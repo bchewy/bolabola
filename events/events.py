@@ -1,51 +1,86 @@
-from flask import Flask, request, jsonify
+from fastapi import FastAPI, HTTPException, Depends
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, Text, func
+from sqlalchemy.future import select
+from pydantic import BaseModel
+from datetime import datetime
+from sqlalchemy.orm import sessionmaker
 
-app = Flask(__name__)
+# Database connection setup
+DATABASE_URL = "postgresql+asyncpg://postgres:testpassword@localhost:5432/events_db"
+engine = create_async_engine(DATABASE_URL, echo=True)
+async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+Base = declarative_base()
 
-# In-memory storage for events
-events = []
+# Pydantic models for request and response
+class EventBase(BaseModel):
+    name: str
+    description: str
+    date: datetime
+    location: str
 
-@app.route('/events', methods=['GET'])
-def get_events():
-    return jsonify(events)
+class EventCreate(EventBase):
+    pass
 
-@app.route('/events/<int:event_id>', methods=['GET'])
-def get_event(event_id):
-    for event in events:
-        if event['id'] == event_id:
-            return jsonify(event)
-    return jsonify({'error': 'Event not found'}), 404
+class EventUpdate(EventBase):
+    pass
 
-@app.route('/events', methods=['POST'])
-def create_event():
-    data = request.get_json()
-    event = {
-        'id': len(events) + 1,
-        'name': data['name'],
-        'date': data['date'],
-        'location': data['location']
-    }
-    events.append(event)
-    return jsonify(event), 201
+class EventInDBBase(EventBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
-@app.route('/events/<int:event_id>', methods=['PUT'])
-def update_event(event_id):
-    data = request.get_json()
-    for event in events:
-        if event['id'] == event_id:
-            event['name'] = data['name']
-            event['date'] = data['date']
-            event['location'] = data['location']
-            return jsonify(event)
-    return jsonify({'error': 'Event not found'}), 404
+    class Config:
+        orm_mode = True
 
-@app.route('/events/<int:event_id>', methods=['DELETE'])
-def delete_event(event_id):
-    for event in events:
-        if event['id'] == event_id:
-            events.remove(event)
-            return jsonify({'message': 'Event deleted'})
-    return jsonify({'error': 'Event not found'}), 404
+# SQLAlchemy models
+class Event(Base):
+    __tablename__ = "events"
 
-if __name__ == '__main__':
-    app.run()
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    date = Column(DateTime(timezone=True), nullable=False)
+    location = Column(String(255), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
+    )
+
+# FastAPI app instance
+app = FastAPI()
+
+# Dependency to get database session
+async def get_db() -> AsyncSession:
+    async with async_session() as session:
+        yield session
+
+# CRUD operations and route handlers
+@app.post("/events/", response_model=EventInDBBase)
+async def create_event(event: EventCreate, db: AsyncSession = Depends(get_db)):    
+    new_event = Event(**event.dict())
+    db.add(new_event)
+    await db.commit()
+    await db.refresh(new_event)
+    return new_event
+
+@app.get("/events/", response_model=list[EventInDBBase])
+async def read_events(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+    async with db() as session:
+        result = await session.execute(select(Event).offset(skip).limit(limit))
+        events = result.scalars().all()
+        return events
+
+@app.get("/events/{event_id}", response_model=EventInDBBase)
+async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
+    async with db() as session:
+        result = await session.execute(select(Event).where(Event.id == event_id))
+        event = result.scalars().first()
+        if event is None:
+            raise HTTPException(status_code=404, detail="Event not found")
+        return event
+
+# Add additional CRUD operations for update and delete as needed.
