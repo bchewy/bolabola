@@ -15,13 +15,22 @@ def hold_ticket(ticket_id, user_id, ttl=10):
     r.setex(f"ticket:{ticket_id}", ttl, user_id)
     print(f"Ticket {ticket_id} is now held for user {user_id} for {ttl} seconds.")
 
-# Example usage
-hold_ticket('12345', 'user_1')
+def does_ticket_exist(ticket_id):
+    """
+    Check if a ticket exists.
+    :param ticket_id: ID of the ticket to check.
+    :return: True if the ticket exists, False otherwise.
+    """
+    return r.exists(f"ticket:{ticket_id}")
 
-# Optional: Check if the ticket is still held after 10 minutes
-print('''r.exists(f"ticket:12345")''', r.exists(f"ticket:12345"))
-time.sleep(15) # Wait for 10 minutes
-if r.exists(f"ticket:12345"):
-    print("Ticket is still held.")
-else:
-    print("Ticket hold has expired.")
+
+# Hold a ticket
+hold_ticket('12345', 'user_1')
+time.sleep(5)
+print("Ticket exist? 5ms mark",does_ticket_exist('12345'))
+
+time.sleep(15) 
+print("Ticket exist? 20ms mark",does_ticket_exist('12345'))
+
+
+
