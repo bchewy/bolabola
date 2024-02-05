@@ -33,6 +33,8 @@ class EventInDBBase(EventBase):
 
     class Config:
         orm_mode = True
+        # Adjusted for Pydantic V2 change
+        from_attributes = True
 
 # SQLAlchemy models
 class Event(Base):
@@ -69,18 +71,16 @@ async def create_event(event: EventCreate, db: AsyncSession = Depends(get_db)):
 
 @app.get("/events/", response_model=list[EventInDBBase])
 async def read_events(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    async with db() as session:
-        result = await session.execute(select(Event).offset(skip).limit(limit))
-        events = result.scalars().all()
-        return events
+    result = await db.execute(select(Event).offset(skip).limit(limit))
+    events = result.scalars().all()
+    return events
 
 @app.get("/events/{event_id}", response_model=EventInDBBase)
 async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
-    async with db() as session:
-        result = await session.execute(select(Event).where(Event.id == event_id))
-        event = result.scalars().first()
-        if event is None:
-            raise HTTPException(status_code=404, detail="Event not found")
-        return event
+    result = await db.execute(select(Event).where(Event.id == event_id))
+    event = result.scalars().first()
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return event
 
-# Add additional CRUD operations for update and delete as needed.
+# Ensure you have installed the required packages: FastAPI, SQLAlchemy, asyncpg, and pydantic.
