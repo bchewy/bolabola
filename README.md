@@ -1,6 +1,14 @@
-# ticketmaster-dupe
+# TicketBoost
+
+t
 
 
+
+
+
+
+
+# Others
 Redis Setup: 
 `docker run --name redis-ticket-holder -p 6379:6379 -d redis`
 
