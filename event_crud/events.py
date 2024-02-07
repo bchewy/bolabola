@@ -1,86 +1,46 @@
-from fastapi import FastAPI, HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text, func
-from sqlalchemy.future import select
-from pydantic import BaseModel
+from flask import Flask, request, jsonify
+from flask_pymongo import PyMongo
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker
+
+app = Flask(__name__)
 
 # Database connection setup
-DATABASE_URL = "postgresql+asyncpg://postgres:testpassword@localhost:5432/events_db"
-engine = create_async_engine(DATABASE_URL, echo=True)
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-Base = declarative_base()
+# we replace localhost here with mongodb because our services are configured to run within docker.
+app.config['MONGO_URI'] = "mongodb://mongodb:27017/events_db"
+mongo = PyMongo(app)
 
-# Pydantic models for request and response
-class EventBase(BaseModel):
-    name: str
-    description: str
-    date: datetime
-    location: str
+# MongoDB collection
+events_collection = mongo.db.events
 
-class EventCreate(EventBase):
-    pass
+# Route handlers
+@app.route("/events/", methods=['POST'])
+def create_event():
+    data = request.json
+    new_event = {
+        'name': data['name'],
+        'description': data['description'],
+        'date': data['date'],
+        'location': data['location'],
+        'created_at': datetime.utcnow(),
+        'updated_at': datetime.utcnow()
+    }
+    event_id = events_collection.insert_one(new_event).inserted_id
+    created_event = events_collection.find_one({'_id': event_id})
+    return jsonify(created_event)
 
-class EventUpdate(EventBase):
-    pass
+@app.route("/events/", methods=['GET'])
+def read_events():
+    skip = request.args.get('skip', 0, type=int)
+    limit = request.args.get('limit', 100, type=int)
+    events = events_collection.find().skip(skip).limit(limit)
+    return jsonify([event for event in events])
 
-class EventInDBBase(EventBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        orm_mode = True
-        # Adjusted for Pydantic V2 change
-        from_attributes = True
-
-# SQLAlchemy models
-class Event(Base):
-    __tablename__ = "events"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=False)
-    date = Column(DateTime(timezone=True), nullable=False)
-    location = Column(String(255), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.current_timestamp(),
-    )
-
-# FastAPI app instance
-app = FastAPI()
-
-# Dependency to get database session
-async def get_db() -> AsyncSession:
-    async with async_session() as session:
-        yield session
-
-# CRUD operations and route handlers
-@app.post("/events/", response_model=EventInDBBase)
-async def create_event(event: EventCreate, db: AsyncSession = Depends(get_db)):    
-    new_event = Event(**event.dict())
-    db.add(new_event)
-    await db.commit()
-    await db.refresh(new_event)
-    return new_event
-
-@app.get("/events/", response_model=list[EventInDBBase])
-async def read_events(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Event).offset(skip).limit(limit))
-    events = result.scalars().all()
-    return events
-
-@app.get("/events/{event_id}", response_model=EventInDBBase)
-async def read_event(event_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Event).where(Event.id == event_id))
-    event = result.scalars().first()
+@app.route("/events/<string:event_id>", methods=['GET'])
+def read_event(event_id):
+    event = events_collection.find_one({'_id': event_id})
     if event is None:
-        raise HTTPException(status_code=404, detail="Event not found")
-    return event
+        return jsonify({'error': 'Event not found'}), 404
+    return jsonify(event)
 
-# Ensure you have installed the required packages: FastAPI, SQLAlchemy, asyncpg, and pydantic.
+if __name__ == '__main__':
+    app.run(port=8000, debug=True)

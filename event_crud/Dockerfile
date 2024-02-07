@@ -2,16 +2,17 @@
 FROM python:3.9-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR .
 
 # Copy the requirements file into the container
 COPY requirements.txt .
-
+COPY events.py .
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the events.py file into the container
-COPY events.py .
+
+EXPOSE 5000
 
 # Set the command to run when the container starts
 CMD ["python", "events.py"]

@@ -7,27 +7,27 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5000:5000
-    depends_on:
-      - mongodb
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
-    volumes:
-      - .:/app
+    # depends_on:
+    #   - mongodb
+    # environment:
+    #   - FLASK_APP=events.py
+    #   - FLASK_ENV=development
+    # volumes:
+    #   - .:/app
   # Notification Service =================================
-  notification:
-    build:
-      context: ./notification
-      dockerfile: Dockerfile
-    ports:
-      - 5001:5001
-    depends_on:
-      - rabbitmq
-    environment:
-      - FLASK_APP=app.py
-      - FLASK_ENV=development
-    volumes:
-      - .:/app
+    # notification:
+    #   build:
+    #     context: ./notification
+    #     dockerfile: Dockerfile
+    #   ports:
+    #     - 5001:5001
+    #   depends_on:
+    #     - rabbitmq
+    #   environment:
+    #     - FLASK_APP=notification.py
+    #     - FLASK_ENV=development
+    # volumes:
+    #   - .:/app
   # MongoDB =============================================
   mongodb:
     image: mongo
