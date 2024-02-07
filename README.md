@@ -1,6 +1,10 @@
 # TicketBoost
 
 
+Microservices:
+![image](https://github.com/bchewy/ticketboost/assets/16286067/09a270e6-46e4-4fab-8ffa-41c702c3ae09)
+
+
 
 ### Docker Compose
 To set up this repositoriy, run `docker-compose up` in the current working directory `.`
