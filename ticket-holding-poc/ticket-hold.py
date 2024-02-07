@@ -26,8 +26,10 @@ def does_ticket_exist(ticket_id):
 
 # Hold a ticket
 hold_ticket('12345', 'user_1')
+
 time.sleep(5)
 print("Ticket exist? 5ms mark",does_ticket_exist('12345'))
+
 
 time.sleep(15) 
 print("Ticket exist? 20ms mark",does_ticket_exist('12345'))
