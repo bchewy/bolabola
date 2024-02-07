@@ -1,9 +1,9 @@
 # TicketBoost
 
-t
 
 
-
+### Docker Compose
+To set up this repositoriy, run `docker-compose up` in the current working directory `.`
 
 
 

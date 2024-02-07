@@ -1,25 +1,49 @@
-version: '3'
+version: "3"
 services:
-  event-service:
+  # Event Service ========================================
+  event:
     build:
-      context: .
+      context: ./event_crud
       dockerfile: Dockerfile
     ports:
       - 5000:5000
     depends_on:
-      - dynamodb
+      - mongodb
     environment:
       - FLASK_APP=app.py
       - FLASK_ENV=development
     volumes:
       - .:/app
-
-  dynamodb:
-    image: amazon/dynamodb-local
+  # Notification Service =================================
+  notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
     ports:
-      - 8000:8000
+      - 5001:5001
+    depends_on:
+      - rabbitmq
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=development
     volumes:
-      - dynamodb-data:/data
+      - .:/app
+  # MongoDB =============================================
+  mongodb:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+  # RabbitMQ ============================================
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ticketboost
+      RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
 
 volumes:
-  dynamodb-data:
+  mongodb-data:
