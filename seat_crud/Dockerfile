@@ -10,7 +10,7 @@ COPY requirements.txt .
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the events.py file into the container
+# Copy the seat_crud.py file into the container
 COPY seat_crud.py .
 
 # Set the command to run when the container starts
