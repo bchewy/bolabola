@@ -25,6 +25,32 @@ def hello():
     redis.ping()
     return "Redis server is running"
 
+@app.route('/api/reservation/<string:ticket>', methods=['DELETE'])
+def remove_reserved_seat(ticket):
+    try:
+        if redis.exists(ticket):
+            redis.delete(ticket)
+            return jsonify({
+                "code": 200,
+                "message": f"Ticket {ticket} has been removed"
+            }), 200
+        return jsonify({
+            "code": 400,
+            "message": f"Ticket {ticket} is currently not reserved"
+        }), 400
+    except Exception as e:
+        # Unexpected error in code
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        ex_str = str(e) + " at " + str(exc_type) + ": " + fname + ": line " + str(exc_tb.tb_lineno)
+        print(ex_str)
+
+        return jsonify({
+            "code": 500,
+            "message": "Internal server error: " + ex_str
+        }), 500
+        
+
 @app.route('/api/reservation', methods=['POST'])
 def reserve_seat():
     if request.is_json:
@@ -36,10 +62,11 @@ def reserve_seat():
             
             for ticket in available:
                 if not redis.exists(ticket):
-                    redis.set(ticket, ex=TTL_SECONDS)
+                    redis.set(ticket, "locked", ex=TTL_SECONDS)
                     return jsonify({
                         "code": 200,
-                        "message": "Ticket has been reserved with TTL of 10 minutes"
+                        "ticket": ticket,
+                        "message": f"Ticket {ticket} has been reserved with TTL of 10 minutes"
                     }), 200
                 shortest_ttl = min(shortest_ttl, redis.ttl(ticket))
                 
