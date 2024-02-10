@@ -1,53 +1,56 @@
 from flask import Flask, request, jsonify
-import pika
+from flask_cors import CORS
 import stripe
 import os
+import sys
+
+"""
+Billing microservice accepts a POST request to /checkout with the following JSON payload:
+{
+    "order_id": "1234",
+    "show_name": "Hamilton",
+    "show_datetime": "2024-02-10T19:00:00",
+    "tickets": [
+        {"category": "A", "price": 400, "quantity": 2},
+        {"category": "B", "price": 300, "quantity": 3},
+        {"category": "C", "price": 200, "quantity": 4}
+    ],
+    "total": 2600,
+    "user_id": "123"
+}
+"""
 
 # Initialize Flask app
 app = Flask(__name__)
+CORS(app)
 
 # Initialize Stripe
 stripe.api_key = os.environ.get('STRIPE_API_KEY')
 
-# Initialize RabbitMQ
-connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-channel = connection.channel()
-channel.queue_declare(queue='my_queue')
-
+# to receive the JSON payload
 @app.route('/checkout', methods=['POST'])
 def checkout():
     data = request.get_json()
-    amount = data['amount']
-    currency = data['currency']
-    description = data['description']
-    token = data['token']
 
-    charge = stripe.Charge.create(
-        amount=amount,
-        currency=currency,
-        description=description,
-        source=token
-    )
-
-    # Send a message to the queue
-    channel.basic_publish(exchange='', routing_key='my_queue', body=charge['id'])
-
-    return jsonify(charge)
-
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    
+    try:
+        # Create a new PaymentIntent
+        intent = stripe.PaymentIntent.create(
+            amount=data['total'],
+            currency='usd',
+            metadata={
+                'order_id': data['order_id'],
+                'show_name': data['show_name'],
+                'show_datetime': data['show_datetime'],
+                'user_id': data['user_id']
+            }
+        )
+        return jsonify({'client_secret': intent.client_secret})
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 403
+    
 if __name__ == '__main__':
-    app.run()
-
-# def consume_message(channel, method, properties, body):
-#     # Process the consumed message here
-#     print("Received message:", body.decode())
-
-# def start_consuming():
-#     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-#     channel = connection.channel()
-#     channel.queue_declare(queue='my_queue')
-#     channel.basic_consume(queue='my_queue', on_message_callback=consume_message, auto_ack=True)
-#     channel.start_consuming()
-
-# if __name__ == '__main__':
-#     app.run()
-
+    app.run(debug=True, host='0.0.0.0', port=5000)
