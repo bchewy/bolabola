@@ -1,11 +1,13 @@
 from flask import Flask
+from flask_cors import CORS
 import pika
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def hello():
-    return 'Hello, World!'
+    return 'Hello, poor World!'
 
 def consume_message(channel, method, properties, body):
     # Process the consumed message here
@@ -19,4 +21,4 @@ def start_consuming():
     channel.start_consuming()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=5000, debug=True)
