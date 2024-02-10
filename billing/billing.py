@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from flask_cors import CORS
 import stripe
 import os
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 
 """
-Billing microservice accepts a POST request to /checkout with the following JSON payload:
+Billing microservice accepts a post request to /checkout with the following JSON payload:
 {
     "order_id": "1234",
     "show_name": "Hamilton",
@@ -16,41 +18,55 @@ Billing microservice accepts a POST request to /checkout with the following JSON
         {"category": "C", "price": 200, "quantity": 4}
     ],
     "total": 2600,
-    "user_id": "123"
+    "user_id": "123",
 }
+
 """
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY')
 
 # Initialize Stripe
-stripe.api_key = os.environ.get('STRIPE_API_KEY')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+stripe.api_key = STRIPE_SECRET_KEY
 
-# to receive the JSON payload
-@app.route('/checkout', methods=['POST'])
-def checkout():
-    data = request.get_json()
+# public key for the frontend
+@app.route('/public-key', methods=['GET'])
+def public_key():
+    return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
 
-    if not data:
-        return jsonify({'error': 'No data provided'}), 400
-    
-    try:
-        # Create a new PaymentIntent
-        intent = stripe.PaymentIntent.create(
-            amount=data['total'],
-            currency='usd',
-            metadata={
-                'order_id': data['order_id'],
-                'show_name': data['show_name'],
-                'show_datetime': data['show_datetime'],
-                'user_id': data['user_id']
-            }
-        )
-        return jsonify({'client_secret': intent.client_secret})
-    
-    except Exception as e:
-        return jsonify({'error': str(e)}), 403
-    
+@app.route('/checkout', methods = ['GET'])
+def create_checkout_session():
+    if request.method == "GET":
+        try:
+            amount = request.json['total']*100 # convert to cents
+            # Create a new Checkout Session using the Stripe API
+            # (https://stripe.com/docs/api/checkout/sessions/create)
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {
+                                'name': request.json['show_name'],
+                            },
+                            'unit_amount': amount,
+                        },
+                        'quantity': 1,
+                    },
+                ],
+                mode='payment',
+                success_url='http://localhost:3000/success',
+                cancel_url='http://localhost:3000/cancel',
+            )
+        except Exception as e:
+            return jsonify(error=str(e)), 403
+
+    return jsonify({'sessionId': checkout_session['id']})
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(port=5000, debug=True)
