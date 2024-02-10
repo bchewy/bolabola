@@ -49,15 +49,15 @@ def create_checkout_session():
                 payment_method_types=['card'],
                 line_items=[
                     {
-                        'price_data': {
-                            'currency': 'usd',
-                            'product_data': {
-                                'name': request.json['show_name'],
-                            },
-                            'unit_amount': amount,
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': f"{request.json['show_name']} - {ticket_type}",
                         },
-                        'quantity': 1,
+                        'unit_amount': ticket_price *  100,  # Convert to cents
                     },
+                    'quantity': ticket_quantity,
+                } for ticket_type, (ticket_price, ticket_quantity) in request.json['tickets'].items()
                 ],
                 mode='payment',
                 success_url='http://localhost:3000/success',
