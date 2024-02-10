@@ -1,0 +1,4 @@
+flask
+requests
+flask_cors
+flask_pymongo
