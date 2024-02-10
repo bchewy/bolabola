@@ -38,6 +38,7 @@ stripe.api_key = STRIPE_SECRET_KEY
 def public_key():
     return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
 
+# create checkout session
 @app.route('/checkout', methods = ['GET'])
 def create_checkout_session():
     if request.method == "GET":
@@ -67,6 +68,24 @@ def create_checkout_session():
             return jsonify(error=str(e)), 403
 
     return jsonify({'sessionId': checkout_session['id']})
+
+# create route for success
+"""
+on success, send POST back to orchestrator with the following JSON payload:
+{
+    "order_id": "1234",
+    "show_name": "Hamilton",
+    "show_datetime": "2024-02-10T19:00:00",
+    "tickets": [
+        {"category": "A", "price": 400, "quantity": 2},
+        {"category": "B", "price": 300, "quantity": 3},
+        {"category": "C", "price": 200, "quantity": 4}
+    ],
+    "total": 2600,
+    "user_id": "123",
+    "payment_status": "success"
+}
+"""
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
