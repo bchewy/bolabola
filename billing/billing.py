@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+import requests
 from flask_cors import CORS
 import stripe
 import os
@@ -86,6 +87,31 @@ on success, send POST back to orchestrator with the following JSON payload:
     "payment_status": "success"
 }
 """
+
+ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
+
+@app.route('/success', methods = ['POST'])
+def success():
+    # Extract session ID from request
+    session_id = request.json['sessionId']
+    # Retreive Checkout Session from Stripe
+    checkout_session = stripe.checkout.Session.retrieve(session_id)
+    # Prepare payload to send back to orchestrator
+    payload = {
+        "order_id": request.json['order_id'],
+        "show_name": request.json['show_name'],
+        "show_datetime": request.json['show_datetime'],
+        "tickets": request.json['tickets'],
+        "total": request.json['total'],
+        "user_id": request.json['user_id'],
+        "payment_status": checkout_session['payment_status']
+    }
+    # Send POST request to orchestrator
+    response = requests.post(ORCHESTRATOR_URL, json=payload)
+    if response.ok:
+        return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
+    else:
+        return jsonify({"error": "Failed to notify the orchestrator."}),  500
 
 if __name__ == '__main__':
     app.run(port=5000, debug=True)
