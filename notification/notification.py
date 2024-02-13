@@ -49,3 +49,4 @@ def send_email(body):
 if __name__ == "__main__":
     # Start consuming notifications from RabbitMQ
     consume_notifications()
+
