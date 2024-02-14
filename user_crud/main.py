@@ -40,4 +40,3 @@ def login(user: user_schemas.UserLogin):
         return jsonify({"message": "Login successful", "user": user})
     else:
         return jsonify({"message": "Invalid username or password"})
-    
