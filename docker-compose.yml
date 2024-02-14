@@ -1,12 +1,12 @@
 version: "3"
 services:
   # Event Service ========================================
-  event:
-    build:
-      context: ./event_crud
-      dockerfile: Dockerfile
-    ports:
-      - 5000:5000
+  # event:
+  #   build:
+  #     context: ./event_crud
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 5000:5000
     # depends_on:
     #   - mongodb
     # environment:
@@ -37,22 +37,33 @@ services:
   #   ports:
   #     - 5000:5000
 
-  # MongoDB =============================================
-  mongodb:
-    image: mongo
+  # Queue Management Service =============================
+  queue-mgt:
+    build:
+      context: ./queue
+      dockerfile: Dockerfile
     ports:
-      - 27017:27017
-    volumes:
-      - mongodb-data:/data/db
-  # RabbitMQ ============================================
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - 5672:5672
-      - 15672:15672
+      - 8080:8080
     environment:
-      RABBITMQ_DEFAULT_USER: ticketboost
-      RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+
+  # MongoDB =============================================
+  # mongodb:
+  #   image: mongo
+  #   ports:
+  #     - 27017:27017
+  #   volumes:
+  #     - mongodb-data:/data/db
+  # RabbitMQ ============================================
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: ticketboost
+  #     RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
 
 volumes:
   mongodb-data:
