@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
-import user_schemas
+import user_schemas, user_crud
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('DATABASE_URL')
@@ -36,17 +36,10 @@ def create_account(user: user_schemas.UserAccountCreate):
 @app.route('/login', methods=['POST'])
 def login(user: user_schemas.UserLogin):
     """
-    Login, which returns user account object with bearer token
+    Login
     """
-    user = User.query.filter_by(username=user.username).first()
+    user = user_crud.get_user(user)
+    if user is None:
+        return jsonify({"message": "Invalid credentials"})
+    return user
 
-    # to implement legit auth in the future!!
-    auth_response = request.post(f"{AUTH_ENDPOINT}/login", data={"username": user.username, "password": user.password})
-    if auth_response.status_code != 200:
-        raise Exception(auth_response.status_code, auth_response.text)
-    token = auth_response.headers["Authorisation"]
-    if user:
-        return jsonify({"message": "Login successful", "user": user})
-    else:
-        return jsonify({"message": "Invalid username or password"})
-    

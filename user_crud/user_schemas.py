@@ -24,9 +24,9 @@ class UserAccountBase(BaseModel):
     name: str
     email: str
     username: str
-    stripe_id: str
-    created_at: datetime
-    updated_at: datetime
+    stripe_id: Optional[str] = None
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 class UserAccountCreate(UserAccountBase):
     password: str
