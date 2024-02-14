@@ -54,6 +54,11 @@ services:
       MYSQL_DATABASE: ticketboost
       MYSQL_USER: ticketboost
       MYSQL_PASSWORD: veryS3ecureP@ssword
+  # REDIS ===============================================
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
   # RabbitMQ ============================================
   rabbitmq:
     image: rabbitmq:3-management
