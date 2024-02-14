@@ -44,6 +44,16 @@ services:
       - 27017:27017
     volumes:
       - mongodb-data:/data/db
+  # MySQL ===============================================
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: veryS3ecureP@ssword
+      MYSQL_DATABASE: ticketboost
+      MYSQL_USER: ticketboost
+      MYSQL_PASSWORD: veryS3ecureP@ssword
   # RabbitMQ ============================================
   rabbitmq:
     image: rabbitmq:3-management
