@@ -21,7 +21,6 @@ Billing microservice accepts a post request to /checkout with the following JSON
     "total": 2600,
     "user_id": "123",
 }
-
 """
 
 # Initialize Flask app
@@ -37,6 +36,9 @@ stripe.api_key = STRIPE_SECRET_KEY
 # public key for the frontend
 @app.route('/public-key', methods=['GET'])
 def public_key():
+    """
+    Returns the public key for the frontend
+    """
     return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
 
 # create checkout session
