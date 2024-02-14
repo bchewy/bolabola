@@ -42,4 +42,3 @@ def login(user: user_schemas.UserLogin):
     if user is None:
         return jsonify({"message": "Invalid credentials"})
     return user
-
