@@ -3,14 +3,11 @@ package websocket
 import (
 	"encoding/json"
 	// "fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"queue/connection_manager"
+	"queue/util/connection"
+	"queue/util/awsutil"
 	"strconv"
 )
 
@@ -18,6 +15,8 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+
+var manager *connection.ConnectionManager
 
 type RequestBody struct {
 	UserID int `json:"user_id"`
@@ -29,19 +28,7 @@ type SQSMessage struct {
 }
 
 type Server struct {
-	ConnectionManager *connection_manager.ConnectionManager
-}
-
-func SetupAWSSession() *session.Session {
-	creds := credentials.NewEnvCredentials()
-
-	return session.Must(session.NewSessionWithOptions(session.Options{
-		Profile:  "default",
-		Config: aws.Config{
-			Region: 	 aws.String("ap-southeast-1"),
-			Credentials: creds,
-		},
-	}))
+	ConnectionManager *connection.ConnectionManager
 }
 
 func WSEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +50,17 @@ func WSEndpoint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WSHandler(ws)
+}
+
+func ConnectionManagerTestEndpoint(w http.ResponseWriter, r *http.Request) {
+	// allow all origins to prevent CORS errors
+	_ , exists := manager.GetConnection("1")
+
+	if exists {
+		w.Write([]byte("Connection exists"))
+	} else {
+		w.Write([]byte("Connection does not exist"))
+	}
 }
 
 func WSHandler(conn *websocket.Conn) {
@@ -89,16 +87,20 @@ func WSHandler(conn *websocket.Conn) {
 		}
 
 		// Send the received user ID to SQS
-		sess := SetupAWSSession()
+		sess := awsutil.SetupAWSSession()
 
 		const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo"
 
 		messageBody := strconv.Itoa(user_id)
 
-		if err := SendToSQS(sess, queueUrl, messageBody); err != nil {
+		manager.AddConnection(strconv.Itoa(user_id), conn)
+
+		if err := awsutil.SendToSQS(sess, queueUrl, messageBody); err != nil {
 			log.Printf("Error trying to send message to queue: %v", err)
 			return
 		}
+
+		log.Println("Sent message to queue")
 
 		if err := conn.WriteMessage(messageType, []byte(messageBody)); err != nil {
 			log.Println(err)
@@ -107,30 +109,20 @@ func WSHandler(conn *websocket.Conn) {
 	}
 }
 
-func SendToSQS(sess *session.Session, queueUrl string, messageBody string) error {
-	sqsClient := sqs.New(sess)
-
-	_, err := sqsClient.SendMessage(&sqs.SendMessageInput{
-		QueueUrl:				&queueUrl,
-		MessageBody:			aws.String(messageBody),
-		MessageGroupId: 		aws.String("waiting-room-queue"),
-		MessageDeduplicationId: aws.String("waiting"),
-	})
-
-	return err
-}
-
 func SetupRoutes() {
 	http.HandleFunc("/ws", WSEndpoint)
+	http.HandleFunc("/test", ConnectionManagerTestEndpoint)
 }
 
-func NewServer(manager *connection_manager.ConnectionManager) *Server {
+func NewServer(connection_manager *connection.ConnectionManager) *Server {
+	manager = connection_manager
+
 	return &Server{
 		ConnectionManager: manager,
 	}
 }
 
 func (s *Server) Start() {
-	http.HandleFunc("/ws", WSEndpoint)
+	SetupRoutes()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

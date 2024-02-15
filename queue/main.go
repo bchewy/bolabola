@@ -2,12 +2,12 @@ package main
 
 import (
 	"queue/websocket"
-	"queue/connection_manager"
+	"queue/util/connection"
 	"sync"
 )
 
 func main() {
-	manager := connection_manager.NewConnectionManager()
+	manager := connection.NewConnectionManager()
 	server := websocket.NewServer(manager)
 
 	var wg sync.WaitGroup

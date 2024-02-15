@@ -6,10 +6,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/websocket"
 	"log"
-	"queue/connection_manager"
+	"queue/util/connection"
 )
 
-func consumeMessages(sess *session.Session, queueUrl string, manager *connection_manager.ConnectionManager) {
+func consumeMessages(sess *session.Session, queueUrl string, manager *connection.ConnectionManager) {
     svc := sqs.New(sess)
 
     for {

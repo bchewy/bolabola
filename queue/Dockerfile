@@ -11,9 +11,9 @@ COPY . .
 ENV AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID
 ENV AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY
 
-RUN go build -v -o /usr/local/bin/queue/connection_manager ./connection_manager
-RUN go build -v -o /usr/local/bin/queue/sqs_consume ./sqs_consume
-RUN go build -v -o /usr/local/bin/queue/websocket ./websocket
-RUN go build -v -o /usr/local/bin/queue ./main.go
+RUN go build -v -o /usr/local/bin/queue/connection_manager ./connection_manager && \
+    go build -v -o /usr/local/bin/queue/sqs_consume ./sqs_consume && \
+    go build -v -o /usr/local/bin/queue/websocket ./websocket && \
+    go build -v -o /usr/local/bin/queue ./main.go
 
 CMD ["/usr/local/bin/queue/main"]
