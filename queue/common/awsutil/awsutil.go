@@ -31,3 +31,13 @@ func SendToSQS(sess *session.Session, queueUrl string, messageBody string) error
 
 	return err
 }
+
+func ConsumeFromSQS(sqsClient *sqs.SQS, queueUrl string) (*sqs.ReceiveMessageOutput, error) {
+
+	return sqsClient.ReceiveMessage(&sqs.ReceiveMessageInput{
+		QueueUrl:            aws.String(queueUrl),
+		MaxNumberOfMessages: aws.Int64(1),
+		VisibilityTimeout:   aws.Int64(30),  // 30 seconds
+		WaitTimeSeconds:     aws.Int64(5),
+	})
+}

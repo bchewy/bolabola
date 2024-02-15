@@ -3,11 +3,12 @@ package websocket
 import (
 	"encoding/json"
 	// "fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"queue/util/connection"
-	"queue/util/awsutil"
+	"queue/common/connection"
+	"queue/common/awsutil"
 	"strconv"
 )
 
@@ -17,6 +18,8 @@ var upgrader = websocket.Upgrader{
 }
 
 var manager *connection.ConnectionManager
+
+var sess *session.Session
 
 type RequestBody struct {
 	UserID int `json:"user_id"`
@@ -87,7 +90,6 @@ func WSHandler(conn *websocket.Conn) {
 		}
 
 		// Send the received user ID to SQS
-		sess := awsutil.SetupAWSSession()
 
 		const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo"
 
@@ -124,5 +126,6 @@ func NewServer(connection_manager *connection.ConnectionManager) *Server {
 
 func (s *Server) Start() {
 	SetupRoutes()
+	sess = awsutil.SetupAWSSession()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

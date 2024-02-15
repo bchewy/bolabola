@@ -1,24 +1,28 @@
 package sqs_consume
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/websocket"
 	"log"
-	"queue/util/connection"
+    "queue/common/awsutil"
+	"queue/common/connection"
 )
 
+type Server struct {
+	ConnectionManager *connection.ConnectionManager
+}
+
+var manager *connection.ConnectionManager
+
+var sess *session.Session
+
 func consumeMessages(sess *session.Session, queueUrl string, manager *connection.ConnectionManager) {
-    svc := sqs.New(sess)
+    sqsClient := sqs.New(sess)
 
     for {
-        result, err := svc.ReceiveMessage(&sqs.ReceiveMessageInput{
-            QueueUrl:            aws.String(queueUrl),
-            MaxNumberOfMessages: aws.Int64(1),
-            VisibilityTimeout:   aws.Int64(30),  // 30 seconds
-            WaitTimeSeconds:     aws.Int64(0),
-        })
+        result, err := awsutil.ConsumeFromSQS(sqsClient, queueUrl)
 
         if err != nil {
             log.Println("Error", err)
@@ -26,7 +30,6 @@ func consumeMessages(sess *session.Session, queueUrl string, manager *connection
         }
 
         if len(result.Messages) == 0 {
-            log.Println("Received no messages")
             continue
         }
 
@@ -46,4 +49,18 @@ func consumeMessages(sess *session.Session, queueUrl string, manager *connection
             return
         }
     }
+}
+
+func NewServer(connection_manager *connection.ConnectionManager) *Server {
+	manager = connection_manager
+
+	return &Server{
+		ConnectionManager: manager,
+	}
+}
+
+func (s *Server) Start() {
+	// SetupRoutes()
+	sess = awsutil.SetupAWSSession()
+    consumeMessages(sess, "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo", manager)
 }

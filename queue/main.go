@@ -2,20 +2,27 @@ package main
 
 import (
 	"queue/websocket"
-	"queue/util/connection"
+	"queue/sqs_consume"
+	"queue/common/connection"
 	"sync"
 )
 
 func main() {
 	manager := connection.NewConnectionManager()
-	server := websocket.NewServer(manager)
+	ws_server := websocket.NewServer(manager)
+	consume_server := sqs_consume.NewServer(manager)
 
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		server.Start()
+		ws_server.Start()
+	}()
+
+	go func() {
+		defer wg.Done()
+		consume_server.Start()
 	}()
 
 	wg.Wait()
