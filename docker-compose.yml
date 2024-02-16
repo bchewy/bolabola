@@ -49,12 +49,27 @@ services:
       - AWS_SECRET_ACCESS_KEY
 
   # MongoDB =============================================
-  # mongodb:
-  #   image: mongo
-  #   ports:
-  #     - 27017:27017
-  #   volumes:
-  #     - mongodb-data:/data/db
+  mongodb:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-data:/data/db
+  # MySQL ===============================================
+  mysql:
+    image: mysql/mysql-server:8.0
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: veryS3ecureP@ssword
+      MYSQL_DATABASE: ticketboost
+      MYSQL_USER: ticketboost
+      MYSQL_PASSWORD: veryS3ecureP@ssword
+  # REDIS ===============================================
+  redis:
+    image: redis
+    ports:
+      - 6379:6379
   # RabbitMQ ============================================
   # rabbitmq:
   #   image: rabbitmq:3-management
