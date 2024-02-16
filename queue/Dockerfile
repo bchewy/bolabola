@@ -1,17 +1,21 @@
-# Use an official Python runtime as the base image
-FROM python:3.9-slim
+FROM golang:1.22.0-alpine3.19
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
 
-# Install the required dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-# Copy the events.py file into the container
-COPY queue.py .
+ENV AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY
 
-# Set the command to run when the container starts
-CMD ["python", "queue.py"]
+RUN go build -v -o /usr/local/bin/queue/common/awsutil ./common/awsutil && \
+    go build -v -o /usr/local/bin/queue/common/connection ./common/connection && \
+    go build -v -o /usr/local/bin/queue/common/util ./common/util && \
+    go build -v -o /usr/local/bin/queue/sqs_consume ./sqs_consume && \
+    go build -v -o /usr/local/bin/queue/websocket ./websocket && \
+    go build -v -o /usr/local/bin/queue ./main.go
+
+CMD ["/usr/local/bin/queue/main"]
