@@ -74,7 +74,7 @@ func WSHandler(conn *websocket.Conn) {
 			return
 		}
 
-		var user_id int
+		var userId int
 
 		// Parse JSON request
 		if messageType == websocket.TextMessage {
@@ -86,16 +86,16 @@ func WSHandler(conn *websocket.Conn) {
 
 			log.Printf("Received JSON: %+v", user)
 
-			user_id = user.UserID
+			userId = user.UserID
 		}
 
 		// Send the received user ID to SQS
 
 		const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo"
 
-		messageBody := strconv.Itoa(user_id)
+		messageBody := strconv.Itoa(userId)
 
-		manager.AddConnection(strconv.Itoa(user_id), conn)
+		manager.AddConnection(strconv.Itoa(userId), conn)
 
 		if err := awsutil.SendToSQS(sess, queueUrl, messageBody); err != nil {
 			log.Printf("Error trying to send message to queue: %v", err)

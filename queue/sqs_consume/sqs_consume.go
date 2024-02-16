@@ -1,13 +1,13 @@
 package sqs_consume
 
 import (
-	// "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/gorilla/websocket"
 	"log"
     "queue/common/awsutil"
 	"queue/common/connection"
+    "queue/common/util"
 )
 
 type Server struct {
@@ -33,26 +33,40 @@ func consumeMessages(sess *session.Session, queueUrl string, manager *connection
             continue
         }
 
+        log.Println("Messages", result.Messages)
+
         // Assume the message body is the user ID
-        user_id := *result.Messages[0].Body
+        userId := *result.Messages[0].Body
 
         // Retrieve the connection
-        conn, ok := manager.GetConnection(user_id)
+        conn, ok := manager.GetConnection(userId)
         if !ok {
-            log.Printf("No connection found for user ID %s", user_id)
+            log.Printf("No connection found for user ID %s", userId)
             continue
         }
 
+        log.Println("Connection found for user ID ", userId)
+
+        // Generate a JWT token
+        token, err := util.GenerateJWT(userId, 10)
+
+        log.Println("Token is ", token)
+
+        if err != nil {
+            log.Println(err)
+            return
+        }
+
         // Send a message back to the client
-        if err := conn.WriteMessage(websocket.TextMessage, []byte("Your message has been dequeued")); err != nil {
+        if err := conn.WriteMessage(websocket.TextMessage, []byte(token)); err != nil {
             log.Println(err)
             return
         }
     }
 }
 
-func NewServer(connection_manager *connection.ConnectionManager) *Server {
-	manager = connection_manager
+func NewServer(connectionManager *connection.ConnectionManager) *Server {
+	manager = connectionManager
 
 	return &Server{
 		ConnectionManager: manager,

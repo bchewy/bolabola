@@ -38,6 +38,6 @@ func ConsumeFromSQS(sqsClient *sqs.SQS, queueUrl string) (*sqs.ReceiveMessageOut
 		QueueUrl:            aws.String(queueUrl),
 		MaxNumberOfMessages: aws.Int64(1),
 		VisibilityTimeout:   aws.Int64(30),  // 30 seconds
-		WaitTimeSeconds:     aws.Int64(5),
+		WaitTimeSeconds:     aws.Int64(0),
 	})
 }
