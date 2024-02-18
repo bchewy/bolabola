@@ -38,21 +38,7 @@ def login(user: user_schemas.UserLogin):
     """
     Login
     """
-<<<<<<< HEAD
     user = user_crud.get_user(user)
     if user is None:
         return jsonify({"message": "Invalid credentials"})
     return user
-=======
-    user = User.query.filter_by(username=user.username).first()
-
-    # to implement legit auth in the future!!
-    auth_response = request.post(f"{AUTH_ENDPOINT}/login", data={"username": user.username, "password": user.password})
-    if auth_response.status_code != 200:
-        raise Exception(auth_response.status_code, auth_response.text)
-    token = auth_response.headers["Authorisation"]
-    if user:
-        return jsonify({"message": "Login successful", "user": user})
-    else:
-        return jsonify({"message": "Invalid username or password"})
->>>>>>> origin/main
