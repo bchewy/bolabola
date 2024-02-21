@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the events.py file into the container
-COPY merch_crud.py .
+COPY merch_cart.py .
 
 # Set the command to run when the container starts
-CMD ["python", "merch_crud.py"]
+CMD ["python", "merch_cart.py"]

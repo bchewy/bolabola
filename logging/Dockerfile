@@ -5,7 +5,7 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the notification.py file into the container
-COPY notification.py .
+COPY logging.py .
 COPY requirements.txt .
 
 # Install the required dependencies
@@ -17,4 +17,4 @@ RUN pip install flask
 
 
 # Set the command to run the notification.py script
-CMD ["python", "notification.py"]
+CMD ["python", "logging.py"]
