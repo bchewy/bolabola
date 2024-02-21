@@ -19,6 +19,25 @@ Microservices:
 To set up this repositoriy, run `docker-compose up` in the current working directory `.`
 
 
+### port numbers
+3p_gateway: 8000
+api_gateway: 8001
+billing: 8002
+database: 8003
+event_crud: 8004
+event_orcha: 8005
+logging: 8006
+merch_crud: 8007
+merchcart_orcha: 8008
+merchcheckout_orcha: 8009
+notification: 8010
+queue: 8011
+rfid: 8012
+rfid_link: 8013
+seat_crud: 8014
+user_crud: 8015
+venue_crud: 8016
+wallet: 8017
 
 
 # Others
