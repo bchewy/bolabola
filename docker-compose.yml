@@ -290,9 +290,13 @@ services:
     image: rabbitmq:3-management
     networks: 
       - kong-net
-    # ports:
-    #   - 5672:5672
-    #   - 15672:15672
+    # Have to expose ports here to access via local
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     environment:
       RABBITMQ_DEFAULT_USER: ticketboost
       RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
