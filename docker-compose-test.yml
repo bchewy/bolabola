@@ -1,0 +1,25 @@
+version: "3"
+
+services:
+  # RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management interface
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+    environment:
+      RABBITMQ_DEFAULT_USER: ticketboost
+      RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
+
+  # Notification Service
+  notification:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    command: ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "/app/notification.py"]
+
