@@ -115,6 +115,8 @@ services:
       - kong-net
     depends_on:
       - rabbitmq
+    command: ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "/app/notification.py"]
+
 
   # Queue Management Service =============================
   queue-mgt:
