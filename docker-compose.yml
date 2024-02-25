@@ -11,6 +11,16 @@ networks:
 
 # MICROSERVICES #################################################################################################################################################################
 services:
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    ports:
+      - 80:80
+
   # 3P Gateway Service ===================================
   3p-gateway:
     build:
