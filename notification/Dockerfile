@@ -14,6 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install requests
 RUN pip install pika
 RUN pip install flask
+RUN pip install boto3
 
 
 # Set the command to run the notification.py script
