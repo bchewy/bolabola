@@ -25,7 +25,7 @@ api_gateway: 8001
 billing: 8002
 database: 8003
 event_crud: 8004
-event_orcha: 8005
+event_orcha: 8005 
 logging: 8006
 merch_crud: 8007
 merchcart_orcha: 8008
@@ -45,6 +45,12 @@ wallet: 8017
 This allows the changes you make in your local code to be immediately reflected in the containerized app. Add the following flag to your `docker run` command.<br><br>
 `-v <path-to-directory-with-code>:/app`<br><br>
 (replace the path with `$(pwd)` for Mac/Linux or `${PWD}` for Windows if your current directory contains the code)
+
+## docker compose tests
+Should you not want to test end-to-end docker compose, you can use docker-compose-test.yml, or a different name file.. use `docker compose --file docker-compose-test.yml up --build` to run this, and similarly, `docker compose down` to clean it up.
+
+## docker compose, building with env file
+`docker-compose --env-file .env up --build -d` - to build with .env
 
 ## Redis Setup: 
 `docker run --name redis-ticket-holder -p 6379:6379 -d redis`
