@@ -4,8 +4,8 @@ from flask_cors import CORS
 import stripe
 import os
 import sys
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 """
 Billing microservice accepts a post request to /checkout with the following JSON payload:
