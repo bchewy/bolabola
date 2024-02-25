@@ -19,4 +19,4 @@ def start_consuming():
     channel.start_consuming()
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=8017)

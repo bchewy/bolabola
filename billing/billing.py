@@ -116,4 +116,4 @@ def success():
         return jsonify({"error": "Failed to notify the orchestrator."}),  500
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(port=8002, debug=True)
