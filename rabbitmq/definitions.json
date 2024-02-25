@@ -1,0 +1,23 @@
+{
+    "users": [
+        {
+            "name": "ticketboost",
+            "password": "veryS3ecureP@ssword",
+            "tags": "administrator"
+        }
+    ],
+    "vhosts": [
+        {
+            "name": "/"
+        }
+    ],
+    "permissions": [
+        {
+            "user": "ticketboost",
+            "vhost": "/",
+            "configure": ".*",
+            "write": ".*",
+            "read": ".*"
+        }
+    ]
+}
