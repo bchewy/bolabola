@@ -9,7 +9,7 @@ rabbitmq_password = "veryS3ecureP@ssword"
 exchange_name = "notifications"
 routing_key = "notification.test"
 test_message = {
-    "email": "brian@bchewy.com",
+    "email": "yourcustomeremail@email.com",
     "subject": "Test Message",
     "body": "This is a test message from RabbitMQ!",
 }
