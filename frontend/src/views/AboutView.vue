@@ -1,19 +1,19 @@
 <template>
-  <div class="home-view">
-    <h1>Home</h1>
-    <p>Start exploring and finding the best tickets for your favorite events!</p>
+  <div class="about-view">
+    <h1>About</h1>
+    <p>Experience the Beat, Secure Your Seat with TicketBoost!</p>
   </div>
 </template>
 
 <script>
 export default {
-  name: "HomeView",
+  name: "AboutView",
   // Add your component's logic here
 }
 </script>
 
 <style scoped>
-.home-view {
+.about-view {
   text-align: center;
   margin-top: 50px;
 }
