@@ -10,8 +10,14 @@ COPY requirements.txt .
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the events.py file into the container
+# Copy the user_crud.py file into the container
 COPY user_crud.py .
 
+# Copy the user_schemas.py file into the container
+COPY user_schemas.py .
+
+# Copy the main.py file into the container
+COPY main.py .
+
 # Set the command to run when the container starts
-CMD ["python", "user_crud.py"]
+CMD ["python", "main.py"]
