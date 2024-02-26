@@ -16,6 +16,9 @@ COPY user_crud.py .
 # Copy the user_schemas.py file into the container
 COPY user_schemas.py .
 
+# Copy the ticket_schemas.py file into the container
+COPY ticket_schemas.py .
+
 # Copy the main.py file into the container
 COPY main.py .
 
