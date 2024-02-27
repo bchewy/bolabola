@@ -76,26 +76,6 @@ class User(db.Model):
 
         return ticket.json()
 
-    def add_ticket_to_user(self, event_id, venue_id, seat_id):
-        """
-        This method adds a ticket to the user's account.
-        """
-        try:
-            # check if user exists
-            user = User.query.get(self.id)
-            if user is None:
-                return jsonify({"message": "User not found"})
-            new_ticket = Ticket(user_id=self.id, event_id=event_id, venue_id=venue_id, seat_id=seat_id)
-
-            # Add the new ticket to the database
-            db.session.add(new_ticket)
-            db.session.commit()
-
-            return jsonify({"message": "Ticket added successfully."})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({"message": "Failed to add ticket."})
-
 # Define the Ticket model
 class Ticket(db.Model):
     id  = db.Column(db.Integer, primary_key = True)
@@ -148,19 +128,33 @@ def view_user_tickets(user_id):
         return jsonify({"message": "User not found"})
     return user.view_all_tickets()
 
-# route to add ticket
-@app.route("/ticket/<int:event_id>/<int:venue_id>/<int:seat_id>", methods = ["POST"])
-def add_ticket(event_id, venue_id, seat_id, user: user_schemas.UserAccount):
-    user_data = user_crud.get_user(user)
-    user_id = user_data["id"]
+# view ticket details
+@app.route('/api/v1/user/<int:user_id>/tickets/<int:ticket_id>', methods=['GET'])
+def view_ticket(user_id, ticket_id):
+    """
+    View the details of a specific ticket owned by a specific user
+    """
+    user = user_crud.get_user(user_id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    return user.view_ticket(ticket_id)
+
+@app.route('/api/v1/user/<int:user_id>/tickets/add', methods=['POST'])
+def add_ticket_to_user(user_id, event_id, venue_id, seat_id):
+    """
+    Add a ticket to a specific user
+    """
+    user = user_crud.get_user(user_id)
+    if user is None:
+        return jsonify({"message": "User not found"})
     new_ticket = Ticket(user_id=user_id, event_id=event_id, venue_id=venue_id, seat_id=seat_id)
     try:
         db.session.add(new_ticket)
         db.session.commit()
-        return jsonify({"message": "Ticket created successfully."})
+        return jsonify({"message": f"Ticket added successfully to user {user_id}."})
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": "Failed to create Ticket."})
+        return jsonify({"message": "Failed to add Ticket."})
 
 # route to change ticket details
 @app.route("/ticket/<int:ticket_id>/edit", methods = ["UPDATE"])
