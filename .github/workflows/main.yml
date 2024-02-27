@@ -12,16 +12,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      # - name: Set up Docker Compose
-      #   uses: docker/compose-cli@v1
-      #   with:
-      #     version: "1.29.2"
       - name: Docker Compose Action
         uses: isbang/compose-action@v1.5.1
         with:
           compose-file: |
             docker-compose.yml
-
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       - name: Validate Docker Compose file
         run: docker compose config
