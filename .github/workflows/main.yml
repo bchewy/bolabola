@@ -17,7 +17,7 @@ jobs:
       # - name: Docker Compose Action
       #   uses: isbang/compose-action@v1.5.1
       - name: Docker Compose Action
-        uses: alexkainzinger/compose-action@v2
+        uses: alexkainzinger/compose-action@v2 # using node20 see: https://github.com/isbang/compose-action/pull/37
         with:
           compose-file: |
             docker-compose.yml
