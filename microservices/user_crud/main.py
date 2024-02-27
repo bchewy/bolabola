@@ -71,8 +71,6 @@ def login(user: user_schemas.UserLogin):
         return jsonify({"message": "Invalid credentials"})
     return user
 
-<<<<<<< HEAD:microservices/user_crud/main.py
-=======
 # route to add ticket
 @app.route("/ticket/<int:event_id>/<int:venue_id>/<int:seat_id>", methods = ["POST"])
 def add_ticket(event_id, venue_id, seat_id, user: user_schemas.UserAccount):
@@ -141,6 +139,5 @@ def view_ticket(user_id, ticket_id):
         code = 500
         return jsonify({"code": code, 'message': "Failed to access ticket."})
     
->>>>>>> c689a74 (ticket functionalities done):user_crud/main.py
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8015, debug=True)
