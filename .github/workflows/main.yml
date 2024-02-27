@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Docker compose pull
+        run: docker compose pull
       - name: Docker Compose Action
         uses: isbang/compose-action@v1.5.1
         with:
