@@ -14,7 +14,7 @@ services:
   # Frontend
   frontend:
     build:
-      context: ./frontend
+      context: ./microservices/frontend
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -24,7 +24,7 @@ services:
   # 3P Gateway Service ===================================
   3p-gateway:
     build:
-      context: ./3p_gateway
+      context: ./microservices/3p_gateway
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -43,7 +43,7 @@ services:
   # Billing Service =======================================
   billing:
     build:
-      context: ./billing
+      context: ./microservices/billing
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -55,7 +55,7 @@ services:
   # Event CRUD Service ===================================
   event:
     build:
-      context: ./event_crud
+      context: ./microservices/event_crud
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -67,7 +67,7 @@ services:
   # Event Orcha Service ========================================
   event-orcha:
     build:
-      context: ./event_orcha
+      context: ./microservices/event_orcha
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -77,7 +77,7 @@ services:
   # Logging Service ======================================
   logging:
     build:
-      context: ./logging
+      context: ./microservices/logging
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -89,7 +89,7 @@ services:
   # Merch CRUD Service ==================================
   merch:
     build:
-      context: ./merch_crud
+      context: ./microservices/merch_crud
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -101,7 +101,7 @@ services:
   # Merch Cart Orcha Service =====================================
   merch-cart-orch:
     build:
-      context: ./merchcart_orcha
+      context: ./microservices/merchcart_orcha
       dockerfile: Dockerfile
     # ports:
     #   - 5000:5000
@@ -111,7 +111,7 @@ services:
   # Merch Checkout Orcha Service =========================
   merch-checkout-orch:
     build:
-      context: ./merchcheckout_orcha
+      context: ./microservices/merchcheckout_orcha
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -123,7 +123,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     build:
-      context: ./notification
+      context: ./microservices/notification
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -141,7 +141,7 @@ services:
   # Queue Management Service =============================
   queue-mgt:
     build:
-      context: ./queue
+      context: ./microservices/queue
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -152,7 +152,7 @@ services:
   # RFID Service ========================================
   rfid:
     build:
-      context: ./rfid
+      context: ./microservices/rfid
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -160,7 +160,7 @@ services:
   # RFID Link Service ===========================================
   rfid-link:
     build:
-      context: ./rfid_link
+      context: ./microservices/rfid_link
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -168,7 +168,7 @@ services:
   # Seat CRUD Service ===========================================
   seat:
     build:
-      context: ./seat_crud
+      context: ./microservices/seat_crud
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -178,7 +178,7 @@ services:
   # User CRUD Service ===========================================
   user:
     build:
-      context: ./user_crud
+      context: ./microservices/user_crud
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -188,7 +188,7 @@ services:
   # Venue CRUD Service ==========================================
   venue:
     build:
-      context: ./venue_crud
+      context: ./microservices/venue_crud
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -198,7 +198,7 @@ services:
   # Wallet Service ======================================
   wallet:
     build:
-      context: ./wallet
+      context: ./microservices/wallet
       dockerfile: Dockerfile
     # ports:
     #   - 5000:5000
@@ -317,8 +317,8 @@ services:
       - 5672:5672
       - 15672:15672
     volumes:
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
     environment:
       RABBITMQ_DEFAULT_USER: ticketboost
       RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword

@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 import requests
+from user_schemas import *
 
 AUTH_ENDPOINT = os.environ.get('AUTH_ENDPOINT') # to create this endpoint in the future
 STRIPE_ENDPOINT = os.environ.get('STRIPE_ENDPOINT') # to create this endpoint in the future
@@ -19,7 +20,7 @@ def get_user(email: str) -> user_schemas.Account:
         raise Exception("User not found")
     
     user_json = user_response.json()
-    return user_schemas.Account(
+    return user_schemas.UserAccount(
         id=user_json['id'],
         name=user_json['name'],
         email=user_json['email'],
