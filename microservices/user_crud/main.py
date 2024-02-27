@@ -156,6 +156,7 @@ def add_ticket_to_user(user_id, event_id, venue_id, seat_id):
         db.session.rollback()
         return jsonify({"message": "Failed to add Ticket."})
 
+# NOT SURE IF THIS IS NEEDED
 # route to change ticket details
 @app.route("/ticket/<int:ticket_id>/edit", methods = ["UPDATE"])
 def change_ticket_details(user_id, ticket_id):
