@@ -34,7 +34,7 @@ STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
 stripe.api_key = STRIPE_SECRET_KEY
 
 # public key for the frontend
-@app.route('/public-key', methods=['GET'])
+@app.route('/api/v1/checkout/public-key', methods=['GET'])
 def public_key():
     """
     Returns the public key for the frontend
@@ -42,7 +42,7 @@ def public_key():
     return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
 
 # create checkout session
-@app.route('/checkout', methods = ['GET'])
+@app.route('/api/v1/checkout', methods = ['GET'])
 def create_checkout_session():
     if request.method == "GET":
         try:
@@ -64,8 +64,8 @@ def create_checkout_session():
                 } for ticket_type, (ticket_price, ticket_quantity) in request.json['tickets'].items()
                 ],
                 mode='payment',
-                success_url='http://localhost:3000/success',
-                cancel_url='http://localhost:3000/cancel',
+                success_url='http://localhost:8002/success',
+                cancel_url='http://localhost:8002/cancel',
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
@@ -92,7 +92,7 @@ on success, send POST back to orchestrator with the following JSON payload:
 
 ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
 
-@app.route('/success', methods = ['POST'])
+@app.route('/api/v1/checkout/success', methods = ['POST'])
 def success():
     # Extract session ID from request
     session_id = request.json['sessionId']

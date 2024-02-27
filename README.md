@@ -16,7 +16,7 @@ Microservices:
 
 
 ### Docker Compose
-To set up this repositoriy, run `docker-compose up` in the current working directory `.`
+To set up this repository, run `docker-compose up` in the current working directory `.`
 
 
 ### port numbers

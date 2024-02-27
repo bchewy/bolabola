@@ -31,6 +31,17 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
 
+    def __init__(self, id, name, email, stripe_id, username, password):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.stripe_id = stripe_id
+        self.username = username
+        self.password = password
+
+    def json(self):
+        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password}
+
 # Define the Ticket model
 class Ticket(db.Model):
     id  = db.Column(db.Integer, primary_key = True)
@@ -50,7 +61,7 @@ class Ticket(db.Model):
         return {"id": self.id, "user_id": self.user_id, "event_id": self.event_id, "seat_id": self.seat_id, "purchased_at": self.purchased_at}
 
 # route to create a new account
-@app.route('/createAccount', methods=['POST'])
+@app.route('/api/v1/createAccount', methods=['POST'])
 def create_account(user: user_schemas.UserAccountCreate):
     """
     Create a new account by providing the user's name, email, username, password
@@ -61,7 +72,7 @@ def create_account(user: user_schemas.UserAccountCreate):
     return jsonify({"message": "Account created successfully"})
 
 # route to login
-@app.route('/login', methods=['POST'])
+@app.route('/api/v1/login', methods=['POST'])
 def login(user: user_schemas.UserLogin):
     """
     Login
