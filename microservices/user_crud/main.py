@@ -30,6 +30,7 @@ class User(db.Model):
     stripe_id = db.Column(db.String(120), unique=True, nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    tickets = db.relationship('Ticket', backref='user', lazy=True) # lazy means that the data is not loaded from the database until it's requested
 
     def __init__(self, id, name, email, stripe_id, username, password):
         self.id = id
@@ -41,6 +42,59 @@ class User(db.Model):
 
     def json(self):
         return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password}
+    
+    def view_all_tickets(self):
+        """
+        This method returns all the tickets owned by the user.
+        Query will join the User and Ticket tables and return the tickets owned by the user.
+        """
+        user = User.query.get(self.id)
+        if user is None:
+            return jsonify({"message": "User not found"})
+        
+        # Accessing the 'tickets' attribute will trigger a query to the database
+        tickets = user.tickets
+
+        # Convert Ticket objects to dictionaries before jsonify
+        tickets_dict = [ticket.json() for ticket in tickets]
+
+        return jsonify(tickets_dict)
+
+    def view_ticket(self, ticket_id):
+        """
+        This method returns the details of a specific ticket owned by the user.
+        """
+        user = User.query.get(self.id)
+        if user is None:
+            return jsonify({"message": "User not found"})
+
+        # Accessing the 'tickets' attribute will trigger a query to the database
+        ticket = user.tickets.filter_by(id=ticket_id).first()
+
+        if ticket is None:
+            return jsonify({"message": "Ticket not found"})
+
+        return ticket.json()
+
+    def add_ticket_to_user(self, event_id, venue_id, seat_id):
+        """
+        This method adds a ticket to the user's account.
+        """
+        try:
+            # check if user exists
+            user = User.query.get(self.id)
+            if user is None:
+                return jsonify({"message": "User not found"})
+            new_ticket = Ticket(user_id=self.id, event_id=event_id, venue_id=venue_id, seat_id=seat_id)
+
+            # Add the new ticket to the database
+            db.session.add(new_ticket)
+            db.session.commit()
+
+            return jsonify({"message": "Ticket added successfully."})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"message": "Failed to add ticket."})
 
 # Define the Ticket model
 class Ticket(db.Model):
@@ -76,11 +130,23 @@ def create_account(user: user_schemas.UserAccountCreate):
 def login(user: user_schemas.UserLogin):
     """
     Login
+    Returns the user's details if the credentials are correct
     """
     user = user_crud.get_user(user)
     if user is None:
         return jsonify({"message": "Invalid credentials"})
     return user
+
+# view tickets bought by specific user 
+@app.route('/api/v1/user/<int:user_id>/tickets', methods=['GET'])
+def view_user_tickets(user_id):
+    """
+    View all tickets owned by a specific user
+    """
+    user = user_crud.get_user(user_id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    return user.view_all_tickets()
 
 # route to add ticket
 @app.route("/ticket/<int:event_id>/<int:venue_id>/<int:seat_id>", methods = ["POST"])
@@ -128,7 +194,7 @@ def delete_ticket(user_id, ticket_id):
         code = 500
         return jsonify({"code": code, "message": "Unable to delete ticket"})
 
-# route to view all tickets
+# route to view all tickets 
 @app.route('/tickets', methods=['GET'])
 def view_user_tickets(user_id):
     try:
