@@ -51,11 +51,11 @@ def acquire_seat_lock():
                     
                 #TODO: Send request to billing microservice
                 
-                return jsonify({
-                    "code": 200,
-                    "lock_identifier": identifiers,
-                    "message": f"Ticket(s) {", ".join(tickets)} succesfully reserved for {TTL_SECONDS} seconds"
-                }), 200
+            return jsonify({
+                "code": 200,
+                "lock_identifier": identifiers,
+                "message": f"Ticket(s) {', '.join(tickets)} successfully reserved for {TTL_SECONDS} seconds"
+            }), 200
                     
         except Exception as e:
             # Unexpected error in code
