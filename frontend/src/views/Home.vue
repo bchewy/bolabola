@@ -10,7 +10,7 @@
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
-              <p class="lead">
+              <p class="lead text-dark">
                 Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals and enjoy a seamless ticketing experience.
               </p>
               <button class="btn btn-primary" @click="$router.push('/about')">Get Started</button>
@@ -52,7 +52,7 @@ export default {
 
     if (!this.isTypedInitialized) {
       new Typed(element, {
-        strings: ["Carbon-First Routing.", "Take the green route.", "Your footprint matters.", "Drive less, save more."],
+        strings: ["Where Every Seat Tells a Story: Get Your Ticket Now", "Your Ticket to the Ultimate Football Experience!", "Feel the Pulse of the Game: Secure Your Ticket Today!"],
         typeSpeed: 50,
         backSpeed: 50,
         loop: true
@@ -121,7 +121,7 @@ export default {
 <style scoped>
 /* Other component-specific styles */
 .bg-image {
-  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png');
+  /* background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png'); */
   /* background-image: url('https://bchewy-images.s3.ap-southeast-1.amazonaws.com/plan-it/planit.png'); */
   background-size: cover;
   background-repeat: no-repeat;

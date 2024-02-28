@@ -1,14 +1,15 @@
 <template>
+  <NavBar />
   <div class="events-view">
     <h1>Events</h1>
-    <p>Find the latest shows here!</p>
+    <p class="lead text-dark">Find the latest matches here!</p>
     <div class="card-container">
       <div class="card">
-        <h2>Taylor Swift | Eras Tour</h2>
+        <h2>xxxx</h2>
         <p>2 Mar 2024 - 9 Mar 2024</p>
       </div>
       <div class="card">
-        <h2>Bruno Mars Live in Singapore</h2>
+        <h2>yyyy</h2>
         <p>3 Apr 2024 - 6 Apr 2024</p>
       </div>
     </div>
@@ -16,9 +17,15 @@
 </template>
 
 <script>
+import NavBar from '../components/Navbar.vue';
 export default {
   name: "EventsView",
   // Add your component's logic here
+  components: {
+    NavBar,
+    // LearnMore,
+    // Footer,
+  }
 }
 </script>
 
