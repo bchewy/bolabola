@@ -8,112 +8,112 @@ services:
           - "/"
 
   - name: 3p-gateway
-    url: http://3p-gateway:5000
+    url: http://3p-gateway:8000
     routes:
       - name: 3p-gateway-route
         paths:
           - "/3p-gateway"
 
   - name: billing
-    url: http://billing:5000
+    url: http://billing:8002
     routes:
       - name: billing-route
         paths:
           - "/billing"
 
   - name: event_crud
-    url: http://event_crud:5000
+    url: http://event_crud:8004
     routes:
       - name: event-route
         paths:
           - "/event"
 
   - name: event_orcha
-    url: http://event_orcha:5000
+    url: http://event_orcha:8005
     routes:
       - name: event-orcha-route
         paths:
           - "/eventstrator"
 
   - name: logging
-    url: http://logging:5000
+    url: http://logging:8006
     routes:
       - name: logging-route
         paths:
           - "/logging"
 
   - name: merch_crud
-    url: http://merch_crud:5000
+    url: http://merch_crud:8007
     routes:
       - name: merch_crud-route
         paths:
           - "/merch"
 
   - name: merchcart_orcha
-    url: http://merchcart_orcha:5000
+    url: http://merchcart_orcha:8008
     routes:
       - name: merchcart_orcha-route
         paths:
           - "/merchcart"
 
   - name: merchcheckout_orcha
-    url: http://merchcheckout_orcha:5000
+    url: http://merchcheckout_orcha:8009
     routes:
       - name: merchcheckout_orcha-route
         paths:
           - "/merchcheckout"
 
   - name: notification
-    url: http://notification:5000
+    url: http://notification:8010
     routes:
       - name: notification-route
         paths:
           - "/notification"
 
   - name: queue
-    url: http://queue:5000
+    url: http://queue:8011
     routes:
       - name: queue-route
         paths:
           - "/queue"
 
   - name: rfid
-    url: http://rfid:5000
+    url: http://rfid:8012
     routes:
       - name: rfid-route
         paths:
           - "/rfid"
 
   - name: rfid_link
-    url: http://rfid_link:5000
+    url: http://rfid_link:8013
     routes:
       - name: rfid_link-route
         paths:
           - "/rfidlink"
 
   - name: seat
-    url: http://seat:5000
+    url: http://seat:8014
     routes:
       - name: seat-route
         paths:
           - "/seat"
 
   - name: user
-    url: http://user:5000
+    url: http://user:8015
     routes:
       - name: user-route
         paths:
           - "/user"
 
   - name: venue
-    url: http://venue:5000
+    url: http://venue:8016
     routes:
       - name: venue-route
         paths:
           - "/venue"
 
   - name: wallet
-    url: http://wallet:5000
+    url: http://wallet:8017
     routes:
       - name: wallet-route
         paths:
