@@ -21,12 +21,14 @@ services:
         paths:
           - "/billing"
 
-  - name: event_crud
+# http://localhost:8000/events/ - to connect via kong
+# if a paths "/events" - # http://localhost:8000/events/events/ - to connect via kong
+  - name: event
     url: http://event_crud:8004
     routes:
       - name: event-route
         paths:
-          - "/event"
+          - "/"
 
   - name: event_orcha
     url: http://event_orcha:8005

@@ -76,8 +76,8 @@
         <div class="container">
             <a class="navbar-brand text-superblue" href="#">
                 <!-- <font-awesome-icon icon="fa-solid fa-car" bounce style="color: #a7c957" /> Plan-It -->
-                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png"
-                    class="img-fluid" style="max-height: 40px;"> TicketBoost
+                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png" class="img-fluid"
+                    style="max-height: 40px;"> TicketBoost
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -100,6 +100,8 @@
                 </ul>
 
                 <ul class="navbar-nav">
+                    {{ isAuthenticated }}
+                    {{ user }}
                     <li v-if="!isAuthenticated" class="nav-item">
                         <a class="nav-link text-evenlighter" @click.prevent="login">Login</a>
                     </li>
@@ -109,12 +111,6 @@
                             <img :src="user.picture" alt="" class="rounded-circle me-2" style="width: 30px; height: 30px" />
                             <span class="text-evenlighter">Welcome, {{ user.name }}!</span>
                         </a>
-                        <!-- <div v-if="showGamification" class="text-evenlighter d-flex align-items-center">
-              <div>Level: {{ userMe.value.level }}</div>
-              <div class="progress">
-                <div class="progress-bar" role="progressbar" :style="{ width: `${userMe.value.exp}%` }" aria-valuenow="user.progress" aria-valuemin="0" aria-valuemax="100">{{ userMe.value.exp }}%</div>
-              </div>
-            </div> -->
                         <ul class="dropdown-menu bg-green2 text-evenlighter" aria-labelledby="navbarDropdown">
                             <li>
                                 <router-link class="dropdown-item text-light" to="/profile">
@@ -147,20 +143,7 @@
                                     Admin</router-link>
                             </li>
                             <li>
-                                <!-- <router-link class="dropdown-item text-light" to="/settings">
-                  <font-awesome-icon icon="fa-cog" />
-                  Settings</router-link> -->
-                                <!-- <router-link class="dropdown-item" :to="`/profile/public/${user.email}`">
-                  <font-awesome-icon icon="fa-solid fa-circle-user" />
-                  Your Public Profile</router-link> -->
                             </li>
-                            <!-- <hr class="dropdown-divider" /> -->
-
-                            <!-- <li>
-                <button class="dropdown-item text-light" @click="toggleGamification">
-                  Toggle Gamification
-                </button>
-              </li> -->
                             <li>
                                 <hr class="dropdown-divider" />
 
@@ -177,159 +160,26 @@
         </div>
         <div class="overlay bg-white" style="height: 20px;"></div>
     </nav>
-    <!-- User handle modal -->
-    <!-- <div class="modal" tabindex="-1" role="dialog" id="handleModal">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Enter User Handle</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <p>Please enter a handle for your account:</p>
-          <input type="text" class="form-control" v-model="userHandle" placeholder="Enter handle">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" @click="saveHandle">Save changes</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div> -->
 </template>
 
 
 <script>
-import { useAuth0 } from '@auth0/auth0-vue';
+import { authGuard, useAuth0 } from '@auth0/auth0-vue';
 import { watch, computed, defineComponent, ref } from 'vue';
 import axios from "axios";
 
-export default defineComponent({
-    name: 'NavBar',
+export default {
     setup() {
-        const { loginWithRedirect, user, isAuthenticated, logout } = useAuth0();
-        const userHandle = ref('');
-        const showGamification = ref(false);
-        const userMe = ref({});
-
-
-        const toggleGamification = () => {
-            fetchUser();
-            showGamification.value = !showGamification.value;
-        };
-
-        watch(user, async (newValue) => {
-            if (newValue) {
-                // console.log('new value here', newValue)
-
-                // Check Handle Code
-                // try {
-                //   const handleResponse = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users/handle/${newValue.nickname}`, {
-                //     method: 'GET',
-                //     headers: {
-                //       'x-api-key': `${import.meta.env.VITE_API_KEY}`
-                //     }
-                //   });
-                //   const handleData = await handleResponse.json();
-                //   if (handleData.message === "User not found.") {
-                //     console.log('handle not found')
-                //     $('#handleModal').modal('show');
-                //   }
-                // } catch (e) {
-                //   console.error('Failed to check handle:', e);
-                // }
-
-
-                try {
-                    let requestBody = {
-                        auth0_user_id: newValue.sub,
-                        email: newValue.email,
-                        handle: newValue.nickname,
-                        pictureurl: newValue.picture,
-                    };
-
-                    // Always do initial check to see if user exists
-                    const response1 = await axios.get(`${import.meta.env.VITE_API_ENDPOINT}/users/ez/${encodeURIComponent(newValue.email)}`, {
-                        headers: {
-                            'x-api-key': `${import.meta.env.VITE_API_KEY}`
-                        }
-                    });
-                    const msg = await response1.data;
-                    console.log(response1.data)
-                    if (response1.status === 200) {
-                        // Initialize exp and level if it does not exist on first-time creation.
-                        console.log('User not found in the database');
-                        requestBody.exp = 0;
-                        requestBody.level = 0;
-                        requestBody.total_km = 0;
-                        // When user is not found we create it.
-                        const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/users`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-api-key': `${import.meta.env.VITE_API_KEY}`
-                            },
-                            body: JSON.stringify(requestBody)
-
-                        });
-                        const data = await response.json();
-                        console.log('User upserted:', data);
-
-                    } else {
-                        console.log('User found in the database');
-                    }
-                } catch (e) {
-                    console.error('Failed to upsert user on the Backend:', e);
-                }
-            }
-        });
-
-        // const saveHandle = async () => {
-        //   user.nickname = userHandle.value;
-        //   // $('#handleModal').modal('hide');
-        // };
-
-        // Initial API call to check if the user exists. (for @handle checking)
-        const fetchUser = async () => {
-            const url = `${import.meta.env.VITE_API_ENDPOINT}/users/iz/${encodeURIComponent(user.value.email)}`;
-            const headers = {
-                "x-api-key": `${import.meta.env.VITE_API_KEY}`,
-            };
-
-            try {
-                const response = await axios.get(url, { headers });
-                userMe.value = response.data;
-
-            } catch (error) {
-                console.error("Error fetching user", error);
-            }
-        };
-
-
+        const { loginWithRedirect, user, isAuthenticated } = useAuth0();
+        console.log(user)
+        console.log(isAuthenticated)
         return {
-            login: async () => {
-                try {
-                    await loginWithRedirect({
-                        appState: { targetUrl: window.location.pathname }
-                    });
-                } catch (e) {
-                    console.error('Failed to login:', e);
-                }
-            },
-            logout: () => {
-                logout({ logoutParams: { returnTo: window.location.origin } });
+            login: () => {
+                loginWithRedirect();
             },
             user,
-            isAuthenticated,
-            userHandle,
-            // saveHandle,
-            showGamification,
-            toggleGamification,
-            fetchUser,
-            userMe,
+            isAuthenticated
         };
     }
-});
+};
 </script>
