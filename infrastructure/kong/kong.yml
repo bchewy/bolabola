@@ -8,7 +8,7 @@ services:
           - "/"
 
   - name: 3p-gateway
-    url: http://3p-gateway:8000
+    url: http://3p-gateway:8100
     routes:
       - name: 3p-gateway-route
         paths:
