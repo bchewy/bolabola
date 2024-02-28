@@ -20,8 +20,8 @@ To set up this repository, run `docker-compose up` in the current working direct
 
 
 ### port numbers
-- 3p_gateway: 8000
-- api_gateway: 8001
+- 3p_gateway: 8100
+- api_gateway: 8200
 - billing: 8002
 - database: 8003
 - event_crud: 8004
