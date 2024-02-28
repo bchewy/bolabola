@@ -1,0 +1,5 @@
+flask
+requests
+pika
+flask_cors
+redis
