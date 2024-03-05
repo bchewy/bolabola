@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the events.py file into the container
-COPY event_orcha.py .
+COPY match-streaming.py .
 
 # Set the command to run when the container starts
-CMD ["python", "event_orcha.py"]
+CMD ["python", "match-streaming.py"]

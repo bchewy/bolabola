@@ -6,13 +6,12 @@ WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
-COPY events.py .
+
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the events.py file into the container
-
-EXPOSE 5000
+COPY refund.py .
 
 # Set the command to run when the container starts
-CMD ["python", "events.py"]
+CMD ["python", "refund.py"]

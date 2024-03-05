@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Database connection setup
 # we replace localhost here with mongodb because our services are configured to run within docker.
-app.config["MONGO_URI"] = "mongodb://mongodb:27017/events_db"
+app.config["MONGO_URI"] = "mongodb://mongodb:27017/matchs_db"
 mongo = PyMongo(app)
 
 # MongoDB collection
-events_collection = mongo.db.events
+match_collection = mongo.db.matchs
 
 
 # Helper function to convert ObjectId to string
@@ -21,7 +21,7 @@ def serialize_doc(doc):
 
 
 # Route handlers
-@app.route("/events/", methods=["POST"])
+@app.route("/match/", methods=["POST"])
 def create_event():
     data = request.json
     new_event = {
@@ -32,26 +32,26 @@ def create_event():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }
-    event_id = events_collection.insert_one(new_event).inserted_id
-    created_event = events_collection.find_one({"_id": event_id})
+    match_id = match_collection.insert_one(new_event).inserted_id
+    created_event = match_collection.find_one({"_id": match_id})
     return jsonify(serialize_doc(created_event))
 
 
-@app.route("/events/", methods=["GET"])
+@app.route("/match/", methods=["GET"])
 def read_events():
     skip = request.args.get("skip", 0, type=int)
     limit = request.args.get("limit", 100, type=int)
-    events = events_collection.find().skip(skip).limit(limit)
+    events = match_collection.find().skip(skip).limit(limit)
     return jsonify([serialize_doc(event) for event in events])
 
 
-@app.route("/events/<string:event_id>", methods=["GET"])
-def read_event(event_id):
-    event = events_collection.find_one({"_id": ObjectId(event_id)})
+@app.route("/events/<string:match>", methods=["GET"])
+def read_event(match_id):
+    event = match_collection.find_one({"_id": ObjectId(match_id)})
     if event is None:
         return jsonify({"error": "Event not found"}), 404
     return jsonify(serialize_doc(event))
 
 
 if __name__ == "__main__":
-    app.run(port=8004, debug=True, host="0.0.0.0")
+    app.run(port=9005, debug=True, host="0.0.0.0")

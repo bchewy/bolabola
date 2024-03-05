@@ -24,13 +24,14 @@ docker-compose up
 
 ## Microservices
 ### Base Microservices Ports:
-- Match CRUD Service: 9001
-- Queue Management Service: 9002
-- Billing (Stripe) Service: 9003
-- User Profile Service: 9004
-- Video Asset Handling Service: 9005
-- Live Match Service: 9006
-- Notification: 9007
+- 1 Match CRUD Service: 9001
+- 2 Queue Management Service: 9002
+- 3 Billing (Stripe) Service: 9003
+- 4 User Profile Service: 9004
+- 5 Video Asset Handling Service: 9005
+- 6 Live Match Service: 9006
+- 7 Notification: 9007
+- 8 Logging: 9008
 ### Orchestrators Ports:
 - Match Booking Orchestrator: 9101
 - Match Streaming Orchestrator: 9102
