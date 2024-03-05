@@ -30,6 +30,7 @@ docker-compose up
 - User Profile Service: 9004
 - Video Asset Handling Service: 9005
 - Live Match Service: 9006
+- Notification: 9007
 ### Orchestrators Ports:
 - Match Booking Orchestrator: 9101
 - Match Streaming Orchestrator: 9102
