@@ -106,6 +106,21 @@ services:
       - name: user-route
         paths:
           - "/user"
+      - name: create-account-route # route for create account
+        paths:
+          - "/api/v1/createAccount"
+      - name: login-route # route for login
+        paths: 
+          - "/api/v1/login"
+      - name: view-user-tickets-route # route for view all tickets by user
+      paths:
+        - "/api/v1/user/<int:user_id>/tickets"
+      - name: view-ticket-route # route for view specific ticket by user
+        paths:
+          - "/api/v1/user/<int:user_id>/tickets/<int:ticket_id>"
+      - name: add-ticket-route # route for add ticket to user profile
+        paths:
+          - "/api/v1/user/<int:user_id>/tickets/add"
 
   - name: venue
     url: http://venue:8016

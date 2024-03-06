@@ -30,35 +30,26 @@ class User(db.Model):
     stripe_id = db.Column(db.String(120), unique=True, nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    tickets = db.relationship('Ticket', backref='user', lazy=True) # lazy means that the data is not loaded from the database until it's requested
+    tickets = db.relationship(db.JSON, nullable=False)
 
-    def __init__(self, id, name, email, stripe_id, username, password):
+    def __init__(self, id, name, email, stripe_id, username, password, tickets=None):
         self.id = id
         self.name = name
         self.email = email
         self.stripe_id = stripe_id
         self.username = username
         self.password = password
+        self.tickets = tickets if tickets else {}
 
     def json(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password}
+        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
     
     def view_all_tickets(self):
         """
         This method returns all the tickets owned by the user.
         Query will join the User and Ticket tables and return the tickets owned by the user.
         """
-        user = User.query.get(self.id)
-        if user is None:
-            return jsonify({"message": "User not found"})
-        
-        # Accessing the 'tickets' attribute will trigger a query to the database
-        tickets = user.tickets
-
-        # Convert Ticket objects to dictionaries before jsonify
-        tickets_dict = [ticket.json() for ticket in tickets]
-
-        return jsonify(tickets_dict)
+        return jsonify(self.tickets)
 
     def view_ticket(self, ticket_id):
         """
@@ -68,31 +59,10 @@ class User(db.Model):
         if user is None:
             return jsonify({"message": "User not found"})
 
-        # Accessing the 'tickets' attribute will trigger a query to the database
-        ticket = user.tickets.filter_by(id=ticket_id).first()
-
-        if ticket is None:
+        if ticket_id not in user.tickets:
             return jsonify({"message": "Ticket not found"})
-
-        return ticket.json()
-
-# Define the Ticket model
-class Ticket(db.Model):
-    id  = db.Column(db.Integer, primary_key = True)
-    user_id = db.Column(db.Integer, unique = True, nullable = False),
-    event_id = db.Column(db.Integer, unique = True, nullable = False),
-    seat_id = db.Column(db.Integer, unique = True, nullable = False),
-    purchased_at = db.Column(db.TIMESTAMP, server_default=func.now(), nullable=False)
-
-    def __init__(self, id, user_id, event_id, seat_id, purchased_at):
-        self.id = id
-        self.user_id = user_id
-        self.event_id = event_id
-        self.seat_id = seat_id
-        self.purchased_at = purchased_at
-
-    def json(self):
-        return {"id": self.id, "user_id": self.user_id, "event_id": self.event_id, "seat_id": self.seat_id, "purchased_at": self.purchased_at}
+        
+        return jsonify(user.tickets[ticket_id])
 
 # route to create a new account
 @app.route('/api/v1/createAccount', methods=['POST'])
@@ -139,17 +109,19 @@ def view_ticket(user_id, ticket_id):
         return jsonify({"message": "User not found"})
     return user.view_ticket(ticket_id)
 
+# route to add ticket to user
 @app.route('/api/v1/user/<int:user_id>/tickets/add', methods=['POST'])
-def add_ticket_to_user(user_id, event_id, venue_id, seat_id):
+def add_ticket_to_user(user_id, match_id, ticket_category, ticket_id):
     """
     Add a ticket to a specific user
     """
     user = user_crud.get_user(user_id)
     if user is None:
         return jsonify({"message": "User not found"})
-    new_ticket = Ticket(user_id=user_id, event_id=event_id, venue_id=venue_id, seat_id=seat_id)
+
     try:
-        db.session.add(new_ticket)
+        # Adding ticket details directly to the user's tickets dictionary
+        user.add_ticket(match_id, ticket_category, ticket_id)
         db.session.commit()
         return jsonify({"message": f"Ticket added successfully to user {user_id}."})
     except Exception as e:
