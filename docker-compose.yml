@@ -4,12 +4,11 @@ volumes:
   mongodb-data:
   pgdata:
 
+
 networks:
   kong-net:
     driver: bridge
     name: kong-net
-
-# MICROSERVICES #################################################################################################################################################################
 services:
   # Frontend
   frontend:
@@ -21,102 +20,61 @@ services:
     ports:
       - 80:80
 
-  # 3P Gateway Service ===================================
-  3p-gateway:
+  match:
     build:
-      context: ./microservices/3p_gateway
+      context: ./microservices/base/1-match
       dockerfile: Dockerfile
     networks:
       - kong-net
-    # ports:
-    # - 5000:5000
-    depends_on:
-      - event_crud
-      - notification
-      - queue-mgt
-
-  # API Gateway Service ===================================
-  # Distinct difference between authentication and API Gateway...
-
-  # Authentication Service ===============================
-
-  # Billing Service =======================================
-  billing:
-    build:
-      context: ./microservices/billing
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    # ports:
-    #   - 5000:5000
-    depends_on:
-      - mysql
-
-  # Event CRUD Service ===================================
-  event_crud:
-    build:
-      context: ./microservices/event_crud
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    # ports:
-    #   - 5000:5000
     depends_on:
       - mongodb
 
-  # Event Orcha Service ========================================
-  event-orcha:
+  queue:
     build:
-      context: ./microservices/event_orcha
+      context: ./microservices/base/2-queue
       dockerfile: Dockerfile
     networks:
       - kong-net
-    # ports:
-    #   - 5000:5000
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
 
-  # Logging Service ======================================
-  logging:
+  billing:
     build:
-      context: ./microservices/logging
+      context: ./microservices/base/3-billing
       dockerfile: Dockerfile
     networks:
       - kong-net
-    # ports:
-    #   - 5000:5000
-    depends_on:
-      - redis
-
-  # Merch CRUD Service ==================================
-  merch:
-    build:
-      context: ./microservices/merch_crud
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    # ports:
-    #   - 5000:5000
     depends_on:
       - mysql
 
-  # Merch Cart Orcha Service =====================================
-  merch-cart-orch:
+  user:
     build:
-      context: ./microservices/merchcart_orcha
-      dockerfile: Dockerfile
-    # ports:
-    #   - 5000:5000
-    networks:
-      - kong-net
-
-  # Merch Checkout Orcha Service =========================
-  merch-checkout-orch:
-    build:
-      context: ./microservices/merchcheckout_orcha
+      context: ./microservices/base/4-user
       dockerfile: Dockerfile
     networks:
       - kong-net
+    depends_on:
+      - mysql
 
-  # Notification Service =================================
+  videoasset:
+    build:
+      context: ./microservices/base/5-videoasset
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    depends_on:
+      - mysql
+
+  livematch:
+    build:
+      context: ./microservices/base/6-livematch
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    depends_on:
+      - mysql
+
   notification:
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -135,79 +93,19 @@ services:
         "rabbitmq:5672",
         "--",
         "python",
-        "/app/notification.py",
+        "/app/notification.py"
       ]
 
-  # Queue Management Service =============================
-  queue-mgt:
+  logging:
     build:
-      context: ./microservices/queue
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    environment:
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-
-  # RFID Service ========================================
-  rfid:
-    build:
-      context: ./microservices/rfid
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-
-  # RFID Link Service ===========================================
-  rfid-link:
-    build:
-      context: ./microservices/rfid_link
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-
-  # Seat CRUD Service ===========================================
-  seat:
-    build:
-      context: ./microservices/seat_crud
+      context: ./microservices/base/7-logging
       dockerfile: Dockerfile
     networks:
       - kong-net
     depends_on:
-      - mysql
+      - redis
 
-  # User CRUD Service ===========================================
-  user:
-    build:
-      context: ./microservices/user_crud
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    depends_on:
-      - mysql
-
-  # Venue CRUD Service ==========================================
-  venue:
-    build:
-      context: ./microservices/venue_crud
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    depends_on:
-      - mysql
-
-  # Wallet Service ======================================
-  wallet:
-    build:
-      context: ./microservices/wallet
-      dockerfile: Dockerfile
-    # ports:
-    #   - 5000:5000
-    networks:
-      - kong-net
-    depends_on:
-      - mysql
-
-  # KONG items ##################################################################################################################################################################
+  # Kong ================================================
   kong-database:
     image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
     platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
@@ -221,7 +119,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "kong"]
+      test: [ "CMD", "pg_isready", "-U", "kong" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -267,7 +165,8 @@ services:
       KONG_ADMIN_GUI_URL: http://localhost:8002
     depends_on:
       - kong-migration
-    ports: # https://docs.konghq.com/gateway/latest/production/networking/default-ports/
+    ports:
+      # https://docs.konghq.com/gateway/latest/production/networking/default-ports/
       - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
       - "8443:8443" # Takes incoming HTTPS traffic from Consumers, and forwards it to upstream Services.
       - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
@@ -280,8 +179,6 @@ services:
       - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
     volumes:
       - ./infrastructure/kong/kong.yml:/etc/kong/kong.yml
-
-  # Database items ###########################################################################################################################
 
   # MongoDB =============================================
   mongodb:
@@ -312,9 +209,7 @@ services:
     # ports:
     #   - 6379:6379
 
-  # AMQP items ####################################################################################################################################################
-
-  # RabbitMQ ============================================
+    # RabbitMQ ============================================
   rabbitmq:
     image: rabbitmq:3-management
     networks:
