@@ -45,7 +45,7 @@ def read_events():
     return jsonify([serialize_doc(event) for event in events])
 
 
-@app.route("/events/<string:match>", methods=["GET"])
+@app.route("/matches/<string:match>", methods=["GET"])
 def read_event(match_id):
     event = match_collection.find_one({"_id": ObjectId(match_id)})
     if event is None:
