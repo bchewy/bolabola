@@ -1,140 +1,113 @@
 _format_version: "2.1"
+
 services:
-  - name: frontend
-    url: http://frontend:80
-    routes:
-      - name: frontend-route
-        paths:
-          - "/"
+  # There is no need for the frontend to be here
+  # - name: frontend
+  #   url: http://frontend:80
+  #   routes:
+  #     - name: frontend-route
+  #       paths:
+  #         - "/"
 
-  - name: 3p-gateway
-    url: http://3p-gateway:8100
+  - name: match
+    url: http://match:9001
     routes:
-      - name: 3p-gateway-route
+      - name: match-route
         paths:
-          - "/3p-gateway"
-
-  - name: billing
-    url: http://billing:8002
-    routes:
-      - name: billing-route
-        paths:
-          - "/billing"
-
-# http://localhost:8000/events/ - to connect via kong
-# if a paths "/events" - # http://localhost:8000/events/events/ - to connect via kong
-  - name: event
-    url: http://event_crud:8004
-    routes:
-      - name: event-route
-        paths:
-          - "/"
-
-  - name: event_orcha
-    url: http://event_orcha:8005
-    routes:
-      - name: event-orcha-route
-        paths:
-          - "/eventstrator"
-
-  - name: logging
-    url: http://logging:8006
-    routes:
-      - name: logging-route
-        paths:
-          - "/logging"
-
-  - name: merch_crud
-    url: http://merch_crud:8007
-    routes:
-      - name: merch_crud-route
-        paths:
-          - "/merch"
-
-  - name: merchcart_orcha
-    url: http://merchcart_orcha:8008
-    routes:
-      - name: merchcart_orcha-route
-        paths:
-          - "/merchcart"
-
-  - name: merchcheckout_orcha
-    url: http://merchcheckout_orcha:8009
-    routes:
-      - name: merchcheckout_orcha-route
-        paths:
-          - "/merchcheckout"
-
-  - name: notification
-    url: http://notification:8010
-    routes:
-      - name: notification-route
-        paths:
-          - "/notification"
+          - "/match"
 
   - name: queue
-    url: http://queue:8011
+    url: http://queue:9002
     routes:
       - name: queue-route
         paths:
           - "/queue"
 
-  - name: rfid
-    url: http://rfid:8012
+  - name: billing
+    url: http://billing:9003
     routes:
-      - name: rfid-route
+      - name: billing-route
         paths:
-          - "/rfid"
-
-  - name: rfid_link
-    url: http://rfid_link:8013
-    routes:
-      - name: rfid_link-route
-        paths:
-          - "/rfidlink"
+          - "/billing"
 
   - name: seat
-    url: http://seat:8014
+    url: http://seat:9009
     routes:
       - name: seat-route
         paths:
           - "/seat"
 
+
   - name: user
-    url: http://user:8015
+    url: http://user:9004
     routes:
       - name: user-route
         paths:
           - "/user"
-      - name: create-account-route # route for create account
+      - name: create-account-route
         paths:
           - "/api/v1/createAccount"
-      - name: login-route # route for login
-        paths: 
+      - name: login-route
+        paths:
           - "/api/v1/login"
-      - name: view-user-tickets-route # route for view all tickets by user
-      paths:
-        - "/api/v1/user/<int:user_id>/tickets"
-      - name: view-ticket-route # route for view specific ticket by user
+      - name: view-user-tickets-route
         paths:
-          - "/api/v1/user/<int:user_id>/tickets/<int:ticket_id>"
-      - name: add-ticket-route # route for add ticket to user profile
+          - "/api/v1/user/:user_id/tickets"
+      - name: view-ticket-route
         paths:
-          - "/api/v1/user/<int:user_id>/tickets/add"
+          - "/api/v1/user/:user_id/tickets/:ticket_id"
+      - name: add-ticket-route
+        paths:
+          - "/api/v1/user/:user_id/tickets/add"
 
-  - name: venue
-    url: http://venue:8016
+  - name: videoasset
+    url: http://videoasset:9005
     routes:
-      - name: venue-route
+      - name: videoasset-route
         paths:
-          - "/venue"
+          - "/videoasset"
 
-  - name: wallet
-    url: http://wallet:8017
+  - name: livematch
+    url: http://livematch:9006
     routes:
-      - name: wallet-route
+      - name: livematch-route
         paths:
-          - "/wallet"
+          - "/livematch"
+
+  - name: notification
+    url: http://notification:9007
+    routes:
+      - name: notification-route
+        paths:
+          - "/notification"
+
+  - name: logging
+    url: http://logging:9008
+    routes:
+      - name: logging-route
+        paths:
+          - "/logging"
+
+  - name: match-booking-orchestrator
+    url: http://match-booking-orchestrator:9101
+    routes:
+      - name: match-booking-orchestrator-route
+        paths:
+          - "/match-booking"
+
+  - name: match-streaming-orchestrator
+    url: http://match-streaming-orchestrator:9102
+    routes:
+      - name: match-streaming-orchestrator-route
+        paths:
+          - "/match-streaming"
+
+  - name: refund-orchestrator
+    url: http://refund-orchestrator:9103
+    routes:
+      - name: refund-orchestrator-route
+        paths:
+          - "/refund"
 
 plugins:
   - name: cors

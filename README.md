@@ -32,6 +32,7 @@ docker-compose up
 - 6 Live Match Service: 9006
 - 7 Notification: 9007
 - 8 Logging: 9008
+- 9 Seat: 9009
 ### Orchestrators Ports:
 - Match Booking Orchestrator: 9101
 - Match Streaming Orchestrator: 9102
