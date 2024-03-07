@@ -213,8 +213,8 @@ services:
     image: redis
     networks:
       - kong-net
-    # ports:
-    #   - 6379:6379
+    ports:
+      - 6379:6379
 
     # RabbitMQ ============================================
   rabbitmq:
