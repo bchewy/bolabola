@@ -1,57 +1,95 @@
 from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo
-from datetime import datetime
-from bson import ObjectId
+import redis
+import requests
 
 app = Flask(__name__)
 
-# Database connection setup
-# we replace localhost here with mongodb because our services are configured to run within docker.
-app.config["MONGO_URI"] = "mongodb://mongodb:27017/matchs_db"
-mongo = PyMongo(app)
+# Redis connection setup
+app.config["REDIS_URL"] = "redis://redis:6379/0"  # Adjust as necessary
+redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
-# MongoDB collection
-match_collection = mongo.db.matchs
+# Match CRUD Service Base URL
+MATCH_CRUD_SERVICE_URL = "http://match"  # Adjust with actual service URL
 
+# Health Check
+@app.route("/health/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "alive"}), 200
 
-# Helper function to convert ObjectId to string
-def serialize_doc(doc):
-    doc["_id"] = str(doc["_id"])
-    return doc
-
-
-# Route handlers
-@app.route("/match/", methods=["POST"])
-def create_event():
+# Reserve a seat
+@app.route("/reserve/", methods=["POST"])
+def reserve_seat():
     data = request.json
-    new_event = {
-        "name": data["name"],
-        "description": data["description"],
-        "date": data["date"],
-        "location": data["location"],
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-    }
-    match_id = match_collection.insert_one(new_event).inserted_id
-    created_event = match_collection.find_one({"_id": match_id})
-    return jsonify(serialize_doc(created_event))
+    userid = data["userid"]
+    matchid = data["matchid"]
+    ticketcat = data["ticketcat"]
+    ticketid = data["ticketid"]
+
+    # Create a ticket hold in Redis
+    if redis_client.set(f"ticket_hold:{ticketid}", userid, ex=300, nx=True):
+        # Send HTTP request to Match CRUD Service to decrease seatqty
+        response = requests.post(
+            f"{MATCH_CRUD_SERVICE_URL}/decrease_seatqty/", json={"matchid": matchid}
+        )
+        if response.status_code == 200:
+            return (
+                jsonify(
+                    {
+                        "message": "Seat reserved and match seat quantity updated.",
+                        "status": "success",
+                    }
+                ),
+                200,
+            )
+        else:
+            # Rollback the Redis hold in case of failure to update match service
+            redis_client.delete(f"ticket_hold:{ticketid}")
+            return (
+                jsonify(
+                    {
+                        "error": "Failed to update seat quantity in match service.",
+                        "status": "failure",
+                    }
+                ),
+                response.status_code,
+            )
+    else:
+        return jsonify({"error": "Failed to reserve seat", "status": "failure"}), 400
 
 
-@app.route("/match/", methods=["GET"])
-def read_events():
-    skip = request.args.get("skip", 0, type=int)
-    limit = request.args.get("limit", 100, type=int)
-    events = match_collection.find().skip(skip).limit(limit)
-    return jsonify([serialize_doc(event) for event in events])
+# Release a seat if not purchased (called when Redis key expires)
+@app.route("/release/", methods=["POST"])
+def release_seat():
+    data = request.json
+    ticketid = data["ticketid"]
+
+    # Send HTTP request to Match CRUD Service to increase seatqty
+    response = requests.post(
+        f"{MATCH_CRUD_SERVICE_URL}/increase_seatqty/", json={"ticketid": ticketid}
+    )
+    if response.status_code == 200:
+        return (
+            jsonify(
+                {
+                    "message": "Seat released and match seat quantity updated.",
+                    "status": "success",
+                }
+            ),
+            200,
+        )
+    else:
+        return (
+            jsonify(
+                {
+                    "error": "Failed to update seat quantity in match service.",
+                    "status": "failure",
+                }
+            ),
+            response.status_code,
+        )
 
 
-@app.route("/events/<string:match>", methods=["GET"])
-def read_event(match_id):
-    event = match_collection.find_one({"_id": ObjectId(match_id)})
-    if event is None:
-        return jsonify({"error": "Event not found"}), 404
-    return jsonify(serialize_doc(event))
-
+# Add any additional endpoints needed for communication with match CRUD service here
 
 if __name__ == "__main__":
-    app.run(port=9006, debug=True, host="0.0.0.0")
+    app.run(port=9009, debug=True, host="0.0.0.0")
