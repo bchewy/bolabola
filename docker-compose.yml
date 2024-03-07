@@ -192,8 +192,8 @@ services:
     image: mongo
     networks:
       - kong-net
-    # ports:
-    #   - 27017:27017
+    ports:
+      - 27017:27017
     volumes:
       - mongodb-data:/data/db
   # MySQL ===============================================
@@ -201,8 +201,8 @@ services:
     image: mysql/mysql-server:8.0
     networks:
       - kong-net
-    # ports:
-    #   - 3306:3306
+    ports:
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: veryS3ecureP@ssword
       MYSQL_DATABASE: ticketboost
