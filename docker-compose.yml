@@ -68,7 +68,7 @@ services:
 
   livematch:
     build:
-      context: ./microservices/base/6-livematch
+      context: ./microservices/base/6-live-match
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -81,7 +81,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     build:
-      context: ./microservices/notification
+      context: ./microservices/base/7-notification
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -98,12 +98,19 @@ services:
 
   logging:
     build:
-      context: ./microservices/base/7-logging
+      context: ./microservices/base/8-logging
       dockerfile: Dockerfile
     networks:
       - kong-net
     depends_on:
       - redis
+
+  seat:
+    build:
+      context: ./microservices/base/9-seat
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
 
   # Kong ================================================
   kong-database:
