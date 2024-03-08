@@ -1,0 +1,12 @@
+mongodb:
+  image: mongo
+  volumeSize: 1Gi
+
+kong:
+  image: kong/kong-gateway:3.2.2.5
+  database:
+    image: postgres:15
+    volumeSize: 1Gi
+    user: kong
+    password: password
+    dbName: kong

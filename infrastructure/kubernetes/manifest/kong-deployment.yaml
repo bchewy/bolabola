@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: kong
+  name: kong
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: kong
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/kong-net: "true"
+        io.kompose.service: kong
+    spec:
+      containers:
+        - env:
+            - name: KONG_ADMIN_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_ADMIN_ERROR_LOG
+              value: /dev/stderr
+            - name: KONG_ADMIN_GUI_URL
+              value: http://localhost:8002
+            - name: KONG_ADMIN_LISTEN
+              value: 0.0.0.0:8001
+            - name: KONG_DATABASE
+              value: "off"
+            - name: KONG_DECLARATIVE_CONFIG
+              value: /etc/kong/kong.yml
+            - name: KONG_PROXY_ACCESS_LOG
+              value: /dev/stdout
+            - name: KONG_PROXY_ERROR_LOG
+              value: /dev/stderr
+          image: kong/kong-gateway:3.2.2.5
+          name: kong
+          ports:
+            - containerPort: 8000
+              hostPort: 8000
+              protocol: TCP
+            - containerPort: 8443
+              hostPort: 8443
+              protocol: TCP
+            - containerPort: 8001
+              hostPort: 8001
+              protocol: TCP
+            - containerPort: 8444
+              hostPort: 8444
+              protocol: TCP
+            - containerPort: 8002
+              hostPort: 8002
+              protocol: TCP
+            - containerPort: 8445
+              hostPort: 8445
+              protocol: TCP
+            - containerPort: 8003
+              hostPort: 8003
+              protocol: TCP
+            - containerPort: 8446
+              hostPort: 8446
+              protocol: TCP
+            - containerPort: 8004
+              hostPort: 8004
+              protocol: TCP
+            - containerPort: 8447
+              hostPort: 8447
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /etc/kong/kong.yml
+              name: kong-claim0
+      restartPolicy: Always
+      volumes:
+        - name: kong-claim0
+          persistentVolumeClaim:
+            claimName: kong-claim0

@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: kong
+  name: kong
+spec:
+  ports:
+    - name: "8000"
+      port: 8000
+      targetPort: 8000
+    - name: "8443"
+      port: 8443
+      targetPort: 8443
+    - name: "8001"
+      port: 8001
+      targetPort: 8001
+    - name: "8444"
+      port: 8444
+      targetPort: 8444
+    - name: "8002"
+      port: 8002
+      targetPort: 8002
+    - name: "8445"
+      port: 8445
+      targetPort: 8445
+    - name: "8003"
+      port: 8003
+      targetPort: 8003
+    - name: "8446"
+      port: 8446
+      targetPort: 8446
+    - name: "8004"
+      port: 8004
+      targetPort: 8004
+    - name: "8447"
+      port: 8447
+      targetPort: 8447
+  selector:
+    io.kompose.service: kong

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert
+    kompose.version: 1.32.0 (765fde254)
+  labels:
+    io.kompose.service: mysql
+  name: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mysql
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: C:\ProgramData\chocolatey\lib\kubernetes-kompose\tools\kompose.exe convert
+        kompose.version: 1.32.0 (765fde254)
+      labels:
+        io.kompose.network/kong-net: "true"
+        io.kompose.service: mysql
+    spec:
+      containers:
+        - env:
+            - name: MYSQL_DATABASE
+              value: ticketboost
+            - name: MYSQL_PASSWORD
+              value: veryS3ecureP@ssword
+            - name: MYSQL_ROOT_PASSWORD
+              value: veryS3ecureP@ssword
+            - name: MYSQL_USER
+              value: ticketboost
+          image: mysql/mysql-server:8.0
+          name: mysql
+          ports:
+            - containerPort: 3306
+              hostPort: 3306
+              protocol: TCP
+      restartPolicy: Always
