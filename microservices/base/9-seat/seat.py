@@ -61,6 +61,48 @@ def release_seat():
     return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
 
 
+@app.route("/validate_reservation/", methods=["POST"])
+def validate_reservation():
+    data = request.json
+    serial_no = data["serial_no"]
+
+    # Check in MongoDB if the seat has a user_id assigned
+    ticket = tickets_collection.find_one({"serial_no": serial_no})
+
+    if ticket and "user_id" in ticket:
+        # Check if the ticket hold still exists in Redis
+        is_held = redis_client.exists(f"ticket_hold:{serial_no}")
+        if is_held:
+            return (
+                jsonify(
+                    {
+                        "status": "reserved",
+                        "message": "This seat is currently on hold.",
+                        "user_id": ticket["user_id"],
+                    }
+                ),
+                200,
+            )
+        else:
+            return (
+                jsonify(
+                    {
+                        "status": "confirmed",
+                        "message": "This seat has been confirmed by a user.",
+                        "user_id": ticket["user_id"],
+                    }
+                ),
+                200,
+            )
+    elif ticket:
+        return (
+            jsonify({"status": "available", "message": "This seat is available."}),
+            200,
+        )
+    else:
+        return jsonify({"error": "Seat not found"}), 404
+
+
 # Health Check
 @app.route("/health/", methods=["GET"])
 def health_check():
