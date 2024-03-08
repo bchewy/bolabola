@@ -90,12 +90,12 @@
                         <router-link class="nav-link text-evenlighter" to="/">Home</router-link>
                     </li>
                     <li class="nav-item">
-                        <router-link class="nav-link text-evenlighter" to="/about">
-                            About
-                        </router-link>
+                        <router-link class="nav-link text-evenlighter" to="/events">Matches</router-link>
                     </li>
                     <li class="nav-item">
-                        <router-link class="nav-link text-evenlighter" to="/events">Events</router-link>
+                        <router-link class="nav-link text-evenlighter" to="/streaming">
+                            Live Stream 
+                        </router-link>
                     </li>
                 </ul>
 

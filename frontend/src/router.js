@@ -11,14 +11,39 @@ const router = createRouter({
 
     },
     {
-      path: '/about',
-      name: 'about',
-      component: () => import('./views/About.vue')
+      path: '/streaming',
+      name: 'streaming',
+      component: () => import('./views/Streaming.vue')
     }, 
     {
       path: '/events',
       name: 'events',
       component: () => import('./views/Events.vue')
+    }, 
+    {
+      path: '/views/eventItem',
+      name: 'eventItem',
+      component: () => import('./views/EventItem.vue')
+    }, 
+    {
+      path: '/views/queue',
+      name: 'queue',
+      component: () => import('./views/Queue.vue')
+    }, 
+    {
+      path: '/views/seats',
+      name: 'seats',
+      component: () => import('./views/Seats.vue')
+    }, 
+    {
+      path: '/views/checkout',
+      name: 'checkout',
+      component: () => import('./views/Checkout.vue')
+    }, 
+    {
+      path: '/views/confirmation',
+      name: 'confirmation',
+      component: () => import('./views/Confirmation.vue')
     }, 
 
   ]

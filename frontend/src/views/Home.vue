@@ -11,9 +11,9 @@
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
-                Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals and enjoy a seamless ticketing experience.
+                Discover and book tickets for your favorite teams with TicketBoost. <br>Get access to exclusive videos and enjoy a seamless ticketing experience. 
               </p>
-              <button class="btn btn-primary" @click="$router.push('/about')">Get Started</button>
+              <button class="btn btn-primary" @click="$router.push('/events')">Get Started</button>
             </div>
           </div>
         </div>
@@ -52,7 +52,7 @@ export default {
 
     if (!this.isTypedInitialized) {
       new Typed(element, {
-        strings: ["Where Every Seat Tells a Story: Get Your Ticket Now", "Your Ticket to the Ultimate Football Experience!", "Feel the Pulse of the Game: Secure Your Ticket Today!"],
+        strings: ["Where Every Seat Tells a Story: Get Your Ticket Now!", "Your Ticket to the Ultimate Football Experience!", "Feel the Pulse of the Game: Secure Your Ticket Today!", "Score Your Seats, Secure Your Spot!"],
         typeSpeed: 50,
         backSpeed: 50,
         loop: true

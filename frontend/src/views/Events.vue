@@ -1,18 +1,24 @@
 <template>
   <NavBar />
   <div class="events-view">
-    <h1>Events</h1>
-    <p class="lead text-dark">Find the latest matches here!</p>
-    <div class="card-container">
-      <div class="card">
-        <h2>xxxx</h2>
-        <p>2 Mar 2024 - 9 Mar 2024</p>
-      </div>
-      <div class="card">
-        <h2>yyyy</h2>
-        <p>3 Apr 2024 - 6 Apr 2024</p>
+    <h1>Matches</h1>
+    <p class="lead text-dark">Find the latest games here!</p>
+
+    <div class="container-fluid mt-3">
+      <div class="row gx-3 gy-3">
+        <div class="col col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
+            <div class="card"  @click="$router.push('/views/eventItem')">
+              <div class="card-body">
+                <!-- Your card content goes here -->
+                <h5 class="card-title">Manchester United vs Liverpool</h5>
+                <p class="card-text">October 23, 2023, 8:00 PM</p>
+              </div>
+            </div>
+          <!-- <EventsCard class="EventsCard" /> -->
+        </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -45,7 +51,8 @@ export default {
   border-radius: 8px;
   padding: 20px;
   margin: 10px;
-  width: 300px; /* Adjust width as needed */
+  width: 300px;
+  /* Adjust width as needed */
 }
 
 .card h2 {
