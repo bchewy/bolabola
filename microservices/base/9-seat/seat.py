@@ -16,6 +16,13 @@ redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
 
 # Reserve a seat
+# Sample Request Body
+# {
+#     "user_id": "123456789",
+#     "match_id": "987654321",
+#     "ticket_category": "A"
+# }
+# Do take note that the and match_id and ticket categoryshould be valid and existing
 @app.route("/reserve/", methods=["POST"])
 def reserve_seat():
     data = request.json
@@ -47,7 +54,11 @@ def reserve_seat():
         return jsonify({"error": "No available seats"}), 404
 
 
-# Release a seat
+# Release a seat - only if the need arises.
+# Sample Request Body
+# {
+#     "serial_no": "12345"
+# }
 @app.route("/release/", methods=["POST"])
 def release_seat():
     data = request.json
