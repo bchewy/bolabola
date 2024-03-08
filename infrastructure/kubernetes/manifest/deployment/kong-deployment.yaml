@@ -36,7 +36,7 @@ spec:
             - name: KONG_DATABASE
               value: "off"
             - name: KONG_DECLARATIVE_CONFIG
-              value: /etc/kong/kong.yml
+              value: /etc/kong/config/kong.yml
             - name: KONG_PROXY_ACCESS_LOG
               value: /dev/stdout
             - name: KONG_PROXY_ERROR_LOG
@@ -75,10 +75,10 @@ spec:
               hostPort: 8447
               protocol: TCP
           volumeMounts:
-            - mountPath: /etc/kong/kong.yml
-              name: kong-claim0
+            - name: kong-config-volume
+              mountPath: /etc/kong/config
       restartPolicy: Always
       volumes:
-        - name: kong-claim0
-          persistentVolumeClaim:
-            claimName: kong-claim0
+      - name: kong-config-volume
+        configMap:
+          name: kong-config

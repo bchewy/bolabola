@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-pod
+spec:
+  volumes:
+    - name: kong-claim0
+      persistentVolumeClaim:
+        claimName: kong-claim0
+  containers:
+    - name: debug-container
+      image: busybox
+      volumeMounts:
+        - mountPath: "/mnt"
+          name: kong-claim0
+      command: ["sleep", "3600"]

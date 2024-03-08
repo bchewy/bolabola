@@ -3,7 +3,7 @@ _format_version: "2.1"
 services:
   # There is no need for the frontend to be here
   # - name: frontend
-  #   url: http://frontend:80
+  #   url: http://frontend:443
   #   routes:
   #     - name: frontend-route
   #       paths:
@@ -36,7 +36,6 @@ services:
       - name: seat-route
         paths:
           - "/seat"
-
 
   - name: user
     url: http://user:9004
