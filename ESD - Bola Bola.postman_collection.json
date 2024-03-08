@@ -7,6 +7,122 @@
 	},
 	"item": [
 		{
+			"name": "Seat Reservation",
+			"item": [
+				{
+					"name": "Seat - Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/seat/health/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"health",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Reserve",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"123456789\",\r\n    \"match_id\": \"987654321\",\r\n    \"ticket_category\": \"A\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/seat/reserve/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"reserve",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Release",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serial_no\": \"12345\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/seat/release/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"release",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - validate",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serial_no\": \"12345\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/seat/validate_reservation/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"validate_reservation",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Check Rabbit",
 			"request": {
 				"method": "GET",
@@ -32,6 +148,21 @@
 						"localhost"
 					],
 					"port": "8002"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Mongo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:27017",
+					"host": [
+						"localhost"
+					],
+					"port": "27017"
 				}
 			},
 			"response": []
