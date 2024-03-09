@@ -21,7 +21,8 @@ def serialize_doc(doc):
 
 
 # Route handlers
-@app.route("/match/", methods=["POST"])
+# Match Create
+@app.route("/create/", methods=["POST"])
 def create_event():
     data = request.json
     new_event = {
@@ -37,7 +38,8 @@ def create_event():
     return jsonify(serialize_doc(created_event))
 
 
-@app.route("/matches/", methods=["GET"])
+# Match Read All
+@app.route("/", methods=["GET"])
 def read_events():
     skip = request.args.get("skip", 0, type=int)
     limit = request.args.get("limit", 100, type=int)
@@ -45,12 +47,36 @@ def read_events():
     return jsonify([serialize_doc(event) for event in events])
 
 
-@app.route("/matches/<string:match_id>", methods=["GET"])
+# Match Read 1
+@app.route("/<string:match_id>", methods=["GET"])
 def read_event(match_id):
     event = match_collection.find_one({"_id": ObjectId(match_id)})
     if event is None:
         return jsonify({"error": "Event not found"}), 404
     return jsonify(serialize_doc(event))
+
+
+# Match Update
+@app.route("/<string:match_id>", methods=["PUT"])
+def update_event(match_id):
+    data = request.json
+    result = match_collection.update_one(
+        {"_id": ObjectId(match_id)},
+        {"$set": data, "$currentDate": {"updated_at": True}},
+    )
+    if result.matched_count == 0:
+        return jsonify({"error": "Event not found"}), 404
+    updated_event = match_collection.find_one({"_id": ObjectId(match_id)})
+    return jsonify(serialize_doc(updated_event))
+
+
+# Match Delete
+@app.route("/<string:match_id>", methods=["DELETE"])
+def delete_event(match_id):
+    result = match_collection.delete_one({"_id": ObjectId(match_id)})
+    if result.deleted_count == 0:
+        return jsonify({"error": "Event not found"}), 404
+    return jsonify({"message": "Event deleted successfully"}), 200
 
 
 if __name__ == "__main__":
