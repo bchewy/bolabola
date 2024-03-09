@@ -189,9 +189,7 @@ services:
 
   # MongoDB =============================================
   mongodb:
-    build:
-      context: ./infrastructure/mongo/.
-      dockerfile: Dockerfile # Path to your new Dockerfile
+    image: mongo:latest
     networks:
       - kong-net
     ports:
