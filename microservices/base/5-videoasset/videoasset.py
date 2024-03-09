@@ -1,56 +1,59 @@
-from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo
-from datetime import datetime
-from bson import ObjectId
+from flask import Flask, jsonify, request
+import boto3
+from botocore.exceptions import ClientError
+from functools import lru_cache
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
+load_dotenv()
 
-# Database connection setup
-# we replace localhost here with mongodb because our services are configured to run within docker.
-app.config["MONGO_URI"] = "mongodb://mongodb:27017/matchs_db"
-mongo = PyMongo(app)
+os.environ['AWS_ACCESS_KEY_ID'] = os.getenv('AWS_ACCESS_KEY_ID')
+os.environ['AWS_SECRET_ACCESS_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
+os.environ['AWS_DEFAULT_REGION'] = 'ap-southeast-1' 
 
-# MongoDB collection
-match_collection = mongo.db.matchs
+dynamodb = boto3.resource('dynamodb')
 
-
-# Helper function to convert ObjectId to string
-def serialize_doc(doc):
-    doc["_id"] = str(doc["_id"])
-    return doc
+print(os.getenv("AWS_ACCESS_KEY_ID"))
+print(os.getenv("AWS_SECRET_ACCESS_KEY"))
+table = dynamodb.Table("ESD-VideoMetaData")
 
 
-# Route handlers
-@app.route("/match/", methods=["POST"])
-def create_event():
-    data = request.json
-    new_event = {
-        "name": data["name"],
-        "description": data["description"],
-        "date": data["date"],
-        "location": data["location"],
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow(),
-    }
-    match_id = match_collection.insert_one(new_event).inserted_id
-    created_event = match_collection.find_one({"_id": match_id})
-    return jsonify(serialize_doc(created_event))
+# Cache size depends on your needs; here, we cache the latest 128 requests
+@lru_cache(maxsize=128)
+def get_video_path(video_id):
+    try:
+        # The video id here refers to the match id.
+        response = table.get_item(Key={"video_id": video_id})
+        # Corrected the print statement to properly format the dictionary as a string
+        print("response:", response)
+    except ClientError as e:
+        # Print the error message from the exception
+        print(e.response["Error"]["Message"])
+        return None
+    else:
+        # Check if 'Item' key exists and then attempt to get 'video_url' from it
+        item = response.get("Item")
+        if item is not None:
+            return item.get("video_url")
+        else:
+            # If 'Item' key does not exist, log it and return None
+            print(f"No item found with video_id: {video_id}")
+            return None
 
 
-@app.route("/match/", methods=["GET"])
-def read_events():
-    skip = request.args.get("skip", 0, type=int)
-    limit = request.args.get("limit", 100, type=int)
-    events = match_collection.find().skip(skip).limit(limit)
-    return jsonify([serialize_doc(event) for event in events])
+@app.route("/video", methods=["GET"])
+def get_video():
+    video_id = request.args.get("id")
+    if not video_id:
+        return jsonify({"error": "Missing video id"}), 400
 
-
-@app.route("/events/<string:match>", methods=["GET"])
-def read_event(match_id):
-    event = match_collection.find_one({"_id": ObjectId(match_id)})
-    if event is None:
-        return jsonify({"error": "Event not found"}), 404
-    return jsonify(serialize_doc(event))
+    video_path = get_video_path(video_id)
+    print("video path: " + str(video_path))
+    if video_path:
+        return jsonify(video_path)
+    else:
+        return jsonify({"error": "Video not found"}), 404
 
 
 if __name__ == "__main__":
