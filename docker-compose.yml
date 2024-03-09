@@ -112,41 +112,64 @@ services:
     networks:
       - kong-net
 
-  # Kong ================================================
-  kong-database:
-    image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
-    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
-    restart: always
+  
+  # Orchas
+  match-streaming-orchestrator:
+    build: 
+      context: ./microservices/orchestrator/match-streaming
+      dockerfile: Dockerfile
     networks:
       - kong-net
-    environment:
-      POSTGRES_DB: kong
-      POSTGRES_USER: kong
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "kong" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - pgdata:/var/lib/postgresql/data
 
-  kong-migration:
-    image: kong/kong-gateway:3.2.2.5 # tested 20231101
-    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
-    command: "kong migrations bootstrap"
-    restart: on-failure
+  match-booking-orchestrator:
+    build: 
+      context: ./microservices/orchestrator/match-booking
+      dockerfile: Dockerfile
     networks:
       - kong-net
-    environment:
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: password
-    depends_on:
-      - kong-database
+
+  refund-orchestrator:
+    build: 
+      context: ./microservices/orchestrator/refund
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+
+  # Kong ================================================
+  # kong-database:
+  #   image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
+  #   platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+  #   restart: always
+  #   networks:
+  #     - kong-net
+  #   environment:
+  #     POSTGRES_DB: kong
+  #     POSTGRES_USER: kong
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: [ "CMD", "pg_isready", "-U", "kong" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+  # kong-migration:
+  #   image: kong/kong-gateway:3.2.2.5 # tested 20231101
+  #   platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+  #   command: "kong migrations bootstrap"
+  #   restart: on-failure
+  #   networks:
+  #     - kong-net
+  #   environment:
+  #     KONG_DATABASE: postgres
+  #     KONG_PG_HOST: kong-database
+  #     KONG_PG_USER: kong
+  #     KONG_PG_PASSWORD: password
+  #   depends_on:
+  #     - kong-database
 
   kong:
     image: kong/kong-gateway:3.2.2.5 # tested 20231101
@@ -170,8 +193,8 @@ services:
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_ADMIN_GUI_URL: http://localhost:8002
-    depends_on:
-      - kong-migration
+    # depends_on:
+    #   - kong-migration
     ports:
       # https://docs.konghq.com/gateway/latest/production/networking/default-ports/
       - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
