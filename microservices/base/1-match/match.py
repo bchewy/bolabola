@@ -28,7 +28,7 @@ def create_event():
         "name": data["name"],
         "description": data["description"],
         "date": data["date"],
-        "location": data["location"],
+        "venue": data["venue"],
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
     }

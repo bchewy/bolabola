@@ -12,7 +12,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the events.py file into the container
 
-EXPOSE 5000
-
 # Set the command to run when the container starts
 CMD ["python", "match.py"]
