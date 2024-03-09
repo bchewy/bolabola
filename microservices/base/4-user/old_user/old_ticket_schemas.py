@@ -4,7 +4,6 @@ from typing import Optional
 
 class TicketBase(BaseModel):
     event_id: int
-    venue_id: int
     seat_id: int
 
 class TicketOwned(TicketBase):
