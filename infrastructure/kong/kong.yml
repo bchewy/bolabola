@@ -40,24 +40,21 @@ services:
   - name: user
     url: http://user:9004
     routes:
-      - name: user-route
+      - name: view-all-user-tickets-route # route for view all tickets bought by user
         paths:
-          - "/user"
-      - name: create-account-route
+          - "/api/v1/user/<int:id>/tickets"
+      - name: view-tickets-by-serial-route # route for view specific ticket bought by user by serial number
         paths:
-          - "/api/v1/createAccount"
-      - name: login-route
+          - "/api/v1/user/<int:id>/tickets/<int:serial_no>"
+      - name: view-tickets-by-match-route # route for view all specific tickets bought by user by match id
         paths:
-          - "/api/v1/login"
-      - name: view-user-tickets-route
+          - "/api/v1/user/<int:id>/tickets/match/<int:match_id>"
+      - name: add-ticket-to-user-route # route for adding a ticket to user
         paths:
-          - "/api/v1/user/:user_id/tickets"
-      - name: view-ticket-route
+          - "/api/v1/user/<int:id>/tickets"
+      - name: delete-ticket-from-user-route # route for deleting a ticket from user
         paths:
-          - "/api/v1/user/:user_id/tickets/:ticket_id"
-      - name: add-ticket-route
-        paths:
-          - "/api/v1/user/:user_id/tickets/add"
+          - "/api/v1/user/<int:id>/tickets/<int:serial_no>"
 
   - name: videoasset
     url: http://videoasset:9005

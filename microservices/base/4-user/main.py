@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import func
 import os
-import user_schemas, user_crud, ticket_schemas
 
 app = Flask(__name__)
 if 'WAMP' in os.environ:
@@ -30,7 +29,7 @@ class User(db.Model):
     stripe_id = db.Column(db.String(120), unique=True, nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    tickets = db.relationship(db.JSON, nullable=False)
+    tickets = db.Column(db.JSON, nullable=True)
 
     def __init__(self, id, name, email, stripe_id, username, password, tickets=None):
         self.id = id
@@ -39,149 +38,104 @@ class User(db.Model):
         self.stripe_id = stripe_id
         self.username = username
         self.password = password
-        self.tickets = tickets if tickets else {}
+        self.tickets = tickets
 
     def json(self):
         return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
-    
-    def view_all_tickets(self):
+
+############################################################################################################
+##################################    VIEW USER TICKETS     ################################################
+################################# ###########################################################################
+# view all tickets bought by the user
+@app.route("/api/v1/user/<int:id>/tickets", methods=["GET"])
+def view_all_user_tickets(self):
         """
         This method returns all the tickets owned by the user.
         Query will join the User and Ticket tables and return the tickets owned by the user.
         """
         return jsonify(self.tickets)
 
-    def view_ticket(self, ticket_id):
-        """
-        This method returns the details of a specific ticket owned by the user.
-        """
-        user = User.query.get(self.id)
-        if user is None:
-            return jsonify({"message": "User not found"})
-
-        if ticket_id not in user.tickets:
-            return jsonify({"message": "Ticket not found"})
-        
-        return jsonify(user.tickets[ticket_id])
-
-# route to create a new account
-@app.route('/api/v1/createAccount', methods=['POST'])
-def create_account(user: user_schemas.UserAccountCreate):
+# view a specific ticket bought by the user by serial number  
+@app.route("/api/v1/user/<int:id>/tickets/<int:serial_no>", methods=["GET"])  
+def view_ticket_by_serial_no(self, serial_no):
     """
-    Create a new account by providing the user's name, email, username, password
+    This method returns the details of a specific ticket owned by the user.
     """
-    new_user = User(name=user.name, email=user.email, username=user.username, password=user.password)
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({"message": "Account created successfully"})
-
-# route to login
-@app.route('/api/v1/login', methods=['POST'])
-def login(user: user_schemas.UserLogin):
-    """
-    Login
-    Returns the user's details if the credentials are correct
-    """
-    user = user_crud.get_user(user)
-    if user is None:
-        return jsonify({"message": "Invalid credentials"})
-    return user
-
-# view tickets bought by specific user 
-@app.route('/api/v1/user/<int:user_id>/tickets', methods=['GET'])
-def view_user_tickets(user_id):
-    """
-    View all tickets owned by a specific user
-    """
-    user = user_crud.get_user(user_id)
+    user = User.query.get(self.id)
     if user is None:
         return jsonify({"message": "User not found"})
-    return user.view_all_tickets()
-
-# view ticket details
-@app.route('/api/v1/user/<int:user_id>/tickets/<int:ticket_id>', methods=['GET'])
-def view_ticket(user_id, ticket_id):
-    """
-    View the details of a specific ticket owned by a specific user
-    """
-    user = user_crud.get_user(user_id)
-    if user is None:
-        return jsonify({"message": "User not found"})
-    return user.view_ticket(ticket_id)
-
-# route to add ticket to user
-@app.route('/api/v1/user/<int:user_id>/tickets/add', methods=['POST'])
-def add_ticket_to_user(user_id, match_id, ticket_category, ticket_id):
-    """
-    Add a ticket to a specific user
-    """
-    user = user_crud.get_user(user_id)
-    if user is None:
-        return jsonify({"message": "User not found"})
-
-    try:
-        # Adding ticket details directly to the user's tickets dictionary
-        user.add_ticket(match_id, ticket_category, ticket_id)
-        db.session.commit()
-        return jsonify({"message": f"Ticket added successfully to user {user_id}."})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": "Failed to add Ticket."})
-
-# NOT SURE IF THIS IS NEEDED
-# route to change ticket details
-@app.route("/ticket/<int:ticket_id>/edit", methods = ["UPDATE"])
-def change_ticket_details(user_id, ticket_id):
-    try:
-        new_details = request.json
-        ticket = ticket_schemas.get_ticket(user_id, ticket_id)
-        ticket.event_id = new_details["event_id"]
-        ticket.venue_id = new_details["venue_id"]
-        ticket.seat_id = new_details["seat_id"]
-        ticket.purchased_at = new_details["purchased_at"]
-        return jsonify({'message': 'Ticket details updated successfully.'})
-    except Exception as e:
-        code = 500
-        return jsonify({"code": code,"message": "Error when changing ticket details."})
-
-# route to delete ticket
-@app.route("/ticket/<int:ticket_id>/del", methods = ["DELETE"])
-def delete_ticket(user_id, ticket_id):
-    try:
-        ticket = ticket_schemas.TicketModel.query.get(ticket_id)
-        if ticket:
-            # If the ticket exists, delete it from the database
-            db.session.delete(ticket)
-            db.session.commit()
-            return jsonify({'message': f'Ticket with ID {ticket_id} has been deleted successfully.'})
-        else:
-            return jsonify({"message": "Ticket already deleted."})
-        
-    except Exception as e:
-        code = 500
-        return jsonify({"code": code, "message": "Unable to delete ticket"})
-
-# route to view all tickets 
-@app.route('/tickets', methods=['GET'])
-def view_user_tickets(user_id):
-    try:
-        tickets = user_crud.get_all_tickets(user_id)
-        # Convert TicketOwned objects to dictionaries before jsonify
-        tickets_dict = [ticket.dict() for ticket in tickets]
-        return jsonify(tickets_dict)
-    except Exception as e:
-        code = 500
-        return jsonify({"code": code, 'message': "Failed to view all tickets."})
-
-# route to see ticket details
-@app.route("/tickets/<int:ticket_id>", methods = ["GET"])
-def view_ticket(user_id, ticket_id):
-    try:
-        ticket = user_crud.get_ticket(user_id, ticket_id)
-        return ticket
-    except Exception as e:
-        code = 500
-        return jsonify({"code": code, 'message': "Failed to access ticket."})
+    if user.tickets is None:
+        return jsonify({"message": "User has no tickets"})
+    for ticket in user.tickets:
+        if ticket['serial_no'] == serial_no:
+            return jsonify(ticket)
+    return jsonify({"message": "Ticket not found"})
     
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=9004, debug=True)
+# view a specific ticket bought by the user by match id
+@app.route("/api/v1/user/<int:id>/tickets/match/<int:match_id>", methods=["GET"])
+def view_ticket_by_match_id(self, match_id):
+    """
+    This method returns the details of a specific ticket owned by the user.
+    """
+    user = User.query.get(self.id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    if user.tickets is None:
+        return jsonify({"message": "User has no tickets"})
+    for ticket in user.tickets:
+        if ticket['match_id'] == match_id:
+            return jsonify(ticket)
+    return jsonify({"message": "Ticket not found"})
+
+############################################################################################################
+#################################    END OF VIEW USER TICKETS    ###########################################
+############################################################################################################
+
+
+############################################################################################################
+####################################    ADD A USER TICKET     ##############################################
+############################################################################################################
+# add a ticket to the user's list of tickets
+@app.route("/api/v1/user/<int:id>/tickets", methods=["POST"])
+def add_ticket_to_user(self, ticket):
+    """
+    This method adds a ticket to the user's list of tickets.
+    """
+    user = User.query.get(self.id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    if user.tickets is None:
+        user.tickets = []
+    user.tickets.append(ticket)
+    db.session.commit()
+    return jsonify({"message": "Ticket added successfully"})
+
+############################################################################################################
+####################################    END OF ADD A USER TICKET     #######################################
+############################################################################################################
+
+############################################################################################################
+####################################    DELETE A USER TICKET     ###########################################
+############################################################################################################
+# delete a ticket from the user's list of tickets
+@app.route("/api/v1/user/<int:id>/tickets/<int:serial_no>", methods=["DELETE"])
+def delete_ticket_from_user(self, serial_no):
+    """
+    This method deletes a ticket from the user's list of tickets.
+    This will be used when the user refunds a ticket successfully.
+    """
+    user = User.query.get(self.id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    if user.tickets is None:
+        return jsonify({"message": "User has no tickets"})
+    for ticket in user.tickets:
+        if ticket['serial_no'] == serial_no:
+            user.tickets.remove(ticket)
+            db.session.commit()
+            return jsonify({"message": "Ticket deleted successfully"})
+    return jsonify({"message": "Ticket not found"})
+
+############################################################################################################
+####################################    END OF DELETE A USER TICKET     ####################################
+############################################################################################################
