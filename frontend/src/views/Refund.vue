@@ -1,15 +1,15 @@
 <template>
-    <div class="confirmation">
-        <h1>Confirmed bookings</h1>
-        <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
-            <!-- <button class="btn btn-primary" @click="$router.push('/views/confirmation')">Proceed</button> -->
-        </div>
+    <div class="refund">
+        <h1>Confirm your tickets to refund...</h1>
+       
+
+        
     </div>
 </template>
   
   
 <style scoped>
-.confirmation {
+.refund {
     text-align: center;
     margin-top: 50px;
 }

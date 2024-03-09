@@ -43,14 +43,14 @@ const router = createRouter({
       component: () => import('./views/Checkout.vue')
     }, 
     {
-      path: '/views/confirmation',
-      name: 'confirmation',
-      component: () => import('./views/Confirmation.vue')
-    }, 
-    {
       path: '/views/userProfile',
       name: 'userprofile',
       component: () => import('./views/UserProfile.vue')
+    }, 
+    {
+      path: '/views/refund',
+      name: 'refund',
+      component: () => import('./views/Refund.vue')
     }
 
   ]

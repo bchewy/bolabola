@@ -1,8 +1,9 @@
 <template>
     <div class="checkout">
         <h1>Confirm your tickets...</h1>
+        <p class="lead text-dark text-center">Payment by ...</p>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
-            <button class="btn btn-primary" @click="$router.push('/views/confirmation')">Proceed</button>
+            <button class="btn btn-primary" @click="$router.push('/views/userProfile')">Proceed</button>
         </div>
     </div>
 </template>

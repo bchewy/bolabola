@@ -104,8 +104,13 @@
                 </ul>
 
                 <ul class="navbar-nav">
-                    <!-- {{ isAuthenticated }} -->
-                    <!-- {{ user }} -->
+                    <li class="nav-item">
+                        <router-link class="nav-link text-evenlighter" to="/views/userProfile">
+                            Profile
+                        </router-link>
+                    </li>
+                    {{ isAuthenticated }}
+                    {{ user }}
                     <li v-if="!isAuthenticated" class="nav-item">
                         <a class="nav-link text-evenlighter" @click.prevent="login">Login</a>
                     </li>
