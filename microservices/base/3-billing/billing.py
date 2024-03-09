@@ -74,8 +74,8 @@ def create_checkout_session():
                 } for ticket_type, (ticket_price, ticket_quantity) in request.json['tickets'].items()
                 ],
                 mode='payment',
-                success_url='http://localhost:8002/success',
-                cancel_url='http://localhost:8002/cancel',
+                success_url='http://localhost:9003/success',
+                cancel_url='http://localhost:9003/cancel',
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
@@ -99,9 +99,7 @@ on success, send POST back to orchestrator with the following JSON payload:
     "payment_status": "success"
 }
 """
-
 ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
-
 @app.route('/api/v1/checkout/success', methods = ['POST'])
 def success():
     # Extract session ID from request
@@ -129,5 +127,11 @@ def success():
 #####################################    END OF CHECKOUT SESSION     #######################################
 ############################################################################################################
 
+############################################################################################################
+#########################################    PAYMENT REFUND     ############################################
+############################################################################################################
+# 
+
+
 if __name__ == '__main__':
-    app.run(port=8002, debug=True)
+    app.run(port=9003, debug=True)
