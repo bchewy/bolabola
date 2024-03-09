@@ -203,13 +203,6 @@ services:
       - kong-net
     depends_on:
       - mongodb
-  # mongo-seed:
-    # image: mongo:latest
-    # build:
-    #   context: ./infrastructure/mongo-seed/.
-    #   dockerfile: Dockerfile # Path to your new Dockerfile
-    # depends_on:
-    #   - mongodb
   # MySQL ===============================================
   mysql:
     image: mysql/mysql-server:8.0
