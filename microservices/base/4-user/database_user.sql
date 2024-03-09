@@ -30,8 +30,8 @@ INSERT INTO User (id, name, email, stripe_id, username, password, tickets) VALUE
     (13, 'Liam Lewis', 'liam@example.com', '120', 'liamlewis', 'liamlewis', '[{"match_id": 3, "ticket_category": "C", "serial_no": "25"}, {"match_id": 4, "ticket_category": "A", "serial_no": "26"}]'),
     (14, 'Charlotte Garcia', 'charlotte@example.com', '121', 'charlottegarcia', 'charlottegarcia', '[{"match_id": 5, "ticket_category": "B", "serial_no": "27"}, {"match_id": 1, "ticket_category": "A", "serial_no": "28"}]'),
     (15, 'Noah Rodriguez', 'noah@example.com', '122', 'noahrodriguez', 'noahrodriguez', '[{"match_id": 2, "ticket_category": "C", "serial_no": "29"}, {"match_id": 3, "ticket_category": "A", "serial_no": "30"}]'),
-    (16, 'Sophie Johnson', 'sophie@example.com', 'sophiejohnson', 'sophiejohnson'),
-    (17, 'James Williams', 'james@example.com', 'jameswilliams', 'jameswilliams'),
-    (18, 'Ava Brown', 'ava@example.com', 'avabrown', 'avabrown'),
-    (19, 'Michael Jones', 'michael@example.com', 'michaeljones', 'michaeljones'),
-    (20, 'Emily Martinez', 'emily@example.com', 'emilymartinez', 'emilymartinez');
+    (16, 'Sophie Johnson', 'sophie@example.com', ,'sophiejohnson', 'sophiejohnson'),
+    (17, 'James Williams', 'james@example.com', ,'jameswilliams', 'jameswilliams'),
+    (18, 'Ava Brown', 'ava@example.com', ,'avabrown', 'avabrown'),
+    (19, 'Michael Jones', 'michael@example.com', ,'michaeljones', 'michaeljones'),
+    (20, 'Emily Martinez', 'emily@example.com', ,'emilymartinez', 'emilymartinez');

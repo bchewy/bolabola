@@ -7,22 +7,6 @@ import sys
 # from dotenv import load_dotenv
 # load_dotenv()
 
-"""
-Billing microservice accepts a post request to /checkout with the following JSON payload:
-{
-    "order_id": "1234",
-    "show_name": "Hamilton",
-    "show_datetime": "2024-02-10T19:00:00",
-    "tickets": [
-        {"category": "A", "price": 400, "quantity": 2},
-        {"category": "B", "price": 300, "quantity": 3},
-        {"category": "C", "price": 200, "quantity": 4}
-    ],
-    "total": 2600,
-    "user_id": "123",
-}
-"""
-
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
@@ -134,15 +118,23 @@ def success():
 # https://docs.stripe.com/api/refunds/object
 @app.route('/api/v1/refund', methods = ['POST'])
 def refund_payment():
-    if request.method == "POST":
-        try:
-            # Create a refund
-            refund = stripe.Refund.create(
-                payment_intent=request.json['payment_intent'],
-            )
-        except Exception as e:
-            return jsonify(error=str(e)), 403
-    return jsonify(refund)
+    """
+    This method refunds a user's payment.
+    Accepts a JSON payload about the tickets, as long as it has charge_id. Eg:
+    {
+        "charge_id": "ch_1NirD82eZvKYlo2CIvbtLWuY""
+    }
+    """
+    try:
+        if 'charge_id' not in request.json:
+            return jsonify({"error": "charge_id not found"}), 400
+        charge_id = request.json['charge_id']
+        refund = stripe.Refund.create(
+            charge=charge_id,
+        )
+        return jsonify(refund)
+    except Exception as e:
+        return jsonify(error=str(e)), 403
 
 ############################################################################################################
 ######################################    END OF PAYMENT REFUND    ##########################################
