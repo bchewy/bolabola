@@ -26,9 +26,21 @@ services:
   - name: billing
     url: http://billing:9003
     routes:
-      - name: billing-route
+      - name: billing-route # route for billing
         paths:
           - "/billing"
+      - name: billing-public-key # route for billing public key
+        paths:
+          - "/api/v1/billing/public-key"
+      - name: billing-checkout-route # route for checkout page, where the user types in their card details
+        paths:
+          - "/api/v1/billing/checkout"
+      - name: billing-checkout-success-route # route for billing checkout success page
+        paths:
+          - "/api/v1/billing/checkout/success"
+      - name: billing-refund-route # route for refund, after the user clicks on refund button
+        paths:
+          - "/api/v1/billing/refund"
 
   - name: seat
     url: http://seat:9009

@@ -3,20 +3,14 @@ import pika
 
 app = Flask(__name__)
 
-@app.route('/')
-def hello():
-    return 'Hello, World!'
-
-def consume_message(channel, method, properties, body):
-    # Process the consumed message here
-    print("Received message:", body.decode())
-
-def start_consuming():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='my_queue')
-    channel.basic_consume(queue='my_queue', on_message_callback=consume_message, auto_ack=True)
-    channel.start_consuming()
+@app.route('/api/v1/refund', methods=['POST'])
+def refund():
+    """
+    1. receives ticket information from frontend
+    2. calls billing service for refund
+    3. receives a status from billing service, success/failure
+    4. if success, send ticket information to RabbitMQ to update db
+    """
 
 if __name__ == '__main__':
     app.run(port=9103)
