@@ -8,4 +8,5 @@ General flow of the refund orchestrator microservice:
 4. if success, send ticket information to RabbitMQ to update db
 
 YET TO IMPLEMENT:
-- is it sending to the right RabbitMQ queue?
+- Set up the message to be sent
+- Send the message
