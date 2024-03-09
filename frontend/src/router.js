@@ -45,6 +45,11 @@ const router = createRouter({
       name: 'confirmation',
       component: () => import('./views/Confirmation.vue')
     }, 
+    {
+      path: '/views/userProfile',
+      name: 'userprofile',
+      component: () => import('./views/UserProfile.vue')
+    }
 
   ]
 })

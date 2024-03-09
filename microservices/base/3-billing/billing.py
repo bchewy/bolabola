@@ -130,8 +130,23 @@ def success():
 ############################################################################################################
 #########################################    PAYMENT REFUND     ############################################
 ############################################################################################################
-# 
+# refund a user's payment
+# https://docs.stripe.com/api/refunds/object
+@app.route('/api/v1/refund', methods = ['POST'])
+def refund_payment():
+    if request.method == "POST":
+        try:
+            # Create a refund
+            refund = stripe.Refund.create(
+                payment_intent=request.json['payment_intent'],
+            )
+        except Exception as e:
+            return jsonify(error=str(e)), 403
+    return jsonify(refund)
 
-
+############################################################################################################
+######################################    END OF PAYMENT REFUND    ##########################################
+############################################################################################################
+    
 if __name__ == '__main__':
     app.run(port=9003, debug=True)
