@@ -21,7 +21,7 @@ stripe.api_key = STRIPE_SECRET_KEY
 ##################################    STRIPE PUBLIC KEY     ################################################
 ############################################################################################################
 # public key for the frontend
-@app.route('/api/v1/checkout/public-key', methods=['GET'])
+@app.route('/api/v1/billing/public-key', methods=['GET'])
 def public_key():
     """
     Returns the public key for the frontend
@@ -37,7 +37,7 @@ def public_key():
 ############################################################################################################
 # create checkout session when the user clicks on the "Buy" button
 # (https://stripe.com/docs/api/checkout/sessions/create)
-@app.route('/api/v1/checkout', methods = ['GET'])
+@app.route('/api/v1/billing/checkout', methods = ['GET'])
 def create_checkout_session():
     """
     This method creates a new checkout session.
@@ -91,7 +91,7 @@ def create_checkout_session():
 
 # create route for successful checkout
 ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
-@app.route('/api/v1/checkout/success', methods = ['POST'])
+@app.route('/api/v1/billing/checkout/success', methods = ['POST'])
 def success():
     """
     on success, send POST back to orchestrator with the following JSON payload:
@@ -138,8 +138,7 @@ def success():
 #########################################    PAYMENT REFUND     ############################################
 ############################################################################################################
 # refund a user's payment
-# https://docs.stripe.com/api/refunds/object
-@app.route('/api/v1/refund', methods = ['POST'])
+@app.route('/api/v1/billing/refund', methods = ['POST'])
 def refund_payment():
     """
     This method refunds a user's payment.
@@ -147,6 +146,7 @@ def refund_payment():
     {
         "charge_id": "ch_1NirD82eZvKYlo2CIvbtLWuY""
     }
+    output: https://docs.stripe.com/api/refunds/object
     """
     try:
         if 'charge_id' not in request.json:

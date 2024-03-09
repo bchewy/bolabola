@@ -1,22 +1,67 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 import pika
+import requests
 
 app = Flask(__name__)
 
-@app.route('/')
-def hello():
-    return 'Hello, World!'
+# Hardcoded credentials and connection details for RabbitMQ
+rabbitmq_user = "ticketboost"
+rabbitmq_password = "veryS3ecureP@ssword"
+rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
+rabbitmq_port = 5672
+rabbitmq_vhost = "/"
 
-def consume_message(channel, method, properties, body):
-    # Process the consumed message here
-    print("Received message:", body.decode())
+credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
+parameters = pika.ConnectionParameters(
+    host=rabbitmq_host,
+    port=rabbitmq_port,
+    virtual_host=rabbitmq_vhost,
+    credentials=credentials,
+)
 
-def start_consuming():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.queue_declare(queue='my_queue')
-    channel.basic_consume(queue='my_queue', on_message_callback=consume_message, auto_ack=True)
-    channel.start_consuming()
+
+@app.route('/api/v1/refund/initiate-refund', methods=['POST'])
+def refund():
+    """
+    1. receives ticket and user information from frontend
+    2. calls billing service for refund
+    3. receives a status from billing service, success/failure
+    4. if success, send ticket information to RabbitMQ to update db
+    """
+    # 1. receive ticket and user information from frontend
+    data = request.json
+
+    # 2. call billing service for refund
+    billing_service_url = "http://billing:9003/api/v1/billing/refund"
+
+    response = requests.post(billing_service_url, json=data)
+    status = response.json()['status']
+
+    # 3. receive a status from billing service, success/failure
+    if status == "succeeded":
+        try: 
+            # 4. if success, send ticket information to RabbitMQ to update db
+            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+            channel = connection.channel()
+
+            channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
+
+            channel.queue_declare(queue='user', durable=True) # for the user service
+            channel.queue_bind(exchange='refund', queue='user', routing_key='refund.user')
+
+            channel.queue_declare(queue='match', durable=True) # for the match service
+            channel.queue_bind(exchange='refund', queue='match', routing_key='refund.match')
+
+            # Set up the message to be sent
+
+            # Send the message
+
+            connection.close()
+            return jsonify({"message": "Refund initiated successfully"}), 200
+        except Exception as e:
+            return jsonify({"message": "Failed to initiate refund"}), 500
+    else:
+        return jsonify({"message": "Refund failed"}), 500
 
 if __name__ == '__main__':
     app.run(port=9103)
