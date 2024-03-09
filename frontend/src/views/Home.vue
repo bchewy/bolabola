@@ -8,6 +8,7 @@
       <div class="section-background text-light text-center vh-100 d-flex align-items-center justify-content-center">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
+            <img src="/src/assets/background2.png" style="width:50%; margin-right: 10%;">
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
