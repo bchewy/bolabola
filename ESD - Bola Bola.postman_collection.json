@@ -123,6 +123,52 @@
 			]
 		},
 		{
+			"name": "Match",
+			"item": [
+				{
+					"name": "Matches - Get All",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/match/matches/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"match",
+								"matches",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Matches - Get 1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/match/matches/65ec7688811b4f8541b54de4/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"match",
+								"matches",
+								"65ec7688811b4f8541b54de4",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Check Rabbit",
 			"request": {
 				"method": "GET",

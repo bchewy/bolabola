@@ -7,11 +7,11 @@ app = Flask(__name__)
 
 # Database connection setup
 # we replace localhost here with mongodb because our services are configured to run within docker.
-app.config["MONGO_URI"] = "mongodb://mongodb:27017/matchs_db"
+app.config["MONGO_URI"] = "mongodb://mongodb:27017/matches"
 mongo = PyMongo(app)
 
 # MongoDB collection
-match_collection = mongo.db.matchs
+match_collection = mongo.db.matches
 
 
 # Helper function to convert ObjectId to string
@@ -37,7 +37,7 @@ def create_event():
     return jsonify(serialize_doc(created_event))
 
 
-@app.route("/match/", methods=["GET"])
+@app.route("/matches/", methods=["GET"])
 def read_events():
     skip = request.args.get("skip", 0, type=int)
     limit = request.args.get("limit", 100, type=int)
@@ -45,7 +45,7 @@ def read_events():
     return jsonify([serialize_doc(event) for event in events])
 
 
-@app.route("/matches/<string:match>", methods=["GET"])
+@app.route("/matches/<string:match_id>", methods=["GET"])
 def read_event(match_id):
     event = match_collection.find_one({"_id": ObjectId(match_id)})
     if event is None:
