@@ -9,4 +9,4 @@
 mongoimport --host mongodb --db matches --collection matches --type json --file /app/init.json --jsonArray
 
 # Keep container running if needed
-tail -f /dev/null
+# tail -f /dev/null
