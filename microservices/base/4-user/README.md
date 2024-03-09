@@ -1,6 +1,6 @@
-
+# User Profile Microservice
 - main.py acts as the entry point for the user microservice.
-- user_crud is the logic for crud on the users, including auth.
+- user_crud.py is the logic for crud on the users.
 - user_schemas is the pydantic models for the user_crud microservice and db.
 
 yet to implement
