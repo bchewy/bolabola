@@ -138,7 +138,6 @@ def success():
 #########################################    PAYMENT REFUND     ############################################
 ############################################################################################################
 # refund a user's payment
-# https://docs.stripe.com/api/refunds/object
 @app.route('/api/v1/billing/refund', methods = ['POST'])
 def refund_payment():
     """
@@ -147,6 +146,7 @@ def refund_payment():
     {
         "charge_id": "ch_1NirD82eZvKYlo2CIvbtLWuY""
     }
+    output: https://docs.stripe.com/api/refunds/object
     """
     try:
         if 'charge_id' not in request.json:
