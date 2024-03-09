@@ -100,6 +100,11 @@
                 </ul>
 
                 <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <router-link class="nav-link text-evenlighter" to="/views/userProfile">
+                            Profile
+                        </router-link>
+                    </li>
                     {{ isAuthenticated }}
                     {{ user }}
                     <li v-if="!isAuthenticated" class="nav-item">
