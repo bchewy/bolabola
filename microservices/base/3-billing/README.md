@@ -1,4 +1,4 @@
-# Billing Microservice
+ d# Billing Microservice
 This microservice is responsible for billing and payment processing. It is a RESTful API that provides the following endpoint:
 
 `POST /checkout`
@@ -15,15 +15,14 @@ User will then be redirected to the success page.
 curl -X POST http://localhost:5000/checkout \
      -H "Content-Type: application/json" \
      -d '{
-    "order_id": "1234",
-    "show_name": "Hamilton",
-    "show_datetime": "2024-02-10T19:00:00",
+    "match_id": "1234",
+    "match_name": "Arsenal vs Chelsea",
     "tickets": [
-        {"category": "A", "price": 400, "quantity": 2},
-        {"category": "B", "price": 300, "quantity": 3},
-        {"category": "C", "price": 200, "quantity": 4}
+        {"category": "A", "quantity": 2},
+        {"category": "B", "quantity": 3},
+        {"category": "C", "quantity": 4},
+        {"category": "Online", "quantity": 1}
     ],
-    "total": 2600,
     "user_id": "123"
     }'
 ```
