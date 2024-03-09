@@ -10,10 +10,10 @@ Sample User:
 {
     "id": 1,
     "name": "John Doe",
-    "email": "
-    "stripe_id": "stripe_id",
+    "email": "john@example.com"
+    "stripe_id": "123",
     "username": "johndoe",
-    "password": "password",
+    "password": "johndoe",
     "tickets": [
         {"match_id": 123, "ticket_category": "A", "serial_no": "1"},
         {"match_id": 456, "ticket_category": "A", "serial_no": "2"}
