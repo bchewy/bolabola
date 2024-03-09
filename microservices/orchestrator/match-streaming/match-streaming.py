@@ -16,7 +16,7 @@ def index():
 
 def retrieve_video_url(match_id):
     print('entering retrieve_video_url')
-    url = f"http://kong:8000/videoasset/{match_id}" # Currently videoasset only has ids ,1,23,4,5,6... not the objectids from Mongo.
+    url = f"http://kong:8000/videoasset/video?id={match_id}" # Currently videoasset only has ids ,1,23,4,5,6... not the objectids from Mongo.
     response = requests.get(url)
     if response.status_code == 200:
         video_url = response.json()
@@ -36,7 +36,8 @@ def retrieve_match(id):
         match = response.json()
         print(match)
         print('exiting retrieve_match')
-        return match
+        video_url = retrieve_video_url(id)
+        return [match, video_url]
     else:
         print('exiting retrieve_match but found nothing')
         return None
