@@ -15,10 +15,11 @@ Sample User:
     "username": "johndoe",
     "password": "johndoe",
     "tickets": [
-        {"match_id": 123, "ticket_category": "A", "serial_no": "1"},
-        {"match_id": 456, "ticket_category": "A", "serial_no": "2"}
+        {"match_id": 123, "ticket_category": "A", "serial_no": "1", "charge_id": "abc"},
+        {"match_id": 456, "ticket_category": "A", "serial_no": "2"}, "charge_id": "cbd",
     ]
 }
 ```
+note that charge_id is optional and is only present if the user has paid for the ticket.
 
 ![user db schema](schema.png)
