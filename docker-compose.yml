@@ -198,9 +198,20 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
-    # environment:
-      # MONGO_INITDB_ROOT_USERNAME: ticketboost
-      # MONGO_INITDB_ROOT_PASSWORD: veryS3ecureP@ssword
+  mongo-seed:
+    build: ./infrastructure/mongo/seed/.
+    entrypoint: /app/entrypoint.sh
+    networks:
+      - kong-net
+    depends_on:
+      - mongodb
+  # mongo-seed:
+    # image: mongo:latest
+    # build:
+    #   context: ./infrastructure/mongo-seed/.
+    #   dockerfile: Dockerfile # Path to your new Dockerfile
+    # depends_on:
+    #   - mongodb
   # MySQL ===============================================
   mysql:
     image: mysql/mysql-server:8.0

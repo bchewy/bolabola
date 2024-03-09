@@ -1,7 +1,8 @@
 FROM mongo:latest
 
-# RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
-# COPY seed.py /data/db-seed/
-# COPY mongo-seed.sh /docker-entrypoint-initdb.d/
+# COPY init.json /init.json
+# COPY mongo-seed.sh /mongo-seed.sh
+# RUN chmod +x /mongo-seed.sh
 
-# RUN chmod +x /docker-entrypoint-initdb.d/mongo-seed.sh
+# RUN mongoimport --host localhost --db matches --collection matches --type json --file init.json --jsonArray
+
