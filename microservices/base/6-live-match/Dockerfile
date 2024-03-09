@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
-COPY match.py .
+COPY livematch.py .
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
