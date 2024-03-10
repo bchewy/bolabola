@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 from flask_pymongo import PyMongo
 from datetime import datetime
 from bson import ObjectId
+from threading import Thread
+import pika, json
 
 app = Flask(__name__)
 
@@ -13,6 +15,23 @@ mongo = PyMongo(app)
 # MongoDB collection
 match_collection = mongo.db.matches
 
+def start_rabbitmq_consumer():
+    def callback(ch, method, properties, body):
+        read_events()
+
+    credentials = pika.PlainCredentials('ticketboost', 'veryS3ecureP@ssword')
+    parameters = pika.ConnectionParameters('rabbitmq', 5672, '/', credentials)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    
+    channel.queue_declare(queue='match', durable=True)
+    channel.basic_consume(queue='match', on_message_callback=callback, auto_ack=True)
+    channel.start_consuming()
+
+def run_consumer_thread():
+    consumer_thread = Thread(target=start_rabbitmq_consumer)
+    consumer_thread.daemon = True 
+    consumer_thread.start()
 
 # Helper function to convert ObjectId to string
 def serialize_doc(doc):
@@ -80,4 +99,5 @@ def delete_event(match_id):
 
 
 if __name__ == "__main__":
+    run_consumer_thread()
     app.run(port=9001, debug=True, host="0.0.0.0")
