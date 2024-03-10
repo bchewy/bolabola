@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import pika
 import requests
+import json
 
 app = Flask(__name__)
 
@@ -32,7 +33,7 @@ def refund():
     data = request.json
 
     # 2. call billing service for refund
-    billing_service_url = "http://billing:9003/api/v1/billing/refund"
+    billing_service_url = "http://kong:9003/api/v1/billing/refund"
 
     response = requests.post(billing_service_url, json=data)
     status = response.json()['status']
@@ -53,8 +54,14 @@ def refund():
             channel.queue_bind(exchange='refund', queue='match', routing_key='refund.match')
 
             # Set up the message to be sent
+            msg = json.dumps(data)  # convert the data to a string to send as message
 
-            # Send the message
+            channel.basic_publish(
+                exchange='refund',
+                routing_key='refund.user',
+                body=msg,
+                properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
+            )
 
             connection.close()
             return jsonify({"message": "Refund initiated successfully"}), 200
