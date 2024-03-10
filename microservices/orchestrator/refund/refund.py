@@ -20,7 +20,6 @@ parameters = pika.ConnectionParameters(
     credentials=credentials,
 )
 
-
 @app.route('/api/v1/refund/initiate-refund', methods=['POST'])
 def refund():
     """
