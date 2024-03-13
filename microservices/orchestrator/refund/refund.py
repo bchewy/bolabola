@@ -47,10 +47,8 @@ def refund():
             channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
 
             channel.queue_declare(queue='user', durable=True) # for the user service
-            channel.queue_bind(exchange='refund', queue='user', routing_key='refund.user')
 
             channel.queue_declare(queue='match', durable=True) # for the match service
-            channel.queue_bind(exchange='refund', queue='match', routing_key='refund.match')
 
             # Set up the message to be sent
             msg = json.dumps(data)  # convert the data to a string to send as message
