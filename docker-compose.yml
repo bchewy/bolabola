@@ -213,9 +213,7 @@ services:
         kong config db_import /etc/kong/kong.yml &&
         kong start
       "
-
     # command: "kong config db_import /etc/kong/kong.yml"
-
     # command: >
     #   /bin/sh -c "
     #     # until curl --output /dev/null --silent --head --fail http://kong-database:5432; do
@@ -280,7 +278,6 @@ services:
       RABBITMQ_DEFAULT_USER: ticketboost
       RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
 
-  #######################################
   prometheus:
     image: prom/prometheus:v2.49.1
     restart: always
@@ -291,6 +288,8 @@ services:
     volumes:
       - prometheus_data:/etc/prometheus
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/prometheus/match-streaming.json:/etc/prometheus/match-streaming.json
+      - ./infrastructure/prometheus/match.json:/etc/prometheus/match.json
 
   grafana:
     image: grafana/grafana-oss:10.2.3

@@ -13,6 +13,7 @@
     "graphql": "^16.8.1",
     "graphql-http": "^1.22.0",
     "mongoose": "^8.2.1",
+    "prom-client": "^15.1.0",
     "ruru": "^2.0.0-beta.11"
   }
 }
