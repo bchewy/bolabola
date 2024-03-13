@@ -1,11 +1,11 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 from sqlalchemy import func
 import pika
 import os
 import json
 from threading import Thread
+from flask_cors import CORS
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost:3306/user"
@@ -34,6 +34,11 @@ class User(db.Model):
 
     def json(self):
         return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
+
+# path to test if the service is running
+@app.route('/ping', methods=['GET'])
+def ping():
+    return 'pong'
 
 ############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
@@ -188,5 +193,6 @@ def run_consumer_thread():
     consumer_thread.start()
 
 if __name__ == "__main__":
-    run_consumer_thread()
+    # run_consumer_thread()
+    print("This change is active okAY")
     app.run(host='0.0.0.0', port=9004, debug=True)
