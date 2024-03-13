@@ -215,7 +215,19 @@ services:
         kong config db_import /etc/kong/kong.yml &&
         kong start
       "
+    # command: "kong config db_import /etc/kong/kong.yml"
+    # command: >
+    #   /bin/sh -c "
+    #     # until curl --output /dev/null --silent --head --fail http://kong-database:5432; do
+    #     #   echo 'Waiting for the database to be ready...';
+    #     #   sleep 1;
+    #     # done;
+    #     # kong migrations up && kong migrations finish;
+    #     kong config db_import /etc/kong/kong.yml;
+    #     # exec kong docker-start
+    #   "
 
+  # MongoDB =============================================
   mongodb:
     image: mongo:latest
     networks:
