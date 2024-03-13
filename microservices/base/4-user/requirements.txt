@@ -6,5 +6,3 @@ pika
 pydantic
 threading
 flask_cors
-
-flask_cors
