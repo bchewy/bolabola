@@ -10,3 +10,5 @@ flask_cors
 =======
 flask_cors
 >>>>>>> 22520ea (requirements txt)
+
+flask_cors
