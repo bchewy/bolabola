@@ -15,35 +15,84 @@ var { ruruHTML } = require("ruru/server")
 
 mongoose.connect("mongodb://mongodb:27017/matches");
 
-var MatchSchema = new mongoose.Schema({
+
+var MatchOverviewSchema = new mongoose.Schema({
+  match_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true,
+  },
   name: String,
   home_team: String,
   away_team: String,
   home_score: Number,
   away_score: Number,
+  date: Date,
+  thumbnail_url: String
 });
 
-const MatchModel = mongoose.model("Match", MatchSchema);
+var MatchDetailsSchema = new mongoose.Schema({
+  match_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true,
+  },
+  name: String,
+  description: String,
+  venue: String,
+  home_team: String,
+  away_team: String,
+  home_score: Number,
+  away_score: Number,
+  date: Date,
+  thumbnail_url: String
+});
+
+const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema);
+const MatchDetailsModel = mongoose.model("MatchDetails", MatchDetailsSchema);
 
 var schema = buildSchema(`
-  type Match {
+  type MatchOverview {
     name: String
     home_team: String
     away_team: String
     home_score: Int
     away_score: Int
   }
+
+  type MatchDetails {
+    match_id: String
+    name: String
+    description: String
+    venue: String,
+    home_team: String
+    away_team: String
+    home_score: Int
+    away_score: Int
+    date: String
+    thumbnail_url: String
+  }
   
-  type Query {
-    matches: [Match]
-  }  
-`)
+  type OverviewQuery {
+    matches: [MatchOverview]
+  }
+
+  type DetailsQuery {
+    match: MatchDetails
+  }
+`);
 
 // The root provides a resolver function for each API endpoint
 const root = {
-  matches: async () => {
+  matches_overview: async () => {
     try {
-      return await MatchModel.find();
+      return await MatchOverviewModel.find();
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  match_details: async (match_id) => {
+    try {
+      return await MatchDetailsModel.findById(match_id);
     } catch (error) {
       throw error;
     }
