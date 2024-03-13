@@ -93,11 +93,27 @@ services:
         paths:
           - "/api/v1/refund"
 
+  - name: prometheus
+    url: http://prometheus:9090
+    routes:
+      - name: prometheus
+        paths:
+          - /prom-metrics
+
 plugins:
   - name: cors
     config:
       origins:
         - "*"
+  - name: prometheus
+    config:
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      per_consumer: true
+      # prefix: kong_api_
+      upstream_health_metrics: true
+
   # - name: prometheus
   #   config:
   #     enable_exporting: true

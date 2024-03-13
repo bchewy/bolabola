@@ -213,19 +213,7 @@ services:
         kong config db_import /etc/kong/kong.yml &&
         kong start
       "
-    # command: "kong config db_import /etc/kong/kong.yml"
-    # command: >
-    #   /bin/sh -c "
-    #     # until curl --output /dev/null --silent --head --fail http://kong-database:5432; do
-    #     #   echo 'Waiting for the database to be ready...';
-    #     #   sleep 1;
-    #     # done;
-    #     # kong migrations up && kong migrations finish;
-    #     kong config db_import /etc/kong/kong.yml;
-    #     # exec kong docker-start
-    #   "
 
-  # MongoDB =============================================
   mongodb:
     image: mongo:latest
     networks:
@@ -241,7 +229,7 @@ services:
       - kong-net
     depends_on:
       - mongodb
-  # MySQL ===============================================
+
   mysql:
     image: mysql/mysql-server:8.0
     networks:
@@ -253,7 +241,7 @@ services:
       MYSQL_DATABASE: ticketboost
       MYSQL_USER: ticketboost
       MYSQL_PASSWORD: veryS3ecureP@ssword
-  # REDIS ===============================================
+
   redis:
     image: redis
     networks:
@@ -261,12 +249,10 @@ services:
     ports:
       - 6379:6379
 
-    # RabbitMQ ============================================
   rabbitmq:
     image: rabbitmq:3-management
     networks:
       - kong-net
-    # Have to expose ports here to access via local
     ports:
       - 5672:5672
       - 15672:15672
@@ -300,3 +286,7 @@ services:
       - "13000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/kong-dashboard.json
