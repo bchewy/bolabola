@@ -137,25 +137,25 @@ services:
       - kong-net
 
   # Kong ================================================
-  kong-database:
-    image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
-    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
-    restart: always
-    networks:
-      - kong-net
-    environment:
-      POSTGRES_DB: kong
-      POSTGRES_USER: kong
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "kong"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  # kong-database:
+  #   image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
+  #   platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+  #   restart: always
+  #   networks:
+  #     - kong-net
+  #   environment:
+  #     POSTGRES_DB: kong
+  #     POSTGRES_USER: kong
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: [ "CMD", "pg_isready", "-U", "kong" ]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
 
   kong-migration:
     image: kong/kong-gateway:3.2.2.5 # tested 20231101
@@ -180,12 +180,14 @@ services:
       - kong-net
     environment:
       # Alternatively, if we want to use db-less we can turn this off
-      # KONG_DATABASE: off
+      KONG_DATABASE: off
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
-      KONG_DATABASE: postgres
-      KONG_PG_HOST: kong-database
-      KONG_PG_USER: kong
-      KONG_PG_PASSWORD: password
+
+      # use database
+      # KONG_DATABASE: postgres
+      # KONG_PG_HOST: kong-database
+      # KONG_PG_USER: kong
+      # KONG_PG_PASSWORD: password
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
