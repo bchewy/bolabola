@@ -4,6 +4,10 @@
         "description": "The final match of the annual European football competition.",
         "date": "2024-05-25T20:00:00Z",
         "venue": "Estadio Santiago Bernabeu",
+        "home_team": "Real Madrid",
+        "away_team": "Liverpool",
+        "home_score": 3,
+        "away_score": 1,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -12,6 +16,10 @@
         "description": "The annual championship game of the National Football League (NFL).",
         "date": "2024-02-04T18:30:00Z",
         "venue": "Hard Rock Stadium",
+        "home_team": "Miami Dolphins",
+        "away_team": "New York Giants",
+        "home_score": 24,
+        "away_score": 21,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -20,6 +28,10 @@
         "description": "The annual football competition between Europe's top clubs.",
         "date": "2024-06-01T19:00:00Z",
         "venue": "Wembley Stadium, London",
+        "home_team": "Chelsea",
+        "away_team": "Manchester City",
+        "home_score": 2,
+        "away_score": 1,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -28,14 +40,10 @@
         "description": "The 59th Super Bowl American football championship game.",
         "date": "2024-02-11T23:30:00Z",
         "venue": "MetLife Stadium, New Jersey",
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Wimbledon Finals 2024",
-        "description": "The final matches of the oldest tennis tournament in the world.",
-        "date": "2024-07-14T13:00:00Z",
-        "venue": "All England Club, London",
+        "home_team": "New York Jets",
+        "away_team": "Los Angeles Rams",
+        "home_score": 28,
+        "away_score": 24,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -44,6 +52,10 @@
         "description": "The deciding game of the NBA championship.",
         "date": "2024-06-19T01:00:00Z",
         "venue": "Madison Square Garden, New York",
+        "home_team": "New York Knicks",
+        "away_team": "Los Angeles Lakers",
+        "home_score": 112,
+        "away_score": 110,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -52,6 +64,10 @@
         "description": "The final match of the 2024 FIFA World Cup.",
         "date": "2024-12-18T18:00:00Z",
         "venue": "Lusail Iconic Stadium, Lusail",
+        "home_team": "France",
+        "away_team": "Brazil",
+        "home_score": 3,
+        "away_score": 2,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -60,6 +76,10 @@
         "description": "The opening ceremony of the 2024 Summer Olympics.",
         "date": "2024-07-26T20:00:00Z",
         "venue": "Stade de France, Paris",
+        "home_team": "France",
+        "away_team": "Brazil",
+        "home_score": 0,
+        "away_score": 0,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -68,6 +88,10 @@
         "description": "The final match of the 2024 Indian Premier League.",
         "date": "2024-05-28T14:30:00Z",
         "venue": "Wankhede Stadium, Mumbai",
+        "home_team": "Mumbai Indians",
+        "away_team": "Chennai Super Kings",
+        "home_score": 180,
+        "away_score": 175,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -76,6 +100,10 @@
         "description": "The final stage of the 2024 Tour de France.",
         "date": "2024-07-21T10:00:00Z",
         "venue": "Champs-Élysées, Paris",
+        "home_team": "France",
+        "away_team": "Brazil",
+        "home_score": 0,
+        "away_score": 0,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     },
@@ -84,6 +112,10 @@
         "description": "One of the four major championships in professional golf.",
         "date": "2024-04-11T12:00:00Z",
         "venue": "Augusta National Golf Club, Augusta",
+        "home_team": "USA",
+        "away_team": "Europe",
+        "home_score": 0,
+        "away_score": 0,
         "created_at": "2024-03-09T00:00:00Z",
         "updated_at": "2024-03-09T00:00:00Z"
     }
