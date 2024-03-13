@@ -221,7 +221,7 @@ services:
       - mongodb-data:/data/db
   mongo-seed:
     build: ./infrastructure/mongo/seed/.
-    entrypoint: /app/entrypoint.sh
+    # entrypoint: /app/entrypoint.sh
     networks:
       - kong-net
     depends_on:
