@@ -207,4 +207,5 @@ def run_consumer_thread():
 
 if __name__ == "__main__":
     # run_consumer_thread()
+    print("This change is active okAY")
     app.run(host='0.0.0.0', port=9004, debug=True)
