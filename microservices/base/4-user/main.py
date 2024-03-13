@@ -8,21 +8,10 @@ import json
 from threading import Thread
 
 app = Flask(__name__)
-if 'WAMP' in os.environ:
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('mysql+mysqlconnector://root@localhost:3306/ticketboost_user')
-    app.config["SQLALCHEMY_BINDS"] = {
-        'ticket_db': os.environ.get('mysql+mysqlconnector://root@localhost:3306/ticketboost_ticket')  # Another database URI
-    }
-else:
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get('mysql+mysqlconnector://root:root@localhost:3306/ticketboost_user')
-    app.config["SQLALCHEMY_BINDS"] = {
-        'ticket_db': os.environ.get('mysql+mysqlconnector://root:root@localhost:3306/ticketboost_ticket')  # Another database URI
-    }
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost:3306/user"
+
 db = SQLAlchemy(app)
 CORS(app)
-
-AUTH_ENDPOINT = os.environ.get('AUTH_ENDPOINT') # to create this endpoint in the future
-STRIPE_ENDPOINT = os.environ.get('STRIPE_ENDPOINT') # to create this endpoint in the future
 
 # Define the User model
 class User(db.Model):
