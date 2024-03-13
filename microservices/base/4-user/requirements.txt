@@ -4,8 +4,4 @@ mysql-connector-python==8.3.0
 requests
 pika
 pydantic
-threading
-<<<<<<< HEAD
-flask_cors
-=======
 flask_cors
