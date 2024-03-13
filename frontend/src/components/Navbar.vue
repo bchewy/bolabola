@@ -100,8 +100,8 @@
                 </ul>
 
                 <ul class="navbar-nav">
-                    {{ isAuthenticated }}
-                    {{ user }}
+                    <!-- {{ isAuthenticated }} -->
+                    <!-- {{ user }} -->
                     <li v-if="!isAuthenticated" class="nav-item">
                         <a class="nav-link text-evenlighter" @click.prevent="login">Login</a>
                     </li>
