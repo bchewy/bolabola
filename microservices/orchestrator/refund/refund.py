@@ -20,7 +20,7 @@ parameters = pika.ConnectionParameters(
     credentials=credentials,
 )
 
-@app.route('/api/v1/refund/initiate-refund', methods=['POST'])
+@app.route('/initiate-refund', methods=['POST'])
 def refund():
     """
     1. receives ticket and user information from frontend
@@ -32,7 +32,7 @@ def refund():
     data = request.json
 
     # 2. call billing service for refund
-    billing_service_url = "http://kong:9003/api/v1/billing/refund"
+    billing_service_url = "http://kong:8000/api/v1/billing/refund"
 
     response = requests.post(billing_service_url, json=data)
     status = response.json()['status']

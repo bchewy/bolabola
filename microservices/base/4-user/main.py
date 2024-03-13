@@ -40,25 +40,35 @@ class User(db.Model):
 def ping():
     return 'pong'
 
+# path to test if the service is running
+@app.route("/", methods=["GET"])
+def home():
+    return "User service running"
+
 ############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
 ############################################################################################################
 # view all tickets bought by the user
-@app.route("/api/v1/user/<int:id>/tickets", methods=["GET"])
-def view_all_user_tickets(self):
+@app.route("/<int:id>/tickets", methods=["GET"])
+def view_all_user_tickets(id):
         """
         This method returns all the tickets owned by the user.
         Query will join the User and Ticket tables and return the tickets owned by the user.
         """
-        return jsonify(self.tickets)
+        user = User.query.get(id)
+        if user is None:
+            return jsonify({"message": "User not found"})
+        if user.tickets is None:
+            return jsonify({"message": "User has no tickets"})
+        return jsonify(user.tickets)
 
 # view a specific ticket bought by the user by serial number  
-@app.route("/api/v1/user/<int:id>/tickets/<int:serial_no>", methods=["GET"])  
-def view_ticket_by_serial_no(self, serial_no):
+@app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])  
+def view_ticket_by_serial_no(id, serial_no):
     """
     This method returns the details of a specific ticket owned by the user.
     """
-    user = User.query.get(self.id)
+    user = User.query.get(id)
     if user is None:
         return jsonify({"message": "User not found"})
     if user.tickets is None:
@@ -69,12 +79,12 @@ def view_ticket_by_serial_no(self, serial_no):
     return jsonify({"message": "Ticket not found"})
     
 # view a specific ticket bought by the user by match id
-@app.route("/api/v1/user/<int:id>/tickets/match/<int:match_id>", methods=["GET"])
-def view_ticket_by_match_id(self, match_id):
+@app.route("/<int:id>/tickets/match/<int:match_id>", methods=["GET"])
+def view_ticket_by_match_id(id, match_id):
     """
     This method returns the details of a specific ticket owned by the user.
     """
-    user = User.query.get(self.id)
+    user = User.query.get(id)
     if user is None:
         return jsonify({"message": "User not found"})
     if user.tickets is None:
@@ -93,12 +103,15 @@ def view_ticket_by_match_id(self, match_id):
 ####################################    ADD A USER TICKET     ##############################################
 ############################################################################################################
 # add a ticket to the user's list of tickets
-@app.route("/api/v1/user/<int:id>/tickets", methods=["POST"])
-def add_ticket_to_user(self, ticket):
+@app.route("/<int:id>/tickets", methods=["POST"])
+def add_ticket_to_user(id, ticket):
     """
     This method adds a ticket to the user's list of tickets.
     """
-    user = User.query.get(self.id)
+    ticket = request.json
+    if ticket is None:
+        return jsonify({"message": "Ticket info not provided"})
+    user = User.query.get(id)
     if user is None:
         return jsonify({"message": "User not found"})
     if user.tickets is None:
@@ -115,13 +128,13 @@ def add_ticket_to_user(self, ticket):
 ####################################    DELETE A USER TICKET     ###########################################
 ############################################################################################################
 # delete a ticket from the user's list of tickets
-@app.route("/api/v1/user/<int:id>/tickets/<int:serial_no>", methods=["DELETE"])
-def delete_ticket_from_user(self, serial_no):
+@app.route("/<int:id>/tickets/<int:serial_no>", methods=["DELETE"])
+def delete_ticket_from_user(id, serial_no):
     """
     This method deletes a ticket from the user's list of tickets.
     This will be used when the user refunds a ticket successfully.
     """
-    user = User.query.get(self.id)
+    user = User.query.get(id)
     if user is None:
         return jsonify({"message": "User not found"})
     if user.tickets is None:
@@ -194,5 +207,4 @@ def run_consumer_thread():
 
 if __name__ == "__main__":
     # run_consumer_thread()
-    print("This change is active okAY")
     app.run(host='0.0.0.0', port=9004, debug=True)
