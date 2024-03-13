@@ -98,3 +98,8 @@ plugins:
     config:
       origins:
         - "*"
+  # - name: prometheus
+  #   config:
+  #     enable_exporting: true
+  #     metrics_path: /metrics
+  #     listen_address: 0.0.0.0:9100
