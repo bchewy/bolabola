@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "match:9001"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

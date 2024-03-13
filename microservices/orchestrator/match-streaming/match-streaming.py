@@ -1,8 +1,11 @@
 from flask import Flask
 import pika
 import requests
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
+
+metrics = PrometheusMetrics(app)
 
 @app.route('/')
 def index():
@@ -60,4 +63,4 @@ def start_consuming():
 
 
 if __name__ == '__main__':
-    app.run(port=9102, debug=True, host='0.0.0.0')
+    app.run(port=9102, debug=False, host='0.0.0.0')
