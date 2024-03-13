@@ -2,7 +2,9 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import func
+import pika
 import os
+import json
 
 app = Flask(__name__)
 if 'WAMP' in os.environ:
@@ -139,6 +141,38 @@ def delete_ticket_from_user(self, serial_no):
 ############################################################################################################
 ####################################    END OF DELETE A USER TICKET     ####################################
 ############################################################################################################
+
+############################################################################################################
+######################################    RABBITMQ INFO    #################################################
+############################################################################################################
+# Hardcoded credentials and connection details for RabbitMQ
+rabbitmq_user = "ticketboost"
+rabbitmq_password = "veryS3ecureP@ssword"
+rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
+rabbitmq_port = 5672
+rabbitmq_vhost = "/"
+
+credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
+parameters = pika.ConnectionParameters(
+    host=rabbitmq_host,
+    port=rabbitmq_port,
+    virtual_host=rabbitmq_vhost,
+    credentials=credentials,
+)
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+channel.queue_declare(queue='user', durable=True) # for the user service
+
+def callback(ch, method, properties, body):
+    # parse received message
+    data = json.loads(body)
+    user = User.query.get(data['user_id'])
+    if user is None:
+        return jsonify({"message": "User not found"})
+    
+
+channel.basic_consume(queue='user', on_message_callback=callback, auto_ack=True)
+channel.start_consuming()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=9004, debug=True)
