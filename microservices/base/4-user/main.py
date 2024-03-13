@@ -5,6 +5,7 @@ from sqlalchemy import func
 import pika
 import os
 import json
+from threading import Thread
 
 app = Flask(__name__)
 if 'WAMP' in os.environ:
@@ -152,27 +153,51 @@ rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
 rabbitmq_port = 5672
 rabbitmq_vhost = "/"
 
-credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
-parameters = pika.ConnectionParameters(
-    host=rabbitmq_host,
-    port=rabbitmq_port,
-    virtual_host=rabbitmq_vhost,
-    credentials=credentials,
-)
-connection = pika.BlockingConnection(parameters)
-channel = connection.channel()
-channel.queue_declare(queue='user', durable=True) # for the user service
+# Start a RabbitMQ consumer to listen for refund events
+def start_rabbitmq_consumer():
+    credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
+    parameters = pika.ConnectionParameters(
+        host=rabbitmq_host,
+        port=rabbitmq_port,
+        virtual_host=rabbitmq_vhost,
+        credentials=credentials,
+    )
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
+    channel.queue_declare(queue='user', durable=True) # for the user service
+    channel.queue_bind(exchange='refund', queue='user', routing_key='refund.user')
+    def callback(ch, method, properties, body):
+        # parse received message
+        data = json.loads(body)
+        user = User.query.get(data['user_id'])
+        if user is None:
+            print("User not found")
+            return
+        def del_ticket_from_user(user, serial_no):
+            for ticket in user.tickets:
+                if ticket['serial_no'] == serial_no:
+                    user.tickets.remove(ticket)
+                    db.session.commit()
+                    print("Ticket deleted successfully")
+                    return
+            print("Ticket not found")
+        if data['status'] == "succeeded":
+            # start a new thread for database operations
+            # this is because database operations are not thread safe
+            refund_thread = Thread(target=del_ticket_from_user, args=(user, data['serial_no']))
+            refund_thread.start()
+            print("Refund successful")
+            return
+        print("Refund failed")
+    channel.basic_consume(queue='user', on_message_callback=callback, auto_ack=True)
+    channel.start_consuming()
 
-def callback(ch, method, properties, body):
-    # parse received message
-    data = json.loads(body)
-    user = User.query.get(data['user_id'])
-    if user is None:
-        return jsonify({"message": "User not found"})
-    
-
-channel.basic_consume(queue='user', on_message_callback=callback, auto_ack=True)
-channel.start_consuming()
+def run_consumer_thread():
+    consumer_thread = Thread(target=start_rabbitmq_consumer)
+    consumer_thread.daemon = True 
+    consumer_thread.start()
 
 if __name__ == "__main__":
+    run_consumer_thread()
     app.run(host='0.0.0.0', port=9004, debug=True)
