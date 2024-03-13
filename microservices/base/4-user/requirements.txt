@@ -5,4 +5,8 @@ requests
 pika
 pydantic
 threading
+<<<<<<< HEAD
 flask_cors
+=======
+flask_cors
+>>>>>>> 22520ea (requirements txt)
