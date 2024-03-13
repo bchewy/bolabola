@@ -213,7 +213,6 @@ services:
         kong config db_import /etc/kong/kong.yml &&
         kong start
       "
-
   mongodb:
     image: mongo:latest
     networks:
