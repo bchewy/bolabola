@@ -13,12 +13,14 @@ const router = createRouter({
     {
       path: '/streaming',
       name: 'streaming',
-      component: () => import('./views/Streaming.vue')
+      component: () => import('./views/Streaming.vue'),
+      beforeEnter: authGuard
     }, 
     {
       path: '/events',
       name: 'events',
-      component: () => import('./views/Events.vue')
+      component: () => import('./views/Events.vue'),
+      beforeEnter: authGuard
     }, 
     {
       path: '/views/eventItem',
