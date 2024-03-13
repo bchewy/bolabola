@@ -98,14 +98,14 @@ services:
         "/app/notification.py",
       ]
 
-  logging:
-    build:
-      context: ./microservices/base/8-logging
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    depends_on:
-      - redis
+  # logging:
+  #   build:
+  #     context: ./microservices/base/8-logging
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
+  #   depends_on:
+  #     - redis
 
   seat:
     build:
@@ -150,7 +150,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "kong" ]
+      test: ["CMD", "pg_isready", "-U", "kong"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -181,9 +181,7 @@ services:
     environment:
       # Alternatively, if we want to use db-less we can turn this off
       # KONG_DATABASE: off
-      # KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
-
-      # use database
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
       KONG_DATABASE: postgres
       KONG_PG_HOST: kong-database
       KONG_PG_USER: kong
@@ -210,6 +208,24 @@ services:
       - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
     volumes:
       - ./infrastructure/kong/kong.yml:/etc/kong/kong.yml
+    command: >
+      /bin/sh -c "
+        kong config db_import /etc/kong/kong.yml &&
+        kong start
+      "
+
+    # command: "kong config db_import /etc/kong/kong.yml"
+
+    # command: >
+    #   /bin/sh -c "
+    #     # until curl --output /dev/null --silent --head --fail http://kong-database:5432; do
+    #     #   echo 'Waiting for the database to be ready...';
+    #     #   sleep 1;
+    #     # done;
+    #     # kong migrations up && kong migrations finish;
+    #     kong config db_import /etc/kong/kong.yml;
+    #     # exec kong docker-start
+    #   "
 
   # MongoDB =============================================
   mongodb:
