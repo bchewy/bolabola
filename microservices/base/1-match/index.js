@@ -62,6 +62,19 @@ var schema = buildSchema(`
     away_score: Int
     date: String
   }
+
+  type MatchDetails {
+    match_id: String
+    name: String
+    description: String
+    venue: String,
+    home_team: String
+    away_team: String
+    home_score: Int
+    away_score: Int
+    date: String
+    thumbnail_url: String
+  }
   
   type Query {
     matches_overview: [MatchOverview]
