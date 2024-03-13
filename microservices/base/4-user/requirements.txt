@@ -5,3 +5,4 @@ requests
 pika
 pydantic
 threading
+flask_cors
