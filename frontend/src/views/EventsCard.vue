@@ -1,24 +1,21 @@
 <template>
     <div class="container-fluid mt-3">
-    <div class="card h-100 position-relative" style="min-width: 18rem;">
+      <div class="card h-100 position-relative" style="min-width: 18rem;" v-if="selectedMatch">
         <div class="card-body">
-            <h5 class="card-title">Manchester United vs Liverpool</h5>
-            <!-- <p class="card-text" style="color: var(--primary-color)">
-              <span v-for="tag in project.tags">#{{ tag }}&nbsp</span>
-          </p> -->
-            <div class="card-subtitle mb-2">Date: October 23, 2023, 8:00 PM</div>
-            <p class="card-text description">
-                Venue: Old Trafford Stadium, Manchester, England <br>
-                Competition: English Premier League
-            </p>
+          <h5 class="card-title">{{ selectedMatch.title }}</h5>
+          <div class="card-subtitle mb-2">Date: {{ selectedMatch.date }}</div>
+          <p class="card-text description">
+            Venue: {{ selectedMatch.venue }} <br>
+            Competition: {{ selectedMatch.competition }}
+          </p>
         </div>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
-            <button class="btn btn-primary" @click="$router.push('/views/queue')">Book Now</button>
+          <button class="btn btn-primary" @click="$router.push('/views/queue')">Book Now</button>
         </div>
+      </div>
     </div>
-</div>
-
-</template>
+  </template>
+  
   
 <script setup>
 import { toRefs } from "vue";

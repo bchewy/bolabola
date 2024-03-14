@@ -4,7 +4,8 @@
 }
 
 .bg-lightblue {
-    background-color: #387ADF;
+    /* background-color: #387ADF; */
+    background-color: #5356FF;
 }
 
 .bg-green2 {
@@ -24,11 +25,12 @@
 }
 
 .text-superblue {
-    color: #50C4ED;
+    color: #DFF5FF;
 }
 
 .router-link-active {
-    color: #50C4ED;
+    /* color: #50C4ED; */
+    color: #67C6E3;
 }
 
 .nav-item .dropdown-menu {
@@ -63,7 +65,8 @@
 
 .navbar-nav .nav-link:hover {
     /* background-color: #a3b18a; */
-    color: #159dce;
+    /* color: #159dce; */
+    color: #378CE7;
 }
 
 .dropdown-toggle::after {
