@@ -60,7 +60,7 @@ export default {
     },
     refundTicket(index) {
       this.tickets.splice(index, 1);
-      router.push('/views/refund'); // Navigate to the refund page
+      this.$router.push('/views/refund');
     }
   }
 };
