@@ -2,7 +2,7 @@
   <div>
     <NavBar />
     <div class="about-view d-flex flex-column justify-content-center align-items-center">
-      <h1 class="text-center">John Doe's Profile page</h1>
+      <h1 class="text-center">Profile page</h1>
       <p class="lead text-dark text-center">Confirmed Bookings</p>
       <table class="table table-striped">
         <thead>
