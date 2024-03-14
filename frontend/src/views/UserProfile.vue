@@ -66,6 +66,7 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .about-view {
   text-align: center;
