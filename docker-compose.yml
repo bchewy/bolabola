@@ -3,7 +3,9 @@ version: "3"
 volumes:
   mongodb-data:
   pgdata:
-
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   kong-net:
@@ -93,21 +95,43 @@ services:
         "rabbitmq:5672",
         "--",
         "python",
-        "/app/notification.py"
+        "/app/notification.py",
       ]
 
-  logging:
-    build:
-      context: ./microservices/base/8-logging
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    depends_on:
-      - redis
+  # logging:
+  #   build:
+  #     context: ./microservices/base/8-logging
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
+  #   depends_on:
+  #     - redis
 
   seat:
     build:
       context: ./microservices/base/9-seat
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+
+  # Orchas
+  match-streaming-orchestrator:
+    build:
+      context: ./microservices/orchestrator/match-streaming
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+
+  match-booking-orchestrator:
+    build:
+      context: ./microservices/orchestrator/match-booking
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+
+  refund-orchestrator:
+    build:
+      context: ./microservices/orchestrator/refund
       dockerfile: Dockerfile
     networks:
       - kong-net
@@ -126,7 +150,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "kong" ]
+      test: ["CMD", "pg_isready", "-U", "kong"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -156,14 +180,12 @@ services:
       - kong-net
     environment:
       # Alternatively, if we want to use db-less we can turn this off
-      KONG_DATABASE: off
+      # KONG_DATABASE: off
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
-
-      # use database
-      # KONG_DATABASE: postgres
-      # KONG_PG_HOST: kong-database
-      # KONG_PG_USER: kong
-      # KONG_PG_PASSWORD: password
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
@@ -186,22 +208,28 @@ services:
       - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
     volumes:
       - ./infrastructure/kong/kong.yml:/etc/kong/kong.yml
+    command: >
+      /bin/sh -c "
+        kong config db_import /etc/kong/kong.yml &&
+        kong start
+      "
 
-  # MongoDB =============================================
   mongodb:
-    build:
-      context: ./infrastructure/mongo/.
-      dockerfile: Dockerfile # Path to your new Dockerfile
+    image: mongo:latest
     networks:
       - kong-net
     ports:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
-    # environment:
-      # MONGO_INITDB_ROOT_USERNAME: ticketboost
-      # MONGO_INITDB_ROOT_PASSWORD: veryS3ecureP@ssword
-  # MySQL ===============================================
+  mongo-seed:
+    build: ./infrastructure/mongo/seed/.
+    # entrypoint: /app/entrypoint.sh
+    networks:
+      - kong-net
+    depends_on:
+      - mongodb
+
   mysql:
     image: mysql/mysql-server:8.0
     networks:
@@ -213,7 +241,7 @@ services:
       MYSQL_DATABASE: ticketboost
       MYSQL_USER: ticketboost
       MYSQL_PASSWORD: veryS3ecureP@ssword
-  # REDIS ===============================================
+
   redis:
     image: redis
     networks:
@@ -221,18 +249,44 @@ services:
     ports:
       - 6379:6379
 
-    # RabbitMQ ============================================
   rabbitmq:
     image: rabbitmq:3-management
     networks:
       - kong-net
-    # Have to expose ports here to access via local
     ports:
       - 5672:5672
       - 15672:15672
     volumes:
       - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ticketboost
       RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    restart: always
+    networks:
+      - kong-net
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/etc/prometheus
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./infrastructure/prometheus/match-streaming.json:/etc/prometheus/match-streaming.json
+      - ./infrastructure/prometheus/match.json:/etc/prometheus/match.json
+
+  grafana:
+    image: grafana/grafana-oss:10.2.3
+    restart: always
+    networks:
+      - kong-net
+    ports:
+      - "13000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    environment:
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/kong-dashboard.json

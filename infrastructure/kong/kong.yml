@@ -14,111 +14,108 @@ services:
     routes:
       - name: match-route
         paths:
-          - "/match"
+          - "/api/v1/match"
 
   - name: queue
     url: http://queue:9002
     routes:
       - name: queue-route
         paths:
-          - "/queue"
+          - "/api/v1/queue"
 
   - name: billing
     url: http://billing:9003
     routes:
       - name: billing-route # route for billing
         paths:
-          - "/billing"
-      - name: billing-public-key # route for billing public key
-        paths:
-          - "/api/v1/billing/public-key"
-      - name: billing-checkout-route # route for checkout page, where the user types in their card details
-        paths:
-          - "/api/v1/billing/checkout"
-      - name: billing-checkout-success-route # route for billing checkout success page
-        paths:
-          - "/api/v1/billing/checkout/success"
-      - name: billing-refund-route # route for refund, after the user clicks on refund button
-        paths:
-          - "/api/v1/billing/refund"
+          - "/api/v1/billing"
 
   - name: seat
     url: http://seat:9009
     routes:
       - name: seat-route
         paths:
-          - "/seat"
+          - "/api/v1/seat"
 
   - name: user
     url: http://user:9004
     routes:
-      - name: view-all-user-tickets-route # route for view all tickets bought by user
+      - name: user-route
         paths:
-          - "/api/v1/user/<int:id>/tickets"
-      - name: view-tickets-by-serial-route # route for view specific ticket bought by user by serial number
-        paths:
-          - "/api/v1/user/<int:id>/tickets/<int:serial_no>"
-      - name: view-tickets-by-match-route # route for view all specific tickets bought by user by match id
-        paths:
-          - "/api/v1/user/<int:id>/tickets/match/<int:match_id>"
-      - name: add-ticket-to-user-route # route for adding a ticket to user
-        paths:
-          - "/api/v1/user/<int:id>/tickets"
-      - name: delete-ticket-from-user-route # route for deleting a ticket from user
-        paths:
-          - "/api/v1/user/<int:id>/tickets/<int:serial_no>"
+          - "/api/v1/user"
 
   - name: videoasset
     url: http://videoasset:9005
     routes:
       - name: videoasset-route
         paths:
-          - "/videoasset"
+          - "/api/v1/videoasset"
 
   - name: livematch
     url: http://livematch:9006
     routes:
       - name: livematch-route
         paths:
-          - "/livematch"
+          - "/api/v1/livematch"
 
   - name: notification
     url: http://notification:9007
     routes:
       - name: notification-route
         paths:
-          - "/notification"
+          - "/api/v1/notification"
 
   - name: logging
     url: http://logging:9008
     routes:
       - name: logging-route
         paths:
-          - "/logging"
+          - "/api/v1/logging"
 
   - name: match-booking-orchestrator
     url: http://match-booking-orchestrator:9101
     routes:
       - name: match-booking-orchestrator-route
         paths:
-          - "/match-booking"
+          - "/api/v1/match-booking"
 
   - name: match-streaming-orchestrator
     url: http://match-streaming-orchestrator:9102
     routes:
       - name: match-streaming-orchestrator-route
         paths:
-          - "/match-streaming"
+          - "/api/v1/match-streaming"
 
   - name: refund-orchestrator
     url: http://refund-orchestrator:9103
     routes:
       - name: refund-orchestrator-route
         paths:
-          - "/refund"
+          - "/api/v1/refund"
+
+  - name: prometheus
+    url: http://prometheus:9090
+    routes:
+      - name: prometheus
+        paths:
+          - /prom-metrics
 
 plugins:
   - name: cors
     config:
       origins:
         - "*"
+  - name: prometheus
+    config:
+      status_code_metrics: true
+      latency_metrics: true
+      bandwidth_metrics: true
+      per_consumer: true
+      # prefix: kong_api_
+      upstream_health_metrics: true
+
+  # - name: prometheus
+  #   config:
+  #     enable_exporting: true
+  #     metrics_path: /metrics
+  #     listen_address: 0.0.0.0:9100

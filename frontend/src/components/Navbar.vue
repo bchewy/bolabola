@@ -8,6 +8,10 @@
     background-color: #5356FF;
 }
 
+.bg-lightblue2 {
+    background-color: #378CE7;
+}
+
 .bg-green2 {
     background-color: #a3b18a;
 }
@@ -39,7 +43,7 @@
 }
 
 .nav-item .dropdown-menu .dropdown-item:hover {
-    background-color: #006400;
+    background-color: #67C6E3;
 }
 
 .nav-item {
@@ -79,8 +83,8 @@
         <div class="container">
             <a class="navbar-brand text-superblue" href="#">
                 <!-- <font-awesome-icon icon="fa-solid fa-car" bounce style="color: #a7c957" /> Plan-It -->
-                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png" class="img-fluid"
-                    style="max-height: 40px;"> TicketBoost
+                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png"
+                    class="img-fluid" style="max-height: 40px;"> TicketBoost
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,29 +101,25 @@
                     </li>
                     <li class="nav-item">
                         <router-link class="nav-link text-evenlighter" to="/streaming">
-                            Live Stream 
+                            Live Stream
                         </router-link>
                     </li>
                 </ul>
 
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <router-link class="nav-link text-evenlighter" to="/views/userProfile">
-                            Profile
-                        </router-link>
-                    </li>
-                    {{ isAuthenticated }}
-                    {{ user }}
+                    <!-- {{ isAuthenticated }} -->
+                    <!-- {{ user }} -->
                     <li v-if="!isAuthenticated" class="nav-item">
                         <a class="nav-link text-evenlighter" @click.prevent="login">Login</a>
                     </li>
                     <li v-else class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-evenlighter d-flex align-items-center" href="#"
                             id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img :src="user.picture" alt="" class="rounded-circle me-2" style="width: 30px; height: 30px" />
+                            <img :src="user.picture" alt="" class="rounded-circle me-2"
+                                style="width: 30px; height: 30px" />
                             <span class="text-evenlighter">Welcome, {{ user.name }}!</span>
                         </a>
-                        <ul class="dropdown-menu bg-green2 text-evenlighter" aria-labelledby="navbarDropdown">
+                        <ul class="dropdown-menu bg-lightblue2 text-evenlighter" aria-labelledby="navbarDropdown">
                             <li>
                                 <router-link class="dropdown-item text-light" to="/profile">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
@@ -178,12 +178,21 @@ import axios from "axios";
 
 export default {
     setup() {
-        const { loginWithRedirect, user, isAuthenticated } = useAuth0();
+        const { loginWithRedirect, user, isAuthenticated, logout } = useAuth0();
         console.log(user)
         console.log(isAuthenticated)
         return {
-            login: () => {
-                loginWithRedirect();
+            login: async () => {
+                try {
+                    await loginWithRedirect({
+                        appState: { targetUrl: window.location.pathname }
+                    });
+                } catch (e) {
+                    console.error('Failed to login:', e);
+                }
+            },
+            logout: () => {
+                logout({ logoutParams: { returnTo: window.location.origin } });
             },
             user,
             isAuthenticated

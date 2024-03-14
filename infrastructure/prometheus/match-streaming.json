@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "match-streaming-orchestrator:9102"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]
