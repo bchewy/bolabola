@@ -41,12 +41,11 @@ export default {
   data() {
     return {
       tickets: [
-        // Sample data for demonstration
-        { matchTime: '2024-03-10T14:00:00', },
-        { matchTime: '2024-03-11T15:00:00', },
-        { matchTime: '2025-01-13T10:00:00', },
-        // Add more ticket objects as needed
-      ]
+        { matchName: 'Match A', matchTime: '2024-03-10T14:00:00', matchLocation: 'Location A', matchPrice: 10 },
+        { matchName: 'Match B', matchTime: '2024-03-11T15:00:00', matchLocation: 'Location B', matchPrice: 15 },
+        { matchName: 'Match C', matchTime: '2025-01-13T10:00:00', matchLocation: 'Location C', matchPrice: 20 },
+      ],
+      refundedTickets: []
     };
   },
   methods: {
@@ -59,12 +58,14 @@ export default {
       return hoursDifference > 24;
     },
     refundTicket(index) {
-      this.tickets.splice(index, 1);
+      const refundedTicket = this.tickets.splice(index, 1)[0]; // Remove the ticket from the tickets array
+      this.refundedTickets.push(refundedTicket); // Add the refunded ticket to the refundedTickets array
       this.$router.push('/views/refund');
     }
   }
 };
 </script>
+
 
 <style scoped>
 .about-view {
