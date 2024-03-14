@@ -1,11 +1,27 @@
 <template>
     <div class="refund">
-        <h1>Confirm your tickets to refund...</h1>
-       
-
-        
+      <h1>Refunded Tickets</h1>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th scope="col">Match Name</th>
+            <th scope="col">Match Time</th>
+            <th scope="col">Match Location</th>
+            <th scope="col">Match Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(ticket, index) in refundedTickets" :key="index">
+            <td>{{ ticket.matchName }}</td>
+            <td>{{ ticket.matchTime }}</td>
+            <td>{{ ticket.matchLocation }}</td>
+            <td>{{ ticket.matchPrice }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-</template>
+  </template>
+  
   
   
 <style scoped>
