@@ -1,9 +1,9 @@
-DROP DATABASE IF EXISTS bolabola_user;
-CREATE DATABASE bolabola_user;
-USE bolabola_user;
+DROP DATABASE IF EXISTS ticketboost;
+CREATE DATABASE ticketboost;
+USE ticketboost;
 
 -- Create the User table
-CREATE TABLE User (
+CREATE TABLE user (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(80) NOT NULL,
     email VARCHAR(120) UNIQUE NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE User (
 );
 
 -- Insert dummy data for users
-INSERT INTO User (id, name, email, stripe_id, username, password, tickets) VALUES
+INSERT INTO user (id, name, email, stripe_id, username, password, tickets) VALUES
     (1, 'John Doe', 'johndoe@gmail.com', '123', 'johndoe', 'johndoe', '[{"match_id": 123, "ticket_category": "A", "serial_no": "1"}, {"match_id": 456, "ticket_category": "A", "serial_no": "2"}]'),
     (2, 'Alice Smith', 'alice@example.com', '456', 'alicesmith', 'alicesmith', '[{"match_id": 1, "ticket_category": "A", "serial_no": "3"}, {"match_id": 2, "ticket_category": "B", "serial_no": "4"}]'),
     (3, 'Bob Johnson', 'bob@example.com', '789', 'bobjohnson', 'bobjohnson', '[{"match_id": 3, "ticket_category": "C", "serial_no": "5"}, {"match_id": 4, "ticket_category": "A", "serial_no": "6"}]'),

@@ -2,13 +2,13 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 import pika
-import os
+from os import environ
 import json
 from threading import Thread
 from flask_cors import CORS
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://root@localhost:3306/user"
+app.config["SQLALCHEMY_DATABASE_URI"] = environ.get('dbURL')
 
 db = SQLAlchemy(app)
 CORS(app)

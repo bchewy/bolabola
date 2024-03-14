@@ -58,6 +58,8 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+      dbURL: "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/ticketboost"
 
   videoasset:
     build:
@@ -237,10 +239,12 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: veryS3ecureP@ssword
+      MYSQL_ROOT_PASSWORD: veryS3ecurePassword
       MYSQL_DATABASE: ticketboost
       MYSQL_USER: ticketboost
-      MYSQL_PASSWORD: veryS3ecureP@ssword
+      MYSQL_PASSWORD: veryS3ecurePassword
+    volumes:
+      - ./infrastructure/database/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql
 
   redis:
     image: redis
