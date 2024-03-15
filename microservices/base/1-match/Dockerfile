@@ -1,17 +1,30 @@
-# Use an official Node runtime as a base image
-FROM node:21
+# FROM node:21
+# WORKDIR /app
+# COPY package*.json ./
+# RUN npm install
+# COPY . .
+# CMD ["node", "index.js"]
+
+
+# old
+
+# Use an official Python runtime as the base image
+FROM python:3.9-slim
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Copy the requirements file into the container
+COPY requirements.txt .
+COPY match.py .
+# COPY .env .env-example ./
+# RUN test -f .env || cp .env-example .env
+# Install the required dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies
-RUN npm install
+# Copy the events.py file into the container
 
-# Bundle app source
-COPY . .
+# Set the command to run when the container starts
+CMD ["python", "match.py"]
 
-# Define the command to run your application
-CMD ["node", "index.js"]
+

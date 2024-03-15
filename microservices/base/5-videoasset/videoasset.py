@@ -8,11 +8,11 @@ import os
 app = Flask(__name__)
 load_dotenv()
 
-os.environ['AWS_ACCESS_KEY_ID'] = os.getenv('AWS_ACCESS_KEY_ID')
-os.environ['AWS_SECRET_ACCESS_KEY'] = os.getenv('AWS_SECRET_ACCESS_KEY')
-os.environ['AWS_DEFAULT_REGION'] = 'ap-southeast-1' 
+os.environ["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
+os.environ["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
+os.environ["AWS_DEFAULT_REGION"] = "ap-southeast-1"
 
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource("dynamodb")
 
 print(os.getenv("AWS_ACCESS_KEY_ID"))
 print(os.getenv("AWS_SECRET_ACCESS_KEY"))
@@ -40,6 +40,23 @@ def get_video_path(video_id):
             # If 'Item' key does not exist, log it and return None
             print(f"No item found with video_id: {video_id}")
             return None
+
+
+# Create video asset with video_id
+@app.route("/video", methods=["POST"])
+def create_video_asset():
+    video_id = request.json.get("id")
+    video_url = "https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/videos/franklampard-video.mp4" # set as default
+    # video_url = request.json.get("url")
+    if not video_id or not video_url:
+        return jsonify({"error": "Missing video id or url"}), 400
+    try:
+        table.put_item(Item={"video_id": video_id, "video_url": video_url})
+    except ClientError as e:
+        print(e.response["Error"]["Message"])
+        return jsonify({"error": "Failed to create video asset"}), 500
+    else:
+        return jsonify({"message": "Video asset created successfully"}), 201
 
 
 @app.route("/video", methods=["GET"])
