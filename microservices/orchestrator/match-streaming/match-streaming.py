@@ -24,6 +24,30 @@ match_url = "http://kong:8000/api/v1/match/"
 # 4. Somehow need to stream it back to the UI.
 
 
+class Match(graphene.ObjectType):
+    id = graphene.String()
+    name = graphene.String()
+    # Add more fields as needed
+
+
+class Query(graphene.ObjectType):
+    match = graphene.Field(Match, id=graphene.String())
+
+    def resolve_match(self, info, id):
+        url = f"http://kong:8000/api/v1/match/{id}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            match_data = response.json()
+            match = Match(
+                id=match_data["id"],
+                name=match_data["name"],
+                # Add more fields as needed
+            )
+            return match
+        else:
+            return None
+
+
 def retrieve_video_url(match_id):
     print("entering retrieve_video_url")
     url = videoasset_url + "video?id=" + match_id
@@ -45,40 +69,6 @@ def retrieve_video_url(match_id):
 @app.route("/<string:id>")
 def retrieve_match(id):
     print("entering retrieve_match")
-
-    class Match(graphene.ObjectType):
-        id = graphene.String()
-        name = graphene.String()
-        # Add more fields as needed
-
-    class Query(graphene.ObjectType):
-        match = graphene.Field(Match, id=graphene.String())
-
-        def resolve_match(self, info, id):
-            url = f"http://kong:8000/api/v1/match/{id}"
-            response = requests.get(url)
-            if response.status_code == 200:
-                match_data = response.json()
-                match = Match(
-                    id=match_data["id"],
-                    name=match_data["name"],
-                    # Add more fields as needed
-                )
-                return match
-            else:
-                return None
-
-    schema = graphene.Schema(query=Query)
-    if response.status_code == 200:
-        match = response.json()
-        print(match)
-        print("exiting retrieve_match")
-        video_url = retrieve_video_url(id)
-        return [match, video_url]
-    else:
-        print("exiting retrieve_match but found nothing")
-
-        return "Error retrieving:{0}".format(response.json()), 400
 
 
 # AMQP consumer
