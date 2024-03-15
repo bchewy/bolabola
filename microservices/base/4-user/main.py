@@ -8,10 +8,13 @@ from threading import Thread
 from flask_cors import CORS
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = environ.get('dbURL')
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    "mysql+mysqlconnector://root@localhost:3306/user"
+)
 
 db = SQLAlchemy(app)
 CORS(app)
+
 
 # Define the User model
 class User(db.Model):
@@ -33,17 +36,28 @@ class User(db.Model):
         self.tickets = tickets
 
     def json(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "stripe_id": self.stripe_id,
+            "username": self.username,
+            "password": self.password,
+            "tickets": self.tickets,
+        }
+
 
 # path to test if the service is running
-@app.route('/ping', methods=['GET'])
+@app.route("/ping", methods=["GET"])
 def ping():
-    return 'pong'
+    return "pong"
+
 
 # path to test if the service is running
 @app.route("/", methods=["GET"])
 def home():
     return "User service running"
+
 
 ############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
@@ -51,19 +65,20 @@ def home():
 # view all tickets bought by the user
 @app.route("/<int:id>/tickets", methods=["GET"])
 def view_all_user_tickets(id):
-        """
-        This method returns all the tickets owned by the user.
-        Query will join the User and Ticket tables and return the tickets owned by the user.
-        """
-        user = User.query.get(id)
-        if user is None:
-            return jsonify({"message": "User not found"})
-        if user.tickets is None:
-            return jsonify({"message": "User has no tickets"})
-        return jsonify(user.tickets)
+    """
+    This method returns all the tickets owned by the user.
+    Query will join the User and Ticket tables and return the tickets owned by the user.
+    """
+    user = User.query.get(id)
+    if user is None:
+        return jsonify({"message": "User not found"})
+    if user.tickets is None:
+        return jsonify({"message": "User has no tickets"})
+    return jsonify(user.tickets)
 
-# view a specific ticket bought by the user by serial number  
-@app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])  
+
+# view a specific ticket bought by the user by serial number
+@app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])
 def view_ticket_by_serial_no(id, serial_no):
     """
     This method returns the details of a specific ticket owned by the user.
@@ -74,10 +89,11 @@ def view_ticket_by_serial_no(id, serial_no):
     if user.tickets is None:
         return jsonify({"message": "User has no tickets"})
     for ticket in user.tickets:
-        if ticket['serial_no'] == serial_no:
+        if ticket["serial_no"] == serial_no:
             return jsonify(ticket)
     return jsonify({"message": "Ticket not found"})
-    
+
+
 # view a specific ticket bought by the user by match id
 @app.route("/<int:id>/tickets/match/<int:match_id>", methods=["GET"])
 def view_ticket_by_match_id(id, match_id):
@@ -90,9 +106,10 @@ def view_ticket_by_match_id(id, match_id):
     if user.tickets is None:
         return jsonify({"message": "User has no tickets"})
     for ticket in user.tickets:
-        if ticket['match_id'] == match_id:
+        if ticket["match_id"] == match_id:
             return jsonify(ticket)
     return jsonify({"message": "Ticket not found"})
+
 
 ############################################################################################################
 #################################    END OF VIEW USER TICKETS    ###########################################
@@ -120,9 +137,11 @@ def add_ticket_to_user(id, ticket):
     db.session.commit()
     return jsonify({"message": "Ticket added successfully"})
 
+
 ############################################################################################################
 ####################################    END OF ADD A USER TICKET     #######################################
 ############################################################################################################
+
 
 ############################################################################################################
 ####################################    DELETE A USER TICKET     ###########################################
@@ -140,11 +159,12 @@ def delete_ticket_from_user(id, serial_no):
     if user.tickets is None:
         return jsonify({"message": "User has no tickets"})
     for ticket in user.tickets:
-        if ticket['serial_no'] == serial_no:
+        if ticket["serial_no"] == serial_no:
             user.tickets.remove(ticket)
             db.session.commit()
             return jsonify({"message": "Ticket deleted successfully"})
     return jsonify({"message": "Ticket not found"})
+
 
 ############################################################################################################
 ####################################    END OF DELETE A USER TICKET     ####################################
@@ -160,6 +180,7 @@ rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
 rabbitmq_port = 5672
 rabbitmq_vhost = "/"
 
+
 # Start a RabbitMQ consumer to listen for refund events
 def start_rabbitmq_consumer():
     credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
@@ -171,40 +192,48 @@ def start_rabbitmq_consumer():
     )
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-    channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
-    channel.queue_declare(queue='user', durable=True) # for the user service
-    channel.queue_bind(exchange='refund', queue='user', routing_key='refund.user')
+    channel.exchange_declare(exchange="refund", exchange_type="direct", durable=True)
+    channel.queue_declare(queue="user", durable=True)  # for the user service
+    channel.queue_bind(exchange="refund", queue="user", routing_key="refund.user")
+
     def callback(ch, method, properties, body):
         # parse received message
         data = json.loads(body)
-        user = User.query.get(data['user_id'])
+        user = User.query.get(data["user_id"])
         if user is None:
             print("User not found")
             return
+
         def del_ticket_from_user(user, serial_no):
             for ticket in user.tickets:
-                if ticket['serial_no'] == serial_no:
+                if ticket["serial_no"] == serial_no:
                     user.tickets.remove(ticket)
                     db.session.commit()
                     print("Ticket deleted successfully")
                     return
             print("Ticket not found")
-        if data['status'] == "succeeded":
+
+        if data["status"] == "succeeded":
             # start a new thread for database operations
             # this is because database operations are not thread safe
-            refund_thread = Thread(target=del_ticket_from_user, args=(user, data['serial_no']))
+            refund_thread = Thread(
+                target=del_ticket_from_user, args=(user, data["serial_no"])
+            )
             refund_thread.start()
             print("Refund successful")
             return
         print("Refund failed")
-    channel.basic_consume(queue='user', on_message_callback=callback, auto_ack=True)
+
+    channel.basic_consume(queue="user", on_message_callback=callback, auto_ack=True)
     channel.start_consuming()
+
 
 def run_consumer_thread():
     consumer_thread = Thread(target=start_rabbitmq_consumer)
-    consumer_thread.daemon = True 
+    consumer_thread.daemon = True
     consumer_thread.start()
+
 
 if __name__ == "__main__":
     # run_consumer_thread()
-    app.run(host='0.0.0.0', port=9004, debug=True)
+    app.run(host="0.0.0.0", port=9004, debug=True)
