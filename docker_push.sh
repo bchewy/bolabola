@@ -1,6 +1,6 @@
 #!/bin/bash
 
-services=( "1-match" "2-queue" "3-billing" "4-user" "5-videoasset" "6-live-match" "7-notification" "8-logging" "9-seat")
+services=( "1-match" "2-queue" "3-billing" "4-user" "5-videoasset" "6-live-match" "7-notification" "8-logging" "9-seat" "10-statservoce")
 username="bchewy"
 
 for service in "${services[@]}"; do

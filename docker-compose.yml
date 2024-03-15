@@ -74,8 +74,18 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    ports:
+      - 9901:9901
     depends_on:
       - mysql
+      - statservice
+    
+  statservice:
+    build:
+      context: ./microservices/base/10-statservice
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
 
   notification:
     environment:
@@ -135,7 +145,6 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
-
   # Kong ================================================
   kong-database:
     image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/

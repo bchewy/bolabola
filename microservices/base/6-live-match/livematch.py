@@ -1,27 +1,42 @@
 from flask import Flask, request, jsonify
-from flask_pymongo import PyMongo
+from flask_socketio import SocketIO, send
 from datetime import datetime
-from bson import ObjectId
+import websockets
+import asyncio
+import threading
 
 app = Flask(__name__)
+socketio = SocketIO(app)
+data_collection = []
 
-# Database connection setup
-# we replace localhost here with mongodb because our services are configured to run within docker.
-app.config["MONGO_URI"] = "mongodb://mongodb:27017/matchs_db"
-mongo = PyMongo(app)
+async def receive_data(): #establish ws connection and recv data
+    async with websockets.connect('ws://statservice:9901') as ws:
+        while True:
+            data = await ws.recv()
+            data_collection.append(data)
+            await asyncio.sleep(5)
 
-# MongoDB collection
-match_collection = mongo.db.matchs
+def start_loop(loop): #runs the receive_data() func in a loopt to retrieve data from ws server
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(receive_data())
 
-
-# Helper function to convert ObjectId to string
 def serialize_doc(doc):
     doc["_id"] = str(doc["_id"])
     return doc
 
+@app.route('/') #test app endpoint
+def index():
+    return "live match Service.. alive"
 
 
 
+
+@app.route('/retrievedata', methods=["GET"])
+def retrieve_data():
+    return jsonify({'data': data_collection})
 
 if __name__ == "__main__":
+    loop = asyncio.new_event_loop()
+    t = threading.Thread(target=start_loop, args=(loop,))
+    t.start()
     app.run(port=9006, debug=True, host="0.0.0.0")
