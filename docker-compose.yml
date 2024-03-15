@@ -50,14 +50,14 @@ services:
     depends_on:
       - mysql
 
-  # user:
-  #   build:
-  #     context: ./microservices/base/4-user
-  #     dockerfile: Dockerfile
-  #   networks:
-  #     - kong-net
-  #   depends_on:
-  #     - mysql
+  user:
+    build:
+      context: ./microservices/base/4-user
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    depends_on:
+      - mysql
 
   videoasset:
     build:
