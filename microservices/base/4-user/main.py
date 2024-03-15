@@ -8,16 +8,17 @@ from threading import Thread
 from flask_cors import CORS
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+mysqlconnector://root@localhost:3306/user"
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
 
 db = SQLAlchemy(app)
-CORS(app)
+# CORS(app)
 
 
 # Define the User model
 class User(db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -26,26 +27,8 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     tickets = db.Column(db.JSON, nullable=True)
 
-    def __init__(self, id, name, email, stripe_id, username, password, tickets=None):
-        self.id = id
-        self.name = name
-        self.email = email
-        self.stripe_id = stripe_id
-        self.username = username
-        self.password = password
-        self.tickets = tickets
-
     def json(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "email": self.email,
-            "stripe_id": self.stripe_id,
-            "username": self.username,
-            "password": self.password,
-            "tickets": self.tickets,
-        }
-
+        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
 
 # path to test if the service is running
 @app.route("/ping", methods=["GET"])
@@ -53,11 +36,23 @@ def ping():
     return "pong"
 
 
-# path to test if the service is running
+# path to print all users
 @app.route("/", methods=["GET"])
 def home():
-    return "User service running"
-
+    userlist = db.session.scalars(db.select(User)).all()
+    if len(userlist) == 0:
+        return jsonify(
+            {
+                "code": 404,
+                "message": "No users found"
+            }
+        )
+    return jsonify(
+        {
+            "code": 200,
+            "data": [user.json() for user in userlist]
+        }
+    )
 
 ############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
