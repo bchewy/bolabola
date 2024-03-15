@@ -3,6 +3,12 @@ var { createHandler } = require("graphql-http/lib/use/express")
 var { buildSchema } = require("graphql")
 var mongoose = require("mongoose");
 var { ruruHTML } = require("ruru/server")
+var cors = require("cors"); // Import cors
+
+
+// Add CORS middleware
+
+
 // var prometheus = require('prom-client');
 // // Create a Prometheus counter
 // const counter = new prometheus.Counter({
@@ -88,7 +94,7 @@ const root = {
 };
 
 const app = express();
-
+app.use(cors());
 // Create and use the GraphQL handler
 app.all(
   "/graphql",
@@ -104,17 +110,13 @@ app.get("/", (_req, res) => {
   res.end(ruruHTML({ endpoint: "/graphql" }))
 })
 
-// Middleware to increment the counter for each API request
 // app.use((req, res, next) => {
 //   counter.inc({ method: req.method, path: req.path });
 //   next();
 // });
-
-// // Expose Prometheus metrics endpoint
 // app.get('/metrics', (req, res) => {
 //   res.set('Content-Type', prometheus.register.contentType);
 //   res.end(prometheus.register.metrics());
 // });
 
-// Start the server at port
 app.listen(9001)

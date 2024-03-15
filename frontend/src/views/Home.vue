@@ -12,7 +12,8 @@
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
-                Discover and book tickets for your favorite teams with TicketBoost. <br>Get access to exclusive videos and enjoy a seamless ticketing experience. 
+                Discover and book tickets for your favorite teams with TicketBoost. <br>Get access to exclusive videos
+                and enjoy a seamless ticketing experience.
               </p>
               <button class="btn btn-primary" @click="$router.push('/events')">Get Started</button>
             </div>
@@ -149,9 +150,11 @@ export default {
 .text-supergreen {
   color: #a7c957;
 }
+
 .text-superblue {
   color: lightblue;
 }
+
 .light-green {
   background-color: #d1f4d1
 }
