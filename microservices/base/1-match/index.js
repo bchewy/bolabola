@@ -15,26 +15,18 @@ var { ruruHTML } = require("ruru/server")
 
 mongoose.connect("mongodb://mongodb:27017/matches");
 
-
 var MatchOverviewSchema = new mongoose.Schema({
-  match_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
-  },
+  _id: mongoose.Schema.Types.ObjectId,
   name: String,
   home_team: String,
   away_team: String,
   home_score: Number,
   away_score: Number,
   date: Date,
-  thumbnail_url: String
 });
 
 var MatchDetailsSchema = new mongoose.Schema({
-  match_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
-  },
+  _id: mongoose.Schema.Types.ObjectId,
   name: String,
   description: String,
   venue: String,
@@ -43,42 +35,39 @@ var MatchDetailsSchema = new mongoose.Schema({
   home_score: Number,
   away_score: Number,
   date: Date,
-  thumbnail_url: String
 });
 
-const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema);
-const MatchDetailsModel = mongoose.model("MatchDetails", MatchDetailsSchema);
+const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema, "matches");
+const MatchDetailsModel = mongoose.model("MatchDetails", MatchDetailsSchema, "matches");
 
 var schema = buildSchema(`
   type MatchOverview {
+    _id: ID
     name: String
-    home_team: String
-    away_team: String
-    home_score: Int
-    away_score: Int
-  }
-
-  type MatchDetails {
-    match_id: String
-    name: String
-    description: String
-    venue: String,
     home_team: String
     away_team: String
     home_score: Int
     away_score: Int
     date: String
-    thumbnail_url: String
-  }
-  
-  type OverviewQuery {
-    matches: [MatchOverview]
   }
 
-  type DetailsQuery {
-    match: MatchDetails
+  type MatchDetails {
+    _id: ID
+    name: String
+    description: String
+    venue: String
+    home_team: String
+    away_team: String
+    home_score: Int
+    away_score: Int
+    date: String
   }
-`);
+  
+  type Query {
+    matches_overview: [MatchOverview]
+    match_details(_id: String): MatchDetails
+  }  
+`)
 
 // The root provides a resolver function for each API endpoint
 const root = {
@@ -89,10 +78,9 @@ const root = {
       throw error;
     }
   },
-
-  match_details: async (match_id) => {
+  match_details: async ({ _id }) => {
     try {
-      return await MatchDetailsModel.findById(match_id);
+      return await MatchDetailsModel.findById(_id);
     } catch (error) {
       throw error;
     }

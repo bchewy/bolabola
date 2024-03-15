@@ -50,16 +50,14 @@ services:
     depends_on:
       - mysql
 
-  user:
-    build:
-      context: ./microservices/base/4-user
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    depends_on:
-      - mysql
-    environment:
-      dbURL: "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/ticketboost"
+  # user:
+  #   build:
+  #     context: ./microservices/base/4-user
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
+  #   depends_on:
+  #     - mysql
 
   videoasset:
     build:
