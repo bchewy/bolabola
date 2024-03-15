@@ -62,6 +62,11 @@ def publish_to_amqp():
     connection.close()
 
 
+# Send billing and purchase details to billing service,
+def call_billing():
+    billing_url = "http://kong:8000/api/v1/billing"
+
+
 @app.route("/")
 def hello():
     return "Match Booking orcha is alive!"
