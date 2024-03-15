@@ -4,8 +4,11 @@ from datetime import datetime
 from bson import ObjectId
 from threading import Thread
 import pika, json
+import requests
+from prometheus_flask_exporter import PrometheusMetrics
 
 app = Flask(__name__)
+metrics = PrometheusMetrics(app)
 
 # Database connection setup
 # we replace localhost here with mongodb because our services are configured to run within docker.
@@ -15,28 +18,50 @@ mongo = PyMongo(app)
 # MongoDB collection
 match_collection = mongo.db.matches
 
+
 def start_rabbitmq_consumer():
     def callback(ch, method, properties, body):
         read_events()
 
-    credentials = pika.PlainCredentials('ticketboost', 'veryS3ecureP@ssword')
-    parameters = pika.ConnectionParameters('rabbitmq', 5672, '/', credentials)
+    credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
+    parameters = pika.ConnectionParameters("rabbitmq", 5672, "/", credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-    
-    channel.queue_declare(queue='match', durable=True)
-    channel.basic_consume(queue='match', on_message_callback=callback, auto_ack=True)
+
+    channel.queue_declare(queue="match", durable=True)
+    channel.basic_consume(queue="match", on_message_callback=callback, auto_ack=True)
     channel.start_consuming()
+
 
 def run_consumer_thread():
     consumer_thread = Thread(target=start_rabbitmq_consumer)
-    consumer_thread.daemon = True 
+    consumer_thread.daemon = True
     consumer_thread.start()
+
 
 # Helper function to convert ObjectId to string
 def serialize_doc(doc):
     doc["_id"] = str(doc["_id"])
     return doc
+
+
+# Make a call to video asset to place the _id of the match in the videoasset table!
+# This is the function that will be called when a new match is created.
+# We will use the match id to create a new video asset in the videoasset table.
+@app.route("/match-video-url", methods=["POST"])
+def create_video_asset():
+    # This is the URL of the videoasset service
+    # get matchid from json body of the requests
+    video_id = request.json.get("id")
+    url = f"http://kong:8000/api/v1/videoasset/video?id={video_id}"
+    response = requests.post(url, json={"id": video_id})
+    if response.status_code == 200:
+        video_url = response.json()
+        print("exiting retrieve_video_url")
+        return video_url
+    else:
+        print("exiting retrieve_video_url but found nothing")
+        return "Error"
 
 
 # Route handlers
