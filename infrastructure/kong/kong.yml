@@ -9,12 +9,19 @@ services:
   #       paths:
   #         - "/"
 
+  # - name: match
+  #   url: http://match:9001
+  #   routes:
+  #     - name: match-route
+  #       paths:
+  #         - "/api/v1/match"
   - name: match
-    url: http://match:9001
+    url: http://match:9001/graphql
     routes:
-      - name: match-route
+      - name: match-graphql-route
         paths:
           - "/api/v1/match"
+        methods: ["POST", "GET"]
 
   - name: queue
     url: http://queue:9002
