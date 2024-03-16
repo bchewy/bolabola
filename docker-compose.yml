@@ -6,21 +6,22 @@ volumes:
   rabbitmq_data:
   prometheus_data:
   grafana_data:
+  mysql_data:
 
 networks:
   kong-net:
     driver: bridge
     name: kong-net
 services:
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    ports:
-      - 80:80
+  # Frontend - removing it here.. We will deploy this seperately.
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
+  #   ports:
+  #     - 80:80
 
   match:
     build:
@@ -241,7 +242,7 @@ services:
       MYSQL_PASSWORD: veryS3ecurePassword
     volumes:
       - ./microservices/base/4-user/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql
-      - ./dbdata:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
 
   redis:
     image: redis
