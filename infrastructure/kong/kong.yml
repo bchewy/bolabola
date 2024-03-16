@@ -84,14 +84,14 @@ services:
     routes:
       - name: match-booking-orchestrator-route
         paths:
-          - "/api/v1/match-booking"
+          - "/api/v1/booking"
 
   - name: match-streaming-orchestrator
     url: http://match-streaming-orchestrator:9102
     routes:
       - name: match-streaming-orchestrator-route
         paths:
-          - "/api/v1/match-streaming"
+          - "/api/v1/streaming"
 
   - name: refund-orchestrator
     url: http://refund-orchestrator:9103
