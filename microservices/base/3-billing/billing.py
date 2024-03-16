@@ -4,18 +4,20 @@ from flask_cors import CORS
 import stripe
 import os
 import sys
-# from dotenv import load_dotenv
-# load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+# app.secret_key = "ee89f7f418d66bdfbb7fb59b07025ec2"
 
 # Initialize Stripe
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
-stripe.api_key = STRIPE_SECRET_KEY
+STRIPE_SECRET_KEY = "sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE"
+STRIPE_PUBLISHABLE_KEY = "pk_test_51Oh9s0F4chEmCmGg0Cbvmc8wbE3puY2dnkr8Gz7H1i0uVy8rAvhpIGVlO5DDBengMt5rVYRycjGU0t6wKTeoJjvg008zdJD9Vz"
+stripe.api_key = "sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE"
+
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({"message": "Pong!"})
 
 ############################################################################################################
 ##################################    STRIPE PUBLIC KEY     ################################################
@@ -26,7 +28,12 @@ def public_key():
     """
     Returns the public key for the frontend
     """
-    return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
+    return jsonify(
+        {
+            "code": 200,
+            'publicKey': STRIPE_PUBLISHABLE_KEY
+        }
+    )
 
 ############################################################################################################
 #########################    END OF STRIPE PUBLIC KEY    ###################################################
@@ -75,7 +82,7 @@ def create_checkout_session():
                     },
                     'quantity': ticket['quantity']
                 })
-
+            print(line_items[0])
             # create a new checkout session
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -111,8 +118,10 @@ def success():
     """
     # Extract session ID from request
     session_id = request.json['sessionId']
+    print(session_id)
     # Retreive Checkout Session from Stripe
     checkout_session = stripe.checkout.Session.retrieve(session_id)
+    print(checkout_session)
     # Prepare payload to send back to orchestrator
     payload = {
         "order_id": request.json['order_id'],
@@ -164,4 +173,4 @@ def refund_payment():
 ############################################################################################################
     
 if __name__ == '__main__':
-    app.run(port=9003, debug=True)
+    app.run(port=9003, debug=True, host="0.0.0.0")
