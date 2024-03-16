@@ -7,7 +7,7 @@ import sys
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 # app.secret_key = "ee89f7f418d66bdfbb7fb59b07025ec2"
 
 # Initialize Stripe
@@ -44,7 +44,7 @@ def public_key():
 ############################################################################################################
 # create checkout session when the user clicks on the "Buy" button
 # (https://stripe.com/docs/api/checkout/sessions/create)
-@app.route('/checkout', methods = ['GET'])
+@app.route('/checkout', methods = ['POST'])
 def create_checkout_session():
     """
     This method creates a new checkout session.
@@ -67,7 +67,7 @@ def create_checkout_session():
         "C": 25,
         "Online": 10
     }
-    if request.method == "GET":
+    if request.method == "POST":
         try:
             # line_items shows the details of the tickets on the receipt
             line_items = []
@@ -88,56 +88,92 @@ def create_checkout_session():
                 payment_method_types=['card'],
                 line_items=line_items,
                 mode='payment',
-                success_url='http://localhost:9003/success',
-                cancel_url='http://localhost:9003/cancel',
+                success_url='http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}',
+                cancel_url='http://localhost:5173/views/checkoutCancel'
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
+    print(checkout_session.id)
+    return jsonify(
+        {
+            'code': 200,
+            'checkout_session':checkout_session
+        }
+    )
 
-    return jsonify({'sessionId': checkout_session['id']})
+# Create a webhook endpoint for the checkout session
+@app.route('/webhook/stripe', methods = ['POST']) # if you change this endpoint, pls let yiji know so he can change in Stripe
+def stripe_webhook():
+    payload = request.get_data(as_text=True)
+    sig_header = request.headers.get('Stripe-Signature')
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_SECRET_KEY
+        )
+    except ValueError as e:
+        # Invalid payload
+        return 'Invalid payload', 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return 'Invalid signature', 400
+    
+    # Handle the checkout.session.completed event
+    if event['type'] == 'checkout.session.completed':
+        payment_intent = event['data']['object']
+        print(payment_intent)
+        print('Checkout Session completed!')
+        ################################## 
+        # add to db
+        ##################################
 
-# create route for successful checkout
-ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
-@app.route('/checkout/success', methods = ['POST'])
-def success():
-    """
-    on success, send POST back to orchestrator with the following JSON payload:
-    {
-        "order_id": "1234",
-        "show_name": "Hamilton",
-        "show_datetime": "2024-02-10T19:00:00",
-        "tickets": [
-            {"category": "A", "price": 400, "quantity": 2},
-            {"category": "B", "price": 300, "quantity": 3},
-            {"category": "C", "price": 200, "quantity": 4}
-        ],
-        "total": 2600,
-        "user_id": "123",
-        "payment_status": "success"
-    }
-    """
-    # Extract session ID from request
-    session_id = request.json['sessionId']
-    print(session_id)
-    # Retreive Checkout Session from Stripe
-    checkout_session = stripe.checkout.Session.retrieve(session_id)
-    print(checkout_session)
-    # Prepare payload to send back to orchestrator
-    payload = {
-        "order_id": request.json['order_id'],
-        "show_name": request.json['show_name'],
-        "show_datetime": request.json['show_datetime'],
-        "tickets": request.json['tickets'],
-        "total": request.json['total'],
-        "user_id": request.json['user_id'],
-        "payment_status": checkout_session['payment_status']
-    }
-    # Send POST request to orchestrator
-    response = requests.post(ORCHESTRATOR_URL, json=payload)
-    if response.ok:
-        return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
-    else:
-        return jsonify({"error": "Failed to notify the orchestrator."}),  500
+    return jsonify(
+        {
+            'code': 200,
+            'status': 'success'
+        }
+    ), 200
+
+# # create route for successful checkout@app.route('/checkout/success', methods = ['POST'])
+# def success():
+#     """
+#     on success, send POST back to orchestrator with the following JSON payload:
+#     {
+#         "order_id": "1234",
+#         "show_name": "Hamilton",
+#         "show_datetime": "2024-02-10T19:00:00",
+#         "tickets": [
+#             {"category": "A", "price": 400, "quantity": 2},
+#             {"category": "B", "price": 300, "quantity": 3},
+#             {"category": "C", "price": 200, "quantity": 4}
+#         ],
+#         "total": 2500,
+#         "user_id": "123",
+#         "payment_status": "success"
+#     }
+#     """
+#     ORCHESTRATOR_URL = "http://localhost:9000/api/v1/orchestrator/checkout/success"
+#     # Extract session ID from request
+#     session_id = request.json['sessionId']
+#     print(session_id)
+#     # Retreive Checkout Session from Stripe
+#     checkout_session = stripe.checkout.Session.retrieve(session_id)
+#     print(checkout_session)
+#     # Prepare payload to send back to orchestrator
+#     payload = {
+#         "order_id": request.json['order_id'],
+#         "show_name": request.json['show_name'],
+#         "show_datetime": request.json['show_datetime'],
+#         "tickets": request.json['tickets'],
+#         "total": request.json['total'],
+#         "user_id": request.json['user_id'],
+#         "payment_status": checkout_session['payment_status']
+#     }
+#     # Send POST request to orchestrator
+#     response = requests.post(ORCHESTRATOR_URL, json=payload)
+#     if response.ok:
+#         return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
+#     else:
+#         return jsonify({"error": "Failed to notify the orchestrator."}),  500
 
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################

@@ -1,10 +1,9 @@
 <template>
     <div class="checkout">
-        <h1>Confirm your tickets...</h1>
-        <p class="lead text-dark text-center">Payment by ...</p>
-        <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
-            <button class="btn btn-primary" @click="redirectToCheckout">Proceed to Checkout</button>
-        </div>
+        <h1>thnx for buying</h1>
+        
+        <!-- back home -->
+        <router-link to="/" class="btn btn-primary">Back to Home</router-link>
     </div>
 </template>
   
@@ -43,7 +42,7 @@ import axios from 'axios';
 
 export default {
     methods: {
-        redirectToCheckout() {
+        async redirectToCheckout() {
             try {
                 // hardcoded data to send. change this JSON dynamically according to the tickets selected
                 const data = {
@@ -65,15 +64,14 @@ export default {
                     },
                     body: JSON.stringify(data),
                 })
-                .then((result) => result.json())
+                .then(response => response.json())
                 .then((data) => {
-                    console.log(data);
-                    // redirect to url
-                    window.location.href = data.checkout_session.url;
+                    return this.stripe.redirectToCheckout({ sessionId: data.sessionId });
                 })
-                .then((res) => {
-                    console.log(res);
+                .then((result) => {
+                    console.log(result);
                 })
+
                 // Handle response if required
                 console.log(response.data);
             } catch (error) {
