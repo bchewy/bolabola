@@ -47,8 +47,6 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
-    depends_on:
-      - mysql
 
   user:
     build:

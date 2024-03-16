@@ -277,25 +277,13 @@ def delete_ticket_from_user(id, serial_no):
 ############################################################################################################
 ######################################    RABBITMQ INFO    #################################################
 ############################################################################################################
-# Hardcoded credentials and connection details for RabbitMQ
-rabbitmq_user = "ticketboost"
-rabbitmq_password = "veryS3ecureP@ssword"
-rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
-rabbitmq_port = 5672
-rabbitmq_vhost = "/"
-
-
 # Start a RabbitMQ consumer to listen for refund events
 def start_rabbitmq_consumer():
-    credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
-    parameters = pika.ConnectionParameters(
-        host=rabbitmq_host,
-        port=rabbitmq_port,
-        virtual_host=rabbitmq_vhost,
-        credentials=credentials,
-    )
+    credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
+    parameters = pika.ConnectionParameters("rabbitmq", 5672, "/", credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
+    
     channel.exchange_declare(exchange="refund", exchange_type="direct", durable=True)
     channel.queue_declare(queue="user", durable=True)  # for the user service
     channel.queue_bind(exchange="refund", queue="user", routing_key="refund.user")
@@ -340,5 +328,5 @@ def run_consumer_thread():
 
 
 if __name__ == "__main__":
-    # run_consumer_thread()
+    run_consumer_thread()
     app.run(host="0.0.0.0", port=9004, debug=True)

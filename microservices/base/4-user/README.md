@@ -27,4 +27,7 @@ note that stripe_id is optional and is only present if the user has bought a tic
 
 If you get this error in mysql:
 `--initialize specified but the data directory has files in it. Aborting...`
-Delete the `dbdata` folder and try again.
+Delete the `dbdata` folder and compose up again.
+
+## Issues
+- [ ] RabbitMQ is not working
