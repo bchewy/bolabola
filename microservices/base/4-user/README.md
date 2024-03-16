@@ -20,6 +20,6 @@ Sample User:
     ]
 }
 ```
-note that charge_id is optional and is only present if the user has paid for the ticket.
+note that stripe_id is optional and is only present if the user has bought a ticket.
 
 ![user db schema](schema.png)
