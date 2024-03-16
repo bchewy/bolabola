@@ -66,6 +66,7 @@ def publish_to_amqp():
 def call_billing():
     billing_url = "http://kong:8000/api/v1/billing"
 
+
 # Receive the transaction status from billing service
 @app.route("/match-booking", methods=["POST"])
 def check_payment_status():
@@ -85,6 +86,7 @@ def check_payment_status():
         publish_to_amqp()
     return jsonify({"message": "Match booking successful!"})
 
+
 @app.route("/")
 def hello():
     return "Match Booking orcha is alive!"
@@ -102,4 +104,4 @@ def hello():
 #     channel.start_consuming()
 
 if __name__ == "__main__":
-    app.run(port=9101)
+    app.run(port=9101, debug=True, host="0.0.0.0")
