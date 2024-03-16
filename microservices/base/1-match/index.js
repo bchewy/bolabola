@@ -29,6 +29,7 @@ var MatchOverviewSchema = new mongoose.Schema({
   home_score: Number,
   away_score: Number,
   date: Date,
+  seats: Number,
 });
 
 var MatchDetailsSchema = new mongoose.Schema({
@@ -41,6 +42,7 @@ var MatchDetailsSchema = new mongoose.Schema({
   home_score: Number,
   away_score: Number,
   date: Date,
+  seats: Number,
 });
 
 const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema, "matches");
@@ -55,6 +57,7 @@ var schema = buildSchema(`
     home_score: Int
     away_score: Int
     date: String
+    seats: Int
   }
 
   type MatchDetails {
@@ -67,6 +70,7 @@ var schema = buildSchema(`
     home_score: Int
     away_score: Int
     date: String
+    seats: Int
   }
   
   type Query {
