@@ -20,6 +20,8 @@ To set up this repository, run the following command in the current working dire
 docker-compose up
 ```
 
+If you encounter issues, please use `docker compose down -v` to delete all volumes and existing containers. Then try the same command above.
+
 
 
 ## Microservices
