@@ -291,3 +291,14 @@ services:
       - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
     environment:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/kong-dashboard.json
+
+  stripe-cli:
+    image: stripe/stripe-cli
+    container_name: stripe-cli
+    command: listen --api-key sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE --device-name ticketboost --forward-to localhost:9003/webhook/stripe # if you change the forward to link, you need to change the link in the stripe service (tell yiji)
+    networks:
+      - kong-net
+    environment:
+      STRIPE_API_KEY: sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE
+    volumes:
+      - ./infrastructure/stripe:/stripe

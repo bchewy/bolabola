@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@auth0/auth0-vue": "^2.3.3",
+    "@stripe/stripe-js": "github:stripe/stripe-js",
     "axios": "^1.6.7",
     "bootstrap": "^5.3.3",
+    "stripe": "^14.21.0",
     "typed": "^10.0.0-beta.2",
     "typed.js": "^2.1.0",
     "vue": "^3.4.15",
