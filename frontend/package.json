@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@apollo/client": "^3.9.7",
     "@auth0/auth0-vue": "^2.3.3",
     "@stripe/stripe-js": "github:stripe/stripe-js",
     "axios": "^1.6.7",
