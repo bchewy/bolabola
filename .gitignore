@@ -33,5 +33,5 @@ coverage
 
 *.tsbuildinfo
 
-dbdata
 dbdata/*
+/dbdata

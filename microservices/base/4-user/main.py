@@ -86,7 +86,7 @@ def view_all_user_tickets(id):
         )
 
 # view a specific ticket bought by the user by serial number
-@app.route("/<int:id>/tickets/<str:serial_no>", methods=["GET"])
+@app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])
 def view_ticket_by_serial_no(id, serial_no):
     """
     This method returns the details of a specific ticket owned by the user.
@@ -107,8 +107,13 @@ def view_ticket_by_serial_no(id, serial_no):
             }
         )
     for ticket in user.tickets:
-        if ticket["serial_no"] == serial_no:
-            return jsonify(ticket)
+        if ticket["serial_no"] == str(serial_no):
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": ticket
+                }
+            )
     return jsonify({"message": "Ticket not found"})
 
 
@@ -120,12 +125,27 @@ def view_ticket_by_match_id(id, match_id):
     """
     user = User.query.get(id)
     if user is None:
-        return jsonify({"message": "User not found"})
+        return jsonify(
+            {
+                "code": 404,
+                "message": "User not found"
+            }
+        )
     if user.tickets is None:
-        return jsonify({"message": "User has no tickets"})
+        return jsonify(
+            {
+                "code": 404,
+                "message": "User has no tickets"
+            }
+        )
     for ticket in user.tickets:
         if ticket["match_id"] == match_id:
-            return jsonify(ticket)
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": ticket
+                }
+            )
     return jsonify({"message": "Ticket not found"})
 
 
