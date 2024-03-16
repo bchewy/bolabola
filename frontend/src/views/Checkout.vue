@@ -6,7 +6,11 @@
             <button class="btn btn-primary" @click="redirectToCheckout">Proceed to Checkout</button>
         </div>
     </div>
-</template>
+  </template>
+  
+
+  
+
   
   
 <style scoped>
