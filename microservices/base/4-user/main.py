@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from sqlalchemy.orm.attributes import flag_modified
 import pika
 import os
 import json
@@ -139,14 +140,19 @@ def view_ticket_by_match_id(id, match_id):
             }
         )
     for ticket in user.tickets:
-        if ticket["match_id"] == match_id:
+        if ticket["match_id"] == str(match_id):
             return jsonify(
                 {
                     "code": 200,
                     "data": ticket
                 }
             )
-    return jsonify({"message": "Ticket not found"})
+    return jsonify(
+            {
+                "code": 404,
+                "message": "Ticket not found"
+            }
+        )
 
 
 ############################################################################################################
@@ -159,21 +165,60 @@ def view_ticket_by_match_id(id, match_id):
 ############################################################################################################
 # add a ticket to the user's list of tickets
 @app.route("/<int:id>/tickets", methods=["POST"])
-def add_ticket_to_user(id, ticket):
+def add_ticket_to_user(id):
     """
     This method adds a ticket to the user's list of tickets.
+    Sample ticket:
+    {
+        "match_id": "1",
+        "ticket_category": "A",
+        "serial_no": "100"
+    }
     """
     ticket = request.json
     if ticket is None:
-        return jsonify({"message": "Ticket info not provided"})
+        return jsonify(
+                {
+                    "code": 400,
+                    "message": "Ticket info not provided"
+                }
+            )
     user = User.query.get(id)
     if user is None:
-        return jsonify({"message": "User not found"})
+        return jsonify(
+                {
+                    "code": 404,
+                    "message": "User not found"
+                }
+            )
+
+    # check if the user already has the ticket
+    if user.tickets is not None:
+        for t in user.tickets:
+            if t["serial_no"] == ticket["serial_no"]:
+                return jsonify(
+                    {
+                        "code": 400,
+                        "message": "User already has the ticket"
+                    }
+                )
+    
+    # add the ticket to the user's list of tickets
     if user.tickets is None:
-        user.tickets = []
-    user.tickets.append(ticket)
+        user.tickets = [ticket]
+    else:
+        user.tickets.append(ticket)
+
+    # inform sqlalchemt that the tickets attribute has been modified. This MUST BE DONE because sqlalchemy got problem with JSON
+    flag_modified(user, "tickets")
+    
     db.session.commit()
-    return jsonify({"message": "Ticket added successfully"})
+    return jsonify(
+        {
+            "code": 201,
+            "message": "Ticket added successfully"
+        }
+    )
 
 
 ############################################################################################################
@@ -193,15 +238,36 @@ def delete_ticket_from_user(id, serial_no):
     """
     user = User.query.get(id)
     if user is None:
-        return jsonify({"message": "User not found"})
+        return jsonify(
+            {
+                "code": 404,
+                "message": "User not found"
+            }
+        )
     if user.tickets is None:
-        return jsonify({"message": "User has no tickets"})
+        return jsonify(
+            {
+                "code": 404,
+                "message": "User has no tickets"
+            }
+        )
     for ticket in user.tickets:
-        if ticket["serial_no"] == serial_no:
+        if ticket["serial_no"] == str(serial_no):
             user.tickets.remove(ticket)
+            flag_modified(user, "tickets")
             db.session.commit()
-            return jsonify({"message": "Ticket deleted successfully"})
-    return jsonify({"message": "Ticket not found"})
+            return jsonify(
+                {
+                    "code": 200,
+                    "message": "Ticket deleted successfully"
+                }
+            )
+    return jsonify(
+        {
+            "code": 404,
+            "message": "Ticket not found"
+        }
+    )
 
 
 ############################################################################################################
