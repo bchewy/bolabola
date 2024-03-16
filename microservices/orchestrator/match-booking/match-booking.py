@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify
 import pika
 from threading import Thread
+import requests
+
+MATCH_URL = "http://kong:8000/api/v1/match"
+SEAT_URL = "http://kong:8000/api/v1/seat"
+BILLING_URL = "http://kong:8000/api/v1/billing"
 
 
 ####### RabbitMQ  #######
@@ -27,7 +32,7 @@ def run_consumer_thread():
 app = Flask(__name__)
 
 
-#### Helper Functions #####
+# Publish to AMQP - to update subsequent services about the match booking
 def publish_to_amqp():
     connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
     channel = connection.channel()
@@ -62,11 +67,6 @@ def publish_to_amqp():
     connection.close()
 
 
-# Send billing and purchase details to billing service,
-def call_billing():
-    billing_url = "http://kong:8000/api/v1/billing"
-
-
 # Receive the transaction status from billing service
 @app.route("/match-booking", methods=["POST"])
 def check_payment_status():
@@ -85,6 +85,96 @@ def check_payment_status():
         print("Publishing to RabbitMQ")
         publish_to_amqp()
     return jsonify({"message": "Match booking successful!"})
+
+
+# HANDLE SELECT SEAT AND QUANTITY FLOW
+@app.route("/init-match-booking/<match_id>", methods=["GET"])
+def init_match_booking(match_id):
+
+    # get userid
+    user_id = request.args.get("userid")
+    ticket_category = request.args.get("cat")
+
+    # Retrieve match details
+    match_details = retrieve_match_from_match_service(match_id)
+    match_details["match_id"] = match_id
+    # Retrieve ticket availability
+    seatCount = match_details["seats"]
+    if seatCount == 0:
+        return jsonify(
+            {"message": "No seats available for this match!"}
+        )  # Return to frontend if unavailable.
+    else:
+        # we can continue here!
+        # Display ticket availability
+        # Lock the ticket
+
+        # minus seat count by one - call match service to do this
+        # TODO: change hardcoded user_id and ticket_category
+        response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
+        print(response, locked)
+    return (response, locked)
+    # return jsonify(match_details, {"seatCount": seatCount})
+
+
+def retrieve_match_from_match_service(match_id):
+    url = MATCH_URL
+
+    query = """
+    query GetMatchDetails($id: String) {
+        match_details(_id: $id) {
+            _id
+            name
+            description
+            venue
+            home_team
+            away_team
+            home_score
+            away_score
+            date
+            seats
+        }
+    }
+    """
+
+    variables = {"id": match_id}
+    headers = {"Content-Type": "application/json"}
+    payload = {"query": query, "variables": variables}
+    response = requests.post(url, headers=headers, json=payload)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        response_json = response.json()
+        match_details = response_json.get("data", {}).get("match_details")
+        return match_details
+    else:
+        raise Exception(
+            f"Query failed to run with a status code {response.status_code}. {response.text}"
+        )
+
+
+def reserve_seat_for_user(match_id, user_id, ticket_category):
+    # returns response.json and boolean value for if successful or not
+    payload = {
+        "user_id": user_id,
+        "match_id": match_id,
+        "ticket_category": ticket_category,
+    }
+    response = requests.post(SEAT_URL + "/reserve", json=payload)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Seat reservation was successful
+        return response.json(), True
+    elif response.status_code == 409:
+        # Seat is currently on hold
+        return response.json(), False
+    elif response.status_code == 404:
+        # No available seats
+        return response.json(), False
+    else:
+        # Other errors
+        return {"error": "An unexpected error occurred."}, False
 
 
 @app.route("/")
