@@ -31,4 +31,4 @@ curl -X POST http://localhost:5000/checkout \
 - [:white_check_mark:] Stripe checkout, success, cancel links are using localhost. Any repurcussions?
 - [:white_check_mark:] Test the stripe checkout page
 - [:white_check_mark:] When checkout is successful, is the redirect to success page working?
-- [:white_check_mark:] When checkout is successful, does it correctly update the db?
+- [ ] When checkout is successful, does it correctly update the db?
