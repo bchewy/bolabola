@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 import pika
 from threading import Thread
 
@@ -66,6 +66,24 @@ def publish_to_amqp():
 def call_billing():
     billing_url = "http://kong:8000/api/v1/billing"
 
+# Receive the transaction status from billing service
+@app.route("/match-booking", methods=["POST"])
+def check_payment_status():
+    """
+    This method receives a POST request from the billing service.
+    If the status is "success", it publishes the match and user data to the RabbitMQ queue.
+    Sample payload received:
+    {
+        "status": "success",
+    }
+    """
+    data = request.json
+    print("The Match Booking orcha received the following from billing service: ")
+    print(data)
+    if data["status"] == "success":
+        print("Publishing to RabbitMQ")
+        publish_to_amqp()
+    return jsonify({"message": "Match booking successful!"})
 
 @app.route("/")
 def hello():
