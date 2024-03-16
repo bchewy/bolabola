@@ -1,39 +1,86 @@
 <template>
-    <div class="queue">
-        <h1>Choose your section...</h1>
-        <p class="lead text-dark">You have 10 minutes to select your seats. <br> After that time, the selection process will be locked.</p>
-        <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
-            <button class="btn btn-primary" @click="$router.push('/views/checkout')">Proceed</button>
+    <div class="seat-selection">
+        <h1>Select Your Seats</h1>
+        <p class="lead text-dark">Click on available seats to select them.</p>
+        <div class="seat-map">
+            <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
+                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="toggleSeat(rowIndex, seatIndex)" class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
+            </div>
+        </div>
+        <div class="position-absolute bottom-0 end-0 mb-3 me-3">
+            <button class="btn btn-primary" @click="proceedToCheckout">Proceed</button>
         </div>
     </div>
 </template>
-  
-  
+
 <style scoped>
-.queue {
+.seat-selection {
     text-align: center;
     margin-top: 50px;
 }
 
-.card-container {
+.seat-map {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.seat-row {
     display: flex;
     justify-content: center;
+    margin-bottom: 10px;
 }
 
-.card {
+.seat {
+    width: 30px;
+    height: 30px;
     border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 10px;
-    width: 300px;
-    /* Adjust width as needed */
+    margin: 0 5px;
+    cursor: pointer;
 }
 
-.card h2 {
-    margin-top: 0;
+.selected {
+    background-color: green;
 }
 
-.card p {
-    margin-bottom: 0;
+.unavailable {
+    background-color: #ccc;
 }
 </style>
+
+<script>
+export default {
+    data() {
+        return {
+            seatMap: [
+                [{ label: 'A1', selected: false, available: true }, { label: 'A2', selected: false, available: false }, { label: 'A3', selected: false, available: true }],
+                [{ label: 'B1', selected: false, available: true }, { label: 'B2', selected: false, available: true }, { label: 'B3', selected: false, available: true }],
+                [{ label: 'C1', selected: false, available: false }, { label: 'C2', selected: false, available: true }, { label: 'C3', selected: false, available: true }],
+            ]
+        };
+    },
+    methods: {
+        toggleSeat(rowIndex, seatIndex) {
+            if (this.seatMap[rowIndex][seatIndex].available) {
+                this.seatMap[rowIndex][seatIndex].selected = !this.seatMap[rowIndex][seatIndex].selected;
+            }
+        },
+        proceedToCheckout() {
+            // Add logic to handle proceeding to checkout with selected seats
+            console.log('Selected seats:', this.getSelectedSeats());
+            // Example: this.$router.push('/views/checkout');
+        },
+        getSelectedSeats() {
+            const selectedSeats = [];
+            for (let i = 0; i < this.seatMap.length; i++) {
+                for (let j = 0; j < this.seatMap[i].length; j++) {
+                    if (this.seatMap[i][j].selected) {
+                        selectedSeats.push(this.seatMap[i][j].label);
+                    }
+                }
+            }
+            return selectedSeats;
+        }
+    }
+};
+</script>

@@ -59,7 +59,40 @@ export default {
     return {
       matches: data ? data.matches : [],
     };
+  }, 
+  created() {
+    this.fetchMatches();
+  },
+  methods: {
+    fetchMatches() {
+      axios.post('http://match:9001/graphql/api/v1/match', {
+        query: `query { matches_overview { _id name home_team away_team home_score away_score date } }`,
+        variables: {
+          id: "65f42e711c248818445678d3"
+        }
+      })
+        .then(response => {
+          this.matches = response.data.data.match_details.map(match => {
+            // Assuming your backend returns an array of match details
+            // You might need to adjust based on the actual structure
+            return {
+              id: match._id, // Adjust based on your data structure
+              title: `${match.home_team} vs ${match.away_team}`,
+              date: new Date(parseInt(match.date)).toLocaleString(), // Convert timestamp to readable date
+              description: match.description,
+              venue: match.venue
+            };
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching matches:', error);
+        });
+    },
+    displayMatchDetails(match) {
+      this.selectedMatch = match;
+    }
   }
+
 };
 </script>
 
