@@ -243,7 +243,6 @@ services:
       MYSQL_PASSWORD: veryS3ecurePassword
     volumes:
       - ./microservices/base/4-user/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql
-      - pgdata:/var/lib/mysql
       - ./dbdata:/var/lib/mysql
 
   redis:
