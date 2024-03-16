@@ -120,11 +120,22 @@ def stripe_webhook():
     # Handle the checkout.session.completed event
     if event['type'] == 'checkout.session.completed':
         payment_intent = event['data']['object']
+        print("The payment intent is: ")
         print(payment_intent)
         print('Checkout Session completed!')
-        ################################## 
-        # add to db
-        ##################################
+        # send payment confirmation to orchestrator
+        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/match-booking"
+        # Prepare payload to send back to orchestrator
+        payload = {
+            "payment_status": payment_intent['payment_status'],
+            "charge_id": payment_intent['id']
+        }
+        # Send POST request to orchestrator
+        response = requests.post(ORCHESTRATOR_URL, json=payload)
+        if response.ok:
+            return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
+        else:
+            return jsonify({"error": "Failed to notify the orchestrator."}),  500
 
     return jsonify(
         {
@@ -132,48 +143,6 @@ def stripe_webhook():
             'status': 'success'
         }
     ), 200
-
-# # create route for successful checkout@app.route('/checkout/success', methods = ['POST'])
-# def success():
-#     """
-#     on success, send POST back to orchestrator with the following JSON payload:
-#     {
-#         "order_id": "1234",
-#         "show_name": "Hamilton",
-#         "show_datetime": "2024-02-10T19:00:00",
-#         "tickets": [
-#             {"category": "A", "price": 400, "quantity": 2},
-#             {"category": "B", "price": 300, "quantity": 3},
-#             {"category": "C", "price": 200, "quantity": 4}
-#         ],
-#         "total": 2500,
-#         "user_id": "123",
-#         "payment_status": "success"
-#     }
-#     """
-#     ORCHESTRATOR_URL = "http://localhost:9000/api/v1/orchestrator/checkout/success"
-#     # Extract session ID from request
-#     session_id = request.json['sessionId']
-#     print(session_id)
-#     # Retreive Checkout Session from Stripe
-#     checkout_session = stripe.checkout.Session.retrieve(session_id)
-#     print(checkout_session)
-#     # Prepare payload to send back to orchestrator
-#     payload = {
-#         "order_id": request.json['order_id'],
-#         "show_name": request.json['show_name'],
-#         "show_datetime": request.json['show_datetime'],
-#         "tickets": request.json['tickets'],
-#         "total": request.json['total'],
-#         "user_id": request.json['user_id'],
-#         "payment_status": checkout_session['payment_status']
-#     }
-#     # Send POST request to orchestrator
-#     response = requests.post(ORCHESTRATOR_URL, json=payload)
-#     if response.ok:
-#         return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
-#     else:
-#         return jsonify({"error": "Failed to notify the orchestrator."}),  500
 
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################
