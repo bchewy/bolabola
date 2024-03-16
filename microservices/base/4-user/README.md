@@ -23,3 +23,8 @@ Sample User:
 note that stripe_id is optional and is only present if the user has bought a ticket.
 
 ![user db schema](schema.png)
+
+
+If you get this error in mysql:
+`--initialize specified but the data directory has files in it. Aborting...`
+Delete the `dbdata` folder and try again.

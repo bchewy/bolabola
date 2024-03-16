@@ -310,8 +310,9 @@ def start_rabbitmq_consumer():
 
         def del_ticket_from_user(user, serial_no):
             for ticket in user.tickets:
-                if ticket["serial_no"] == serial_no:
+                if ticket["serial_no"] == str(serial_no):
                     user.tickets.remove(ticket)
+                    flag_modified(user, "tickets")
                     db.session.commit()
                     print("Ticket deleted successfully")
                     return

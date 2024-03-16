@@ -32,6 +32,3 @@ coverage
 *.sw?
 
 *.tsbuildinfo
-
-dbdata/*
-/dbdata
