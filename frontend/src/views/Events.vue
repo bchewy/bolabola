@@ -2,7 +2,7 @@
   <div>
     <NavBar />
     <div class="events-view">
-      <h1>Matches</h1>
+      <h1 class="text-superblue">Matches</h1>
       <p class="lead text-dark">Find the latest games here!</p>
 
       <div class="container-fluid mt-3">
@@ -102,6 +102,10 @@ export default {
 .events-view {
   text-align: center;
   margin-top: 50px;
+}
+
+.text-superblue{
+  color: #5356FF;
 }
 
 .card-container {
