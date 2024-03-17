@@ -31,3 +31,4 @@ Delete the `dbdata` folder and compose up again.
 
 ## Issues
 - [ ] RabbitMQ is not working
+- [ ] Change db to include Premium field
