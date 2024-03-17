@@ -31,6 +31,8 @@ services:
       - kong-net
     depends_on:
       - mongodb
+    environment:
+      - PYTHONUNBUFFERED=1
 
   queue:
     build:
@@ -41,6 +43,7 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - PYTHONUNBUFFERED=1
 
   billing:
     build:
@@ -48,6 +51,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   user:
     build:
@@ -57,6 +62,8 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
 
   videoasset:
     build:
@@ -66,6 +73,8 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+    - PYTHONUNBUFFERED=1
 
   livematch:
     build:
@@ -75,12 +84,15 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
 
   notification:
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - PYTHONUNBUFFERED=1
     build:
       context: ./microservices/base/7-notification
       dockerfile: Dockerfile
@@ -112,6 +124,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   # Orchas
   match-streaming-orchestrator:
@@ -120,6 +134,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   match-booking-orchestrator:
     build:
@@ -127,6 +143,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   refund-orchestrator:
     build:
@@ -134,6 +152,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   # Kong ================================================
   kong-database:
@@ -296,9 +316,9 @@ services:
   stripe-cli:
     image: stripe/stripe-cli
     container_name: stripe-cli
-    command: listen --api-key sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE --device-name ticketboost --forward-to localhost:9003/webhook/stripe # if you change the forward to link, you need to change the link in the stripe service (tell yiji)
-    networks:
-      - kong-net
+    command: listen --api-key sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE --device-name bolabola --forward-to localhost:8000/api/v1/billing/webhook/stripe # if you change the forward to link, you need to change the link in the stripe service (tell yiji)
+    network_mode:
+      host
     environment:
       STRIPE_API_KEY: sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE
     volumes:

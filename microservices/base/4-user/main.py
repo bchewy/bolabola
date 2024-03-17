@@ -34,6 +34,7 @@ class User(db.Model):
 # path to test if the service is running
 @app.route("/ping", methods=["GET"])
 def ping():
+    print("pinged")
     return "pong"
 
 # path to print all users

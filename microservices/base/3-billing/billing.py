@@ -27,6 +27,7 @@ stripe.api_key = "sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060E
 
 @app.route("/ping", methods=["GET"])
 def ping():
+    print("pinged")
     return jsonify({"message": "Pong!"})
 
 
@@ -88,7 +89,6 @@ def create_checkout_session():
                         "quantity": ticket["quantity"],
                     }
                 )
-            print(line_items[0])
             # create a new checkout session
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
@@ -99,39 +99,46 @@ def create_checkout_session():
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
-    print(checkout_session.id)
+    print("The following checkout session was created: ")
+    print(checkout_session)
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
 
 # Create a webhook endpoint for the checkout session
 @app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get("Stripe-Signature")
+    print("RECEIVED STRIPE ENDPOINT") # for testing
+    endpoint_secret = 'whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df'
+    event = None
+    payload = request.data
+    sig_header = request.headers["Stripe-Signature"]
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_SECRET_KEY)
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
     except ValueError as e:
         # Invalid payload
         return "Invalid payload", 400
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
+    
+    print("Received event: id: ", event["id"], "type: ", event["type"]) # for testing
+    print("event: ", event) # for testing
 
     # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
-        payment_intent = event["data"]["object"]
-        print("The payment intent is: ") # for testing
-        print(payment_intent) # for testing
-        print("Checkout Session completed!")
+        session = event["data"]["object"]
+        print("The checkout session that is completed is: ") # for testing
+        print(session) # for testing
         # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/process_webhook"
+        ORCHESTRATOR_URL = "http://kong:8000/api/v1/match-booking/process_webhook"
         # Prepare payload to send back to orchestrator
         payload = {
-            "payment_status": payment_intent["payment_status"],
-            "charge_id": payment_intent["id"],
+            "payment_status": session["payment_status"],
+            "charge_id": session["id"],
         }
         # Send POST request to orchestrator
         response = requests.post(ORCHESTRATOR_URL, json=payload)
+
         if response.ok:
             return (
                 jsonify({"stats": "Payment confirmed and orchestrator notified."}),
