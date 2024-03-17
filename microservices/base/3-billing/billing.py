@@ -104,9 +104,7 @@ def create_checkout_session():
 
 
 # Create a webhook endpoint for the checkout session
-@app.route(
-    "/webhook/stripe", methods=["POST"]
-)  # if you change this endpoint, pls let yiji know so he can change in Stripe
+@app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
     payload = request.get_data(as_text=True)
     sig_header = request.headers.get("Stripe-Signature")
@@ -122,11 +120,11 @@ def stripe_webhook():
     # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
         payment_intent = event["data"]["object"]
-        print("The payment intent is: ")
-        print(payment_intent)
+        print("The payment intent is: ") # for testing
+        print(payment_intent) # for testing
         print("Checkout Session completed!")
         # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/match-booking"
+        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/process_webhook"
         # Prepare payload to send back to orchestrator
         payload = {
             "payment_status": payment_intent["payment_status"],
@@ -136,7 +134,7 @@ def stripe_webhook():
         response = requests.post(ORCHESTRATOR_URL, json=payload)
         if response.ok:
             return (
-                jsonify({"message": "Payment confirmed and orchestrator notified."}),
+                jsonify({"stats": "Payment confirmed and orchestrator notified."}),
                 200,
             )
         else:

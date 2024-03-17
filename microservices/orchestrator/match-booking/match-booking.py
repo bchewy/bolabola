@@ -66,27 +66,6 @@ def publish_to_amqp():
 
     connection.close()
 
-
-# Receive the transaction status from billing service
-@app.route("/match-booking", methods=["POST"])
-def check_payment_status():
-    """
-    This method receives a POST request from the billing service.
-    If the status is "success", it publishes the match and user data to the RabbitMQ queue.
-    Sample payload received:
-    {
-        "status": "success",
-    }
-    """
-    data = request.json
-    print("The Match Booking orcha received the following from billing service: ")
-    print(data)
-    if data["status"] == "success":
-        print("Publishing to RabbitMQ")
-        publish_to_amqp()
-    return jsonify({"message": "Match booking successful!"})
-
-
 # HANDLE SELECT SEAT AND QUANTITY FLOW
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
@@ -114,13 +93,68 @@ def init_match_booking(match_id):
     # return jsonify(match_details, {"seatCount": seatCount})
 
 
-app.route("/continue-match-booking/<match_id>", methods=["GET"])
-
+# app.route("/continue-match-booking/<match_id>", methods=["GET"])
 
 def continue_match_booking(match_id, user_id, ticket_category):
     # TODO: Call billing service to send billing/purchase details, and wait for response
+    """
+    This method should send the billing details to the billing service. An example of the payload of billing details is:
+    {
+        "match_id": "1234",
+        "match_name": "Arsenal vs Chelsea",
+        "tickets": [
+            {"category": "A", "quantity": 2},
+            {"category": "B", "quantity": 3},
+            {"category": "C", "quantity": 4},
+        ],
+        "user_id": "123"
+    }
+    """
+    payload = { # hardcoded now, but should be dynamic
+        "match_id": match_id,
+        "match_name": "Arsenal vs Chelsea",
+        "tickets": [
+            {"category": "A", "quantity": 2},
+            {"category": "B", "quantity": 3},
+            {"category": "C", "quantity": 4},
+        ],
+        "user_id": user_id,
+    }
+    
+    # Send to billing service to create a checkout session
+    response = requests.post(BILLING_URL + "/checkout", json=payload)
 
-    pass
+    # Check if the checkout_session was created successfully
+    if response["code"] == 200:
+        checkout_session = response["checkout_session"]
+        return jsonify({"checkout_session": checkout_session})
+    else:
+        return jsonify({"error": "Unable to create checkout session."}) 
+
+# Receive the transaction status from billing service
+@app.route("/process-webhook", methods=["POST"])
+def process_webhook():
+    """
+    This method receives a POST request from the billing service.
+    If the status is "success", it publishes the match and user data to the RabbitMQ queue.
+    Sample payload sent over by billing microservice:
+    payload = {
+            "payment_status": payment_intent["payment_status"],
+            "charge_id": payment_intent["id"],
+    }
+    """
+    data = request.json
+    print("The Match Booking orcha received the following from billing service: ")
+    print(data)
+    ############################################################################################################
+    ############################################################################################################
+    # may be need to get other match booking detials from other services before sending over to the RabbitMQ
+    ############################################################################################################
+    ############################################################################################################
+    if data["status"] == "success":
+        print("Publishing to RabbitMQ")
+        publish_to_amqp()
+    return jsonify({"message": "Match booking successful!"})
 
 
 def retrieve_match_from_match_service(match_id):
