@@ -16,7 +16,7 @@ Sample User:
     "password": "johndoe",
     "tickets": [
         {"match_id": 123, "ticket_category": "A", "serial_no": "1", "charge_id": "abc"},
-        {"match_id": 456, "ticket_category": "A", "serial_no": "2"}, "charge_id": "cbd",
+        {"match_id": 456, "ticket_category": "A", "serial_no": "2", "charge_id": "cbd"},
     ]
 }
 ```
@@ -30,5 +30,8 @@ If you get this error in mysql:
 Delete the `dbdata` folder and compose up again.
 
 ## Issues
+- [ ] Track the logged in user
+- [ ] If user is not registered, create a new user
 - [ ] RabbitMQ is not working
-- [ ] Change db to include Premium field
+- [:checkmark:] Change db to include Premium field
+- [ ] Create charge_id field for tickets in db

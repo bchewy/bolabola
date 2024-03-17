@@ -117,8 +117,6 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
-    
-    print("event: ", event) # for testing
 
     # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
@@ -127,36 +125,18 @@ def stripe_webhook():
         print(session) # for testing
 
         # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/process_webhook"
+        ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process_webhook"
         # Prepare payload to send back to orchestrator
         payload = {
-            "payment_status": "success",
-            "payment_intent": session["payment_intent"],
-        }
-        # Send POST request to orchestrator
-        response = requests.post(ORCHESTRATOR_URL, json=payload)
-
-        # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://kong:8000/api/v1/match-booking/process_webhook"
-        # Prepare payload to send back to orchestrator
-        payload = {
+            "status": "success",
             "test": "test1",
             "payment_status": "success",
             "payment_intent": session["payment_intent"],
         }
         # Send POST request to orchestrator
+        print("Tried sending to this link: ", ORCHESTRATOR_URL)
         response = requests.post(ORCHESTRATOR_URL, json=payload)
-
-        # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://kong:8000/match-booking/process_webhook"
-        # Prepare payload to send back to orchestrator
-        payload = {
-            "test": "test2",
-            "payment_status": "success",
-            "payment_intent": session["payment_intent"],
-        }
-        # Send POST request to orchestrator
-        response = requests.post(ORCHESTRATOR_URL, json=payload)
+        print("The response from orchestrator is: ", response)
 
         if response.ok:
             return (
@@ -164,6 +144,7 @@ def stripe_webhook():
                 200,
             )
         else:
+            print("Cannot notify orchestrator")
             return jsonify({"error": "Failed to notify the orchestrator."}), 500
 
     return jsonify({"code": 200, "status": "success"}), 200
