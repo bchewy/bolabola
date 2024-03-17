@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pika
 from threading import Thread
 import requests
@@ -30,6 +31,7 @@ def run_consumer_thread():
 
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 # Publish to AMQP - to update subsequent services about the match booking
@@ -139,7 +141,7 @@ def process_webhook():
     If the status is "success", it publishes the match and user data to the RabbitMQ queue.
     Sample payload sent over by billing microservice:
     payload = {
-            "payment_status": "success",
+            "status": "success",
             "payment_intent": "pi_3OvDsfF4chEmCmGg1efgabcI,
     }
     """
@@ -151,9 +153,9 @@ def process_webhook():
     # may be need to get other match booking detials from other services before sending over to the RabbitMQ
     ############################################################################################################
     ############################################################################################################
-    if data["status"] == "success":
-        print("Publishing to RabbitMQ")
-        publish_to_amqp()
+    # if data["status"] == "success":
+    #     print("Publishing to RabbitMQ")
+    #     publish_to_amqp()
     return jsonify({"message": "Match booking successful!"})
 
 

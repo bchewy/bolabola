@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify
 import pika
 import requests
 import json
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Hardcoded credentials and connection details for RabbitMQ
 rabbitmq_user = "ticketboost"

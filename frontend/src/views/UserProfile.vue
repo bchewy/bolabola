@@ -65,7 +65,12 @@ export default {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ticket: this.tickets[index] }),
+        body: JSON.stringify(
+          { 
+            ticket: this.tickets[index],
+            paymentIntentId: 'pi_1GszsK2eZvKYlo2CfhZyoZLp' // This is the most important thing to initiate the refund!!
+          }
+        ),
       })
 
       const refundedTicket = this.tickets.splice(index, 1)[0]; // Remove the ticket from the tickets array
