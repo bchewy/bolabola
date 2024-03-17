@@ -1,19 +1,36 @@
 <template>
     <div class="checkout">
         <h1 class="text-superblue">Confirm your tickets...</h1>
-        <div class="position-absolute bottom-0 end-0 mb-3 me-3"> <!-- Container for the button -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Selected Ticket Type</th>
+                    <th>Category</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- <tr v-for="(ticket, index) in selectedOption" :key="index">
+                    <td>{{ ticket.category }}</td>
+                    <td>{{ ticket.quantity }}</td>
+                </tr> -->
+                <tr>
+                    <td>{{selectedOption}}</td>
+                    <td>{{selectedSeats}}</td>
+                    <td>{{selectedQuantity}}</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="position-absolute bottom-0 end-0 mb-3 me-3">
             <button class="btn btn-primary" @click="redirectToCheckout">Proceed to Checkout</button>
         </div>
     </div>
-  </template>
-  
+</template>
 
 
-  
-  
 <style scoped>
-.text-superblue{
-  color: #5356FF;
+.text-superblue {
+    color: #5356FF;
 }
 
 .checkout {
@@ -43,10 +60,21 @@
     margin-bottom: 0;
 }
 </style>
-  
+
 <script>
+import SeatSelection from './Seats.vue';
 import axios from 'axios';
 export default {
+    components: {
+        SeatSelection,
+    },
+    data() {
+        return {
+            selectedSeats: [],
+            selectedQuantity: 0, 
+            selectedOption: ''
+        };
+    },
     methods: {
         redirectToCheckout() {
             try {
@@ -55,10 +83,10 @@ export default {
                     "match_id": "1234",
                     "match_name": "Arsenal vs Chelsea",
                     "tickets": [
-                        {"category": "A", "quantity": 2},
-                        {"category": "B", "quantity": 3},
-                        {"category": "C", "quantity": 4},
-                        {"category": "Online", "quantity": 1}
+                        { "category": "A", "quantity": 2 },
+                        { "category": "B", "quantity": 3 },
+                        { "category": "C", "quantity": 4 },
+                        { "category": "Online", "quantity": 1 }
                     ],
                     "user_id": "123"
                 };
@@ -70,15 +98,15 @@ export default {
                     },
                     body: JSON.stringify(data),
                 })
-                .then((result) => result.json())
-                .then((data) => {
-                    console.log(data);
-                    // redirect to url
-                    window.location.href = data.checkout_session.url;
-                })
-                .then((res) => {
-                    console.log(res);
-                })
+                    .then((result) => result.json())
+                    .then((data) => {
+                        console.log(data);
+                        // redirect to url
+                        window.location.href = data.checkout_session.url;
+                    })
+                    .then((res) => {
+                        console.log(res);
+                    })
                 // Handle response if required
                 console.log(response.data);
             } catch (error) {

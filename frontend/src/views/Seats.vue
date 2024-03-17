@@ -4,7 +4,8 @@
         <p class="lead text-dark">Click on available seats to select them.</p>
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <select class="form-select mb-3" v-model="selectedOption" @change="selectSeatOption(selectedOption)" style="width: 100%">
+                <select class="form-select mb-3" v-model="selectedOption" @change="selectSeatOption(selectedOption)"
+                    style="width: 100%">
                     <option value="Stadium Ticket">Stadium Ticket</option>
                     <option value="Streaming Ticket">Streaming Ticket</option>
                 </select>
@@ -13,11 +14,14 @@
         <!-- Display the seat map only if selectedOption is not 'Streaming Ticket' -->
         <div v-if="selectedOption !== 'Streaming Ticket'" class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
-                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="toggleSeat(rowIndex, seatIndex)" class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
+                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="toggleSeat(rowIndex, seatIndex)"
+                    class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}
+                </div>
             </div>
         </div>
         <!-- Display the quantity selector -->
-        <div v-if="selectedOption === 'Streaming Ticket' || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0)" class="quantity-selector">
+        <div v-if="selectedOption === 'Streaming Ticket' || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0)"
+            class="quantity-selector">
             <label for="quantity">Select Quantity:</label>
             <select id="quantity" v-model="selectedQuantity">
                 <option value="1">1</option>
@@ -27,7 +31,8 @@
             </select>
         </div>
         <!-- Display the proceed button if conditions are met -->
-        <div v-if="(selectedOption === 'Streaming Ticket' && selectedQuantity > 0) || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0 && selectedQuantity > 0)" class="position-absolute bottom-0 end-0 mb-3 me-3">
+        <div v-if="(selectedOption === 'Streaming Ticket' && selectedQuantity > 0) || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0 && selectedQuantity > 0)"
+            class="position-absolute bottom-0 end-0 mb-3 me-3">
             <button class="btn btn-primary" @click="proceedToCheckout">Proceed</button>
         </div>
     </div>
@@ -35,6 +40,11 @@
 
 <script>
 export default {
+    props: {
+        selectedOption: String,
+        selectedSeats: Array,
+        selectedQuantity: Number
+    },
     data() {
         return {
             seatMap: [
@@ -85,8 +95,8 @@ export default {
 
 
 <style scoped>
-.text-superblue{
-  color: #5356FF;
+.text-superblue {
+    color: #5356FF;
 }
 
 .seat-selection {
@@ -122,6 +132,3 @@ export default {
     background-color: #ccc;
 }
 </style>
-
-
-
