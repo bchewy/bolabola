@@ -91,6 +91,7 @@ def check_payment_status():
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
 
+    readyToPay = False
     # get userid
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
@@ -105,16 +106,21 @@ def init_match_booking(match_id):
             {"message": "No seats available for this match!"}
         )  # Return to frontend if unavailable.
     else:
-        # we can continue here!
-        # Display ticket availability
-        # Lock the ticket
-
-        # minus seat count by one - call match service to do this
-        # TODO: change hardcoded user_id and ticket_category
+        # TODO: Add minus seat count for the selected seat from Match Service
         response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
-        print(response, locked)
-    return (response, locked)
+
+        readyToPay = True  # Upon readyToPay being true, frontend should progress to match checkout UI.
+    return (response, locked, readyToPay)
     # return jsonify(match_details, {"seatCount": seatCount})
+
+
+app.route("/continue-match-booking/<match_id>", methods=["GET"])
+
+
+def continue_match_booking(match_id, user_id, ticket_category):
+    # TODO: Call billing service to send billing/purchase details, and wait for response
+
+    pass
 
 
 def retrieve_match_from_match_service(match_id):
