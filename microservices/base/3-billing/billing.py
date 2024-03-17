@@ -125,7 +125,7 @@ def stripe_webhook():
         print(session) # for testing
 
         # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process_webhook"
+        ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
         # Prepare payload to send back to orchestrator
         payload = {
             "status": "success",
