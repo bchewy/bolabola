@@ -1,7 +1,7 @@
 <template>
   <NavBar />
   <div class="about-view d-flex flex-column justify-content-center align-items-center">
-    <h1 class="text-center">Streaming</h1>
+    <h1 class="text-center text-superblue">Streaming</h1>
     <p class="lead text-dark text-center">Tune in and experience the thrill of live football!</p>
 </div>
 </template>
@@ -24,4 +24,10 @@ export default {
   text-align: center;
   margin-top: 50px;
 }
+
+.text-superblue{
+  color: #5356FF;
+}
+
+
 </style>

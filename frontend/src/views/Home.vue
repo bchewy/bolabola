@@ -5,12 +5,12 @@
   <div class="container-fluid p-0 scroll-container bg-image pb-5">
     <section>
       <NavBar />
-      <div class="section-background text-light text-center vh-100 d-flex align-items-center justify-content-center">
+      <div class="text-light text-center d-flex align-items-center justify-content-center" style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh;">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
-              <p class="lead">
+              <p class="lead text-dark">
                 Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals
                 and enjoy a seamless ticketing experience.
               </p>
@@ -122,7 +122,7 @@ export default {
 <style scoped>
 /* Other component-specific styles */
 .bg-image {
-  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png');
+  /* background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png'); */
   /* background-image: url('https://bchewy-images.s3.ap-southeast-1.amazonaws.com/plan-it/planit.png'); */
   background-size: cover;
   background-repeat: no-repeat;
@@ -151,7 +151,8 @@ export default {
 }
 
 .text-superblue {
-  color: lightblue;
+  /* color: lightblue; */
+  color: #5356FF;
 }
 
 .light-green {
