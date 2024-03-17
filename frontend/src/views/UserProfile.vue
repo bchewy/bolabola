@@ -45,7 +45,8 @@ export default {
         { matchName: 'Match B', matchTime: '2024-03-11T15:00:00', matchLocation: 'Location B', matchPrice: 15 },
         { matchName: 'Match C', matchTime: '2025-01-13T10:00:00', matchLocation: 'Location C', matchPrice: 20 },
       ],
-      refundedTickets: []
+      refundedTickets: [],
+      refund_success: false
     };
   },
   methods: {
@@ -58,9 +59,22 @@ export default {
       return hoursDifference > 24;
     },
     refundTicket(index) {
+      // Send a request to the backend to refund the ticket
+      fetch('http://localhost:8000/api/v1/billing/refund', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ticket: this.tickets[index] }),
+      })
+
       const refundedTicket = this.tickets.splice(index, 1)[0]; // Remove the ticket from the tickets array
       this.refundedTickets.push(refundedTicket); // Add the refunded ticket to the refundedTickets array
-      this.$router.push('/views/refund');
+      if (this.refund_success) {
+        this.$router.push('/views/refund');
+      } else {
+        alert('Refund failed'); // can help to find nicer way of showing this
+      }
     }
   }
 };

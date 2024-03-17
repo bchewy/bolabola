@@ -139,8 +139,8 @@ def process_webhook():
     If the status is "success", it publishes the match and user data to the RabbitMQ queue.
     Sample payload sent over by billing microservice:
     payload = {
-            "payment_status": payment_intent["payment_status"],
-            "charge_id": payment_intent["id"],
+            "payment_status": "success",
+            "payment_intent": "pi_3OvDsfF4chEmCmGg1efgabcI,
     }
     """
     data = request.json

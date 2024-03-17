@@ -99,15 +99,12 @@ def create_checkout_session():
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
-    print("The following checkout session was created: ")
-    print(checkout_session)
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
 
 # Create a webhook endpoint for the checkout session
 @app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
-    print("RECEIVED STRIPE ENDPOINT") # for testing
     endpoint_secret = 'whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df'
     event = None
     payload = request.data
@@ -121,7 +118,6 @@ def stripe_webhook():
         # Invalid signature
         return "Invalid signature", 400
     
-    print("Received event: id: ", event["id"], "type: ", event["type"]) # for testing
     print("event: ", event) # for testing
 
     # Handle the checkout.session.completed event
@@ -129,12 +125,35 @@ def stripe_webhook():
         session = event["data"]["object"]
         print("The checkout session that is completed is: ") # for testing
         print(session) # for testing
+
+        # send payment confirmation to orchestrator
+        ORCHESTRATOR_URL = "http://localhost:8000/api/v1/match-booking/process_webhook"
+        # Prepare payload to send back to orchestrator
+        payload = {
+            "payment_status": "success",
+            "payment_intent": session["payment_intent"],
+        }
+        # Send POST request to orchestrator
+        response = requests.post(ORCHESTRATOR_URL, json=payload)
+
         # send payment confirmation to orchestrator
         ORCHESTRATOR_URL = "http://kong:8000/api/v1/match-booking/process_webhook"
         # Prepare payload to send back to orchestrator
         payload = {
-            "payment_status": session["payment_status"],
-            "charge_id": session["id"],
+            "test": "test1",
+            "payment_status": "success",
+            "payment_intent": session["payment_intent"],
+        }
+        # Send POST request to orchestrator
+        response = requests.post(ORCHESTRATOR_URL, json=payload)
+
+        # send payment confirmation to orchestrator
+        ORCHESTRATOR_URL = "http://kong:8000/match-booking/process_webhook"
+        # Prepare payload to send back to orchestrator
+        payload = {
+            "test": "test2",
+            "payment_status": "success",
+            "payment_intent": session["payment_intent"],
         }
         # Send POST request to orchestrator
         response = requests.post(ORCHESTRATOR_URL, json=payload)
@@ -163,9 +182,9 @@ def stripe_webhook():
 def refund_payment():
     """
     This method refunds a user's payment.
-    Accepts a JSON payload about the tickets, as long as it has charge_id. Eg:
+    Accepts a JSON payload about the tickets, as long as it has a payment_intent. Eg:
     {
-        "charge_id": "ch_1NirD82eZvKYlo2CIvbtLWuY""
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY""
     }
     output: https://docs.stripe.com/api/refunds/object
     """

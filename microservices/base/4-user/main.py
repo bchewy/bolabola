@@ -26,10 +26,11 @@ class User(db.Model):
     stripe_id = db.Column(db.String(120), unique=True, nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    tickets = db.Column(db.JSON, nullable=True)
+    tickets = db.Column(db.JSON, nullable=True),
+    premium = db.Column(db.String(80), nullable=False)
 
     def json(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets}
+        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets, "premium": self.premium}
 
 # path to test if the service is running
 @app.route("/ping", methods=["GET"])
