@@ -8,14 +8,13 @@
       <div class="section-background text-light text-center vh-100 d-flex align-items-center justify-content-center">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
-            <img src="/src/assets/background2.png" style="width:50%; margin-right: 10%;">
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
-              <p class="lead text-dark">
-                Discover and book tickets for your favorite teams with TicketBoost. <br>Get access to exclusive videos
+              <p class="lead">
+                Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals
                 and enjoy a seamless ticketing experience.
               </p>
-              <button class="btn btn-primary" @click="$router.push('/events')">Get Started</button>
+              <button class="btn btn-primary" @click="$router.push('/about')">Get Started</button>
             </div>
           </div>
         </div>
@@ -123,7 +122,7 @@ export default {
 <style scoped>
 /* Other component-specific styles */
 .bg-image {
-  /* background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png'); */
+  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png');
   /* background-image: url('https://bchewy-images.s3.ap-southeast-1.amazonaws.com/plan-it/planit.png'); */
   background-size: cover;
   background-repeat: no-repeat;
