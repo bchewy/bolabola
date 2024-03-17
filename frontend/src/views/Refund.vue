@@ -22,7 +22,16 @@
     </div>
   </template>
   
-  
+
+<!-- <script>
+export default {
+  computed: {
+    refundedTickets() {
+      return this.$store.state.refundedTickets;
+    }
+  }
+};
+</script> -->
   
 <style scoped>
 .text-superblue{

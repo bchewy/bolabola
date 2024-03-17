@@ -13,6 +13,7 @@
         </div>
         <!-- Display the seat map only if selectedOption is not 'Streaming Ticket' -->
         <div v-if="selectedOption !== 'Streaming Ticket'" class="seat-map">
+            <p>Choose Category:</p>
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
                 <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="toggleSeat(rowIndex, seatIndex)"
                     class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}
@@ -48,9 +49,9 @@ export default {
     data() {
         return {
             seatMap: [
-                [{ label: 'A1', selected: false, available: true }, { label: 'A2', selected: false, available: false }, { label: 'A3', selected: false, available: true }],
-                [{ label: 'B1', selected: false, available: true }, { label: 'B2', selected: false, available: true }, { label: 'B3', selected: false, available: true }],
-                [{ label: 'C1', selected: false, available: false }, { label: 'C2', selected: false, available: true }, { label: 'C3', selected: false, available: true }],
+                [{ label: 'A', selected: false, available: true }, { label: 'B', selected: false, available: false }, { label: 'C', selected: false, available: true }],
+                [{ label: 'D', selected: false, available: true }, { label: 'E', selected: false, available: true }, { label: 'F', selected: false, available: true }],
+                [{ label: 'G', selected: false, available: false }, { label: 'H', selected: false, available: true }, { label: 'I', selected: false, available: true }],
             ],
             selectedOption: 'Stadium Ticket', // Default option
             dropdownOpen: false, // Tracks the dropdown state
@@ -66,6 +67,7 @@ export default {
             }
         },
         proceedToCheckout() {
+            console.log('Selected ticket type:', this.selectedOption);
             console.log('Selected seats:', this.selectedSeats);
             console.log('Selected quantity:', this.selectedQuantity);
             this.$router.push('/views/checkout');

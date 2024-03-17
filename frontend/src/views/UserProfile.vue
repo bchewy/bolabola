@@ -46,7 +46,7 @@ export default {
         { matchName: 'Match C', matchTime: '2025-01-13T10:00:00', matchLocation: 'Location C', matchPrice: 20 },
       ],
       refundedTickets: [],
-      refund_success: false
+      refund_success: true
     };
   },
   methods: {
@@ -78,7 +78,7 @@ export default {
       if (this.refund_success) {
         this.$router.push('/views/refund');
       } else {
-        alert('Refund failed'); // can help to find nicer way of showing this
+        alert('Unsuccessful Refund. Please try again.'); // can help to find nicer way of showing this
       }
     }
   }

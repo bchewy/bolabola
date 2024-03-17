@@ -1,20 +1,22 @@
 <template>
     <div class="checkout">
         <h1 class="text-superblue">Confirm your tickets...</h1>
-        <table class="table">
+        <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>Match Name</th>
+                    <th>Match ID</th>
+                    <th>User ID</th>
                     <th>Selected Ticket Type</th>
                     <th>Category</th>
                     <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- <tr v-for="(ticket, index) in selectedOption" :key="index">
-                    <td>{{ ticket.category }}</td>
-                    <td>{{ ticket.quantity }}</td>
-                </tr> -->
                 <tr>
+                    <td>Arsenal vs Chelsea</td>
+                    <td>1234</td>
+                    <td>123</td>
                     <td>{{selectedOption}}</td>
                     <td>{{selectedSeats}}</td>
                     <td>{{selectedQuantity}}</td>
@@ -28,39 +30,6 @@
 </template>
 
 
-<style scoped>
-.text-superblue {
-    color: #5356FF;
-}
-
-.checkout {
-    text-align: center;
-    margin-top: 50px;
-}
-
-.card-container {
-    display: flex;
-    justify-content: center;
-}
-
-.card {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 20px;
-    margin: 10px;
-    width: 300px;
-    /* Adjust width as needed */
-}
-
-.card h2 {
-    margin-top: 0;
-}
-
-.card p {
-    margin-bottom: 0;
-}
-</style>
-
 <script>
 import SeatSelection from './Seats.vue';
 import axios from 'axios';
@@ -70,9 +39,9 @@ export default {
     },
     data() {
         return {
-            selectedSeats: [],
-            selectedQuantity: 0, 
-            selectedOption: ''
+            selectedOption: String,
+            selectedSeats: Array,
+            selectedQuantity: Number
         };
     },
     methods: {
@@ -117,3 +86,36 @@ export default {
 }
 
 </script>
+
+<style scoped>
+.text-superblue {
+    color: #5356FF;
+}
+
+.checkout {
+    text-align: center;
+    margin-top: 50px;
+}
+
+.card-container {
+    display: flex;
+    justify-content: center;
+}
+
+.card {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px;
+    width: 300px;
+    /* Adjust width as needed */
+}
+
+.card h2 {
+    margin-top: 0;
+}
+
+.card p {
+    margin-bottom: 0;
+}
+</style>
