@@ -3,6 +3,7 @@ from flask_cors import CORS
 import pika
 from threading import Thread
 import requests
+import json
 
 MATCH_URL = "http://kong:8000/api/v1/match"
 SEAT_URL = "http://kong:8000/api/v1/seat"
@@ -141,22 +142,39 @@ def process_webhook():
     If the status is "success", it publishes the match and user data to the RabbitMQ queue.
     Sample payload sent over by billing microservice:
     payload = {
-            "status": "success",
+            "status": "complete",
             "payment_intent": "pi_3OvDsfF4chEmCmGg1efgabcI,
+            "metadata": {
+                            "match_id": "1234",
+                            "user_id": "123",
+                            "A": 2,
+                            "B": 3,
+                            "C": 4,
+                        }
     }
+    Note: A, B, C are the ticket categories and their respective quantities.
     """
     data = request.json
     print("The Match Booking orcha received the following from billing service: ")
     print(data)
-    ############################################################################################################
-    ############################################################################################################
-    # may be need to get other match booking detials from other services before sending over to the RabbitMQ
-    ############################################################################################################
-    ############################################################################################################
-    # if data["status"] == "success":
-    #     print("Publishing to RabbitMQ")
-    #     publish_to_amqp()
-    return jsonify({"message": "Match booking successful!"})
+
+    if data["status"] == "complete":
+
+        # Publish to RabbitMQ
+        # publish_to_amqp()
+
+        return jsonify({"message": "Match booking info sent to AMQP"})
+
+    elif data["status"] == "expired":
+        # send a message to the frontend to inform the user that the payment link has expired
+        return jsonify({"message": "Payment link expired!"})
+    
+    elif data["status"] == "cancelled":
+        # send a message to the frontend to inform the user that the payment link has been cancelled
+        return jsonify({"message": "Payment link cancelled!"})
+    
+    else:
+        return jsonify({"error": "Unexpected status received."})
 
 
 def retrieve_match_from_match_service(match_id):

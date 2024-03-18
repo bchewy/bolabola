@@ -13,6 +13,7 @@ from flask_cors import CORS
 import stripe
 import os
 import sys
+import json
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -64,18 +65,29 @@ def create_checkout_session():
         "tickets": [
             {"category": "A", "quantity": 2},
             {"category": "B", "quantity": 3},
-            {"category": "C", "quantity": 4},
-            {"category": "Online", "quantity": 1}
+            {"category": "C", "quantity": 4}
         ],
         "user_id": "123"
     }
     """
-    ticket_dict = {"A": 100, "B": 50, "C": 25, "Online": 10}
+    ticket_dict = {"A": 100, "B": 50, "C": 25}
     if request.method == "POST":
         try:
+            # these variables store the quantity of each ticket category for metadata use
+            A,B,C = 0,0,0
+
             # line_items shows the details of the tickets on the receipt
             line_items = []
+
             for ticket in request.json["tickets"]:
+                # fill in metadata for Stripe
+                if ticket["category"] == "A":
+                    A = ticket["quantity"]
+                elif ticket["category"] == "B":
+                    B = ticket["quantity"]
+                elif ticket["category"] == "C":
+                    C = ticket["quantity"]
+                # fill in line_items for Stripe
                 line_items.append(
                     {
                         "price_data": {
@@ -89,20 +101,29 @@ def create_checkout_session():
                         "quantity": ticket["quantity"],
                     }
                 )
+
             # create a new checkout session
+            metadata = {
+                "match_id": request.json["match_id"],
+                "user_id": request.json["user_id"],
+                "A": A,
+                "B": B,
+                "C": C,
+            }
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
                 success_url="http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url="http://localhost:5173/views/checkoutCancel",
+                metadata=metadata, # pass the metadata to the webhook
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
 
-# Create a webhook endpoint for the checkout session
+# Stripe calls this webhook
 @app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
     endpoint_secret = 'whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df'
@@ -117,38 +138,49 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
+    
+    # send payment information to orchestrator
+    ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
 
+    session = event["data"]["object"]
     # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
-        session = event["data"]["object"]
-        print("The checkout session that is completed is: ") # for testing
-        print(session) # for testing
-
-        # send payment confirmation to orchestrator
-        ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
         # Prepare payload to send back to orchestrator
         payload = {
-            "status": "success",
-            "test": "test1",
-            "payment_status": "success",
+            "status": "complete",
             "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
         }
-        # Send POST request to orchestrator
-        print("Tried sending to this link: ", ORCHESTRATOR_URL)
-        response = requests.post(ORCHESTRATOR_URL, json=payload)
-        print("The response from orchestrator is: ", response)
+    
+    elif event["type"] == "checkout.session.expired":
+        payload = {
+            "status": "expired",
+            "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
+        }
+    elif event["type"] == "checkout.session.cancelled":
+        payload = {
+            "status": "cancelled",
+            "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
+        }
+    else:
+        # Unexpected event type
+        return "Unexpected event type", 400
 
-        if response.ok:
-            return (
-                jsonify({"stats": "Payment confirmed and orchestrator notified."}),
-                200,
-            )
-        else:
-            print("Cannot notify orchestrator")
-            return jsonify({"error": "Failed to notify the orchestrator."}), 500
+    # Send POST request to orchestrator
+    print("Tried sending to this link: ", ORCHESTRATOR_URL)
+    response = requests.post(ORCHESTRATOR_URL, json=payload)
+    print("The response from orchestrator is: ", response)
 
-    return jsonify({"code": 200, "status": "success"}), 200
-
+    if response.ok:
+        return (
+            jsonify({"stats": "Payment confirmed and orchestrator notified."}),
+            200,
+        )
+    else:
+        print("Cannot notify orchestrator")
+        return jsonify({"error": "Failed to notify the orchestrator."}), 500
 
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################
