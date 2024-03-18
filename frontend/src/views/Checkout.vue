@@ -13,13 +13,13 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Arsenal vs Chelsea</td>
-                    <td>1234</td>
-                    <td>123</td>
-                    <td>{{selectedOption}}</td>
-                    <td>{{selectedSeats}}</td>
-                    <td>{{selectedQuantity}}</td>
+                <tr v-for="(ticket, index) in tickets" :key="index">
+                    <td>{{ match_name }}</td>
+                    <td>{{ match_id }}</td>
+                    <td>{{ user_id }}</td> <!-- no need show this hor -->
+                    <td>{{ticket.type }}</td> <!--idk what is this type actly-->
+                    <td>{{ ticket.category }}</td>
+                    <td>{{ ticket.quantity }}</td>
                 </tr>
             </tbody>
         </table>
@@ -41,7 +41,15 @@ export default {
         return {
             selectedOption: String,
             selectedSeats: Array,
-            selectedQuantity: Number
+            selectedQuantity: Number,
+            match_id: "1234", // to be fetched from previous page
+            match_name: "Arsenal vs Chelsea", // to be fetched from previous page
+            user_id: "123", // to be fetched from the server or previous page
+            tickets: [
+                { category: "A", quantity: 2 },
+                { category: "B", quantity: 3 },
+                { category: "C", quantity: 4 },
+            ]
         };
     },
     methods: {
@@ -55,7 +63,6 @@ export default {
                         { "category": "A", "quantity": 2 },
                         { "category": "B", "quantity": 3 },
                         { "category": "C", "quantity": 4 },
-                        { "category": "Online", "quantity": 1 }
                     ],
                     "user_id": "123"
                 };
