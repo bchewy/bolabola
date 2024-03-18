@@ -197,10 +197,17 @@ def refund_payment():
     This method refunds a user's payment.
     Accepts a JSON payload about the tickets, as long as it has a payment_intent. Eg:
     {
-        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY""
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
     output: https://docs.stripe.com/api/refunds/object
+    "pi_3OvgQTF4chEmCmGg1A9ZYrVI"
+
     """
+    # When user clicks on refund on the frontend, the frontend will send a POST request to this endpoint
+    # the request will contain the payment_intent, which is taken from the user's database
+
+    # REFUND LOGIC COPY THE CHECKOUT LOGIC ABOVE
+    
     try:
         if "charge_id" not in request.json:
             return jsonify({"error": "charge_id not found"}), 400

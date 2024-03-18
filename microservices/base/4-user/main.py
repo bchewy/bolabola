@@ -26,11 +26,30 @@ class User(db.Model):
     stripe_id = db.Column(db.String(120), unique=True, nullable=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
-    tickets = db.Column(db.JSON, nullable=True),
+    tickets = db.Column(db.JSON, nullable=True)
     premium = db.Column(db.String(80), nullable=False)
 
+    def __init__(self, name, email, stripe_id, username, password, tickets, premium):
+        self.name = name
+        self.email = email
+        self.stripe_id = stripe_id
+        self.username = username
+        self.password = password
+        self.tickets = tickets
+        self.premium = premium
+
     def json(self):
-        return {"id": self.id, "name": self.name, "email": self.email, "stripe_id": self.stripe_id, "username": self.username, "password": self.password, "tickets": self.tickets, "premium": self.premium}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "stripe_id": self.stripe_id,
+            "username": self.username,
+            "password": self.password,
+            "tickets": self.tickets,
+            "premium": self.premium
+        }
+
 
 # path to test if the service is running
 @app.route("/ping", methods=["GET"])
@@ -211,7 +230,7 @@ def add_ticket_to_user(id):
     else:
         user.tickets.append(ticket)
 
-    # inform sqlalchemt that the tickets attribute has been modified. This MUST BE DONE because sqlalchemy got problem with JSON
+    # inform sqlalchemy that the tickets attribute has been modified. This MUST BE DONE because sqlalchemy got problem with JSON
     flag_modified(user, "tickets")
     
     db.session.commit()

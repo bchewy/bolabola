@@ -163,6 +163,8 @@ def process_webhook():
         # Publish to RabbitMQ
         # publish_to_amqp()
 
+        # Pls send payment_intent to user service too THANKS
+
         return jsonify({"message": "Match booking info sent to AMQP"})
 
     elif data["status"] == "expired":
