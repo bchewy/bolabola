@@ -60,7 +60,7 @@ export default {
     },
     refundTicket(index) {
       // Send a request to the backend to refund the ticket
-      fetch('http://localhost:8000/api/v1/billing/refund', {
+      fetch('http://localhost:8000/api/v1/refund/initiate-refund', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export default {
         body: JSON.stringify(
           { 
             ticket: this.tickets[index],
-            paymentIntentId: 'pi_1GszsK2eZvKYlo2CfhZyoZLp' // This is the most important thing to initiate the refund!!
+            payment_intent: 'pi_1GszsK2eZvKYlo2CfhZyoZLp' // This is the most important thing to initiate the refund!!
           }
         ),
       })
