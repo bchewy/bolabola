@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 -- Insert dummy data for users
 INSERT INTO `user` (`id`, `name`, `email`, `stripe_id`, `username`, `password`, `tickets`) VALUES
-    (1, 'John Doe', 'johndoe@gmail.com', '123', 'johndoe', 'johndoe', '[{"match_id": 123, "ticket_category": "A", "serial_no": "1"}, {"match_id": 456, "ticket_category": "A", "serial_no": "2"}]'),
-    (2, 'Alice Smith', 'alice@example.com', '456', 'alicesmith', 'alicesmith', '[{"match_id": 1, "ticket_category": "A", "serial_no": "3"}, {"match_id": 2, "ticket_category": "B", "serial_no": "4"}]'),
-    (3, 'Bob Johnson', 'bob@example.com', '789', 'bobjohnson', 'bobjohnson', '[{"match_id": 3, "ticket_category": "C", "serial_no": "5"}, {"match_id": 4, "ticket_category": "A", "serial_no": "6"}]');
+    (1, 'John Doe', 'johndoe@gmail.com', '123', 'johndoe', 'johndoe', '[{"match_id": "123", "ticket_category": "A", "serial_no": "1"}, {"match_id": "456", "ticket_category": "A", "serial_no": "2"}]'),
+    (2, 'Alice Smith', 'alice@example.com', '456', 'alicesmith', 'alicesmith', '[{"match_id": "1", "ticket_category": "A", "serial_no": "3"}, {"match_id": "2", "ticket_category": "B", "serial_no": "4"}]'),
+    (3, 'Bob Johnson', 'bob@example.com', '789', 'bobjohnson', 'bobjohnson', '[{"match_id": "3", "ticket_category": "C", "serial_no": "5"}, {"match_id": "4", "ticket_category": "A", "serial_no": "6"}]');
 
 -- Grant access to the user
 -- CREATE USER 'ticketboost'@'%' IDENTIFIED BY 'ticketboost';
