@@ -44,7 +44,7 @@ export default {
             tickets: [
                 { category: "A", quantity: 2 },
                 { category: "B", quantity: 3 },
-                { category: "C", quantity: 4 },
+                { category: "Online", quantity: 4 },
             ]
         };
     },
