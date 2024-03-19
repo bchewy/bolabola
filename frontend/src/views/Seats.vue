@@ -2,38 +2,22 @@
     <div class="seat-selection">
         <h1 class="text-superblue">Select Your Seats</h1>
         <p class="lead text-dark">Click on available seats to select them.</p>
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <select class="form-select mb-3" v-model="selectedOption" @change="selectSeatOption(selectedOption)"
-                    style="width: 100%">
-                    <option value="Stadium Ticket">Stadium Ticket</option>
-                    <option value="Streaming Ticket">Streaming Ticket</option>
-                </select>
-            </div>
-        </div>
-        <!-- Display the seat map only if selectedOption is not 'Streaming Ticket' -->
-        <div v-if="selectedOption !== 'Streaming Ticket'" class="seat-map">
-            <p>Choose Category:</p>
+        <!-- Always display the seat map -->
+        <div class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
-                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="toggleSeat(rowIndex, seatIndex)"
-                    class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}
-                </div>
+                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="selectSeat(seat)"
+                     class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
             </div>
         </div>
-        <!-- Display the quantity selector -->
-        <div v-if="selectedOption === 'Streaming Ticket' || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0)"
-            class="quantity-selector">
-            <label for="quantity">Select Quantity:</label>
-            <select id="quantity" v-model="selectedQuantity">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
+        <!-- Display quantity selector when a seat is selected -->
+        <div v-if="selectedSeat" class="quantity-selector">
+            <label>Select Quantity for {{ selectedSeat.label }}:</label>
+            <select v-model="selectedQuantities[selectedSeat.label]">
+                <option v-for="n in maxQuantity" :value="n">{{ n }}</option>
             </select>
         </div>
         <!-- Display the proceed button if conditions are met -->
-        <div v-if="(selectedOption === 'Streaming Ticket' && selectedQuantity > 0) || (selectedOption === 'Stadium Ticket' && selectedSeats.length > 0 && selectedQuantity > 0)"
-            class="position-absolute bottom-0 end-0 mb-3 me-3">
+        <div v-if="proceedEnabled" class="position-absolute bottom-0 end-0 mb-3 me-3">
             <button class="btn btn-primary" @click="proceedToCheckout">Proceed</button>
         </div>
     </div>
@@ -41,60 +25,66 @@
 
 <script>
 export default {
-    props: {
-        selectedOption: String,
-        selectedSeats: Array,
-        selectedQuantity: Number
-    },
     data() {
         return {
             seatMap: [
                 [{ label: 'A', selected: false, available: true }, { label: 'B', selected: false, available: false }, { label: 'C', selected: false, available: true }],
                 [{ label: 'D', selected: false, available: true }, { label: 'E', selected: false, available: true }, { label: 'F', selected: false, available: true }],
                 [{ label: 'G', selected: false, available: false }, { label: 'H', selected: false, available: true }, { label: 'I', selected: false, available: true }],
+                [{ label: 'Online', selected: false, available: true }]
             ],
-            selectedOption: 'Stadium Ticket', // Default option
-            dropdownOpen: false, // Tracks the dropdown state
-            selectedQuantity: 0, // Tracks the selected quantity
-            selectedSeats: [] // Tracks the selected seats
+            selectedQuantities: {
+                'A': 0,
+                'B': 0, 
+                'C': 0,
+                'D': 0,
+                'E': 0,
+                'F': 0,
+                'G': 0,
+                'H': 0,
+                'I': 0,
+                'Online': 0
+            },
+            maxQuantity: 4, // Maximum selectable quantity
+            selectedSeat: null // Track the currently selected seat
         };
     },
+    computed: {
+        proceedEnabled() {
+            return this.selectedSeat !== null;
+        }
+    },
     methods: {
-        toggleSeat(rowIndex, seatIndex) {
-            if (this.seatMap[rowIndex][seatIndex].available && this.selectedOption === 'Stadium Ticket') {
-                this.seatMap[rowIndex][seatIndex].selected = !this.seatMap[rowIndex][seatIndex].selected;
-                this.updateSelectedSeats(); // Update selected seats when toggling seats
+        selectSeat(seat) {
+            if (seat.available) {
+                // Deselect previous seat if any
+                if (this.selectedSeat) {
+                    this.selectedSeat.selected = false;
+                }
+                // Select new seat
+                seat.selected = true;
+                this.selectedSeat = seat;
             }
         },
         proceedToCheckout() {
-            console.log('Selected ticket type:', this.selectedOption);
-            console.log('Selected seats:', this.selectedSeats);
-            console.log('Selected quantity:', this.selectedQuantity);
+            console.log('Selected seats:', this.getSelectedSeats());
+            console.log('Selected quantities:', this.selectedQuantities);
             this.$router.push('/views/checkout');
         },
-        updateSelectedSeats() {
-            this.selectedSeats = [];
+        getSelectedSeats() {
+            const selectedSeats = [];
             for (let i = 0; i < this.seatMap.length; i++) {
                 for (let j = 0; j < this.seatMap[i].length; j++) {
                     if (this.seatMap[i][j].selected) {
-                        this.selectedSeats.push(this.seatMap[i][j].label);
+                        selectedSeats.push(this.seatMap[i][j].label);
                     }
                 }
             }
-        },
-        selectSeatOption(option) {
-            this.selectedOption = option;
-            this.dropdownOpen = false; // Close the dropdown after selecting an option
-            this.selectedQuantity = 0; // Reset selected quantity when changing option
-            this.selectedSeats = []; // Reset selected seats when changing option
-        },
-        toggleDropdown() {
-            this.dropdownOpen = !this.dropdownOpen; // Toggle the dropdown state
+            return selectedSeats;
         }
     }
 };
 </script>
-
 
 <style scoped>
 .text-superblue {
@@ -133,4 +123,12 @@ export default {
 .unavailable {
     background-color: #ccc;
 }
+
+.quantity-selector {
+    margin-top: 10px;
+}
 </style>
+
+
+
+
