@@ -195,30 +195,48 @@ def stripe_webhook():
 def refund_payment():
     """
     This method refunds a user's payment.
-    Accepts a JSON payload about the tickets, as long as it has a payment_intent. Eg:
+    When the refund orchestrator calls initiate-refund, this method is called.
+    When this method is called, it will call stripe to refund the payment.
+    This method accepts a JSON payload about the tickets, as long as it has a payment_intent. Eg:
     {
         "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
     output: https://docs.stripe.com/api/refunds/object
     "pi_3OvgQTF4chEmCmGg1A9ZYrVI"
-
+    The output will be returned to the orchestrator.
     """
-    # When user clicks on refund on the frontend, the frontend will send a POST request to this endpoint
-    # the request will contain the payment_intent, which is taken from the user's database
-
-    # REFUND LOGIC COPY THE CHECKOUT LOGIC ABOVE
-    
     try:
-        if "charge_id" not in request.json:
-            return jsonify({"error": "charge_id not found"}), 400
-        charge_id = request.json["charge_id"]
-        refund = stripe.Refund.create(
-            charge=charge_id,
-        )
-        return jsonify(refund)
-    except Exception as e:
-        return jsonify(error=str(e)), 403
+        # receive refund information from orchestrator
+        payload = request.json
 
+        if "payment_intent" not in payload:
+            return jsonify({"error": "payment_intent not found"}), 400
+        
+        metadata = {
+            "user_id": payload["user_id"],
+            "match_id": payload["match_id"],
+            "payment_intent": payload["payment_intent"],
+        }
+
+        # call stripe to refund the payment
+        refund = stripe.Refund.create(
+            payment_intent=payload["payment_intent"],
+            metadata=metadata,
+        )
+        
+        # prepare refund information to send to orchestrator
+        refund_info = {
+            "status": refund.status,
+            "payment_intent": refund.payment_intent,
+            "metadata": refund.metadata,
+        }
+
+        # return refund information to orchestrator
+        return jsonify({"message": "Refund successful", "data": refund_info}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 
 ############################################################################################################
 ######################################    END OF PAYMENT REFUND    #########################################

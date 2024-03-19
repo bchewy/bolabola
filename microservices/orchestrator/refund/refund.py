@@ -33,45 +33,68 @@ def refund():
     2. calls billing service for refund
     3. receives a status from billing service, success/failure
     4. if success, send ticket information to RabbitMQ to update db
+
+    Sends the following JSON payload to the billing service:
+    {
+        "user_id": "1234",
+        "match_id": "5678",
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
+    }
+
+    Receives the following JSON payload from the billing service:
+    {
+        "status": "succeeded",
+        "message": "Refund successful",
+        "data": {
+            "user_id": "1234",
+            "match_id": "5678",
+            "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
+        }
+    }
+
+    Sends the following JSON payload to the RabbitMQ:
+    {
+        "user_id": "1234",
+        "match_id": "5678",
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
+    }
     """
     # 1. receive ticket and user information from frontend
     data = request.json
 
     # 2. call billing service for refund
     billing_service_url = "http://kong:8000/api/v1/billing/refund"
-
     response = requests.post(billing_service_url, json=data)
-    status = response.json()['status']
 
     # 3. receive a status from billing service, success/failure
-    if status == "succeeded":
-        try: 
-            # 4. if success, send ticket information to RabbitMQ to update db
-            connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
-            channel = connection.channel()
+    if response.status_code != 200:
+        return jsonify({"message": "Failed to initiate refund"}), 500
+    
+    try: 
+        # 4. if success, send refund information to RabbitMQ to update db
+        connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
+        channel = connection.channel()
 
-            channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
+        channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
 
-            channel.queue_declare(queue='user', durable=True) # for the user service
+        channel.queue_declare(queue='user', durable=True) # for the user service
 
-            channel.queue_declare(queue='match', durable=True) # for the match service
+        channel.queue_declare(queue='match', durable=True) # for the match service
 
-            # Set up the message to be sent
-            msg = json.dumps(data)  # convert the data to a string to send as message
+        # Set up the refund information to be sent
+        msg = json.dumps(response.json())
 
-            channel.basic_publish(
-                exchange='refund',
-                routing_key='refund.user',
-                body=msg,
-                properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
-            )
+        channel.basic_publish(
+            exchange='refund',
+            routing_key='refund.user',
+            body=msg,
+            properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
+        )
 
-            connection.close()
-            return jsonify({"message": "Refund initiated successfully"}), 200
-        except Exception as e:
-            return jsonify({"message": "Failed to initiate refund"}), 500
-    else:
-        return jsonify({"message": "Refund failed"}), 500
+        connection.close()
+        return jsonify({"message": "Refund initiated successfully"}), 200
+    except Exception as e:
+        return jsonify({"message": "Failed to initiate refund"}), 500
 
 if __name__ == '__main__':
     app.run(port=9103, debug=True, host="0.0.0.0")
