@@ -44,8 +44,8 @@ export default {
       // capitalize the first letter of the name
       return name.charAt(0).toUpperCase() + name.slice(1);
     },
-    userEmail() { // for sending to the backend
-      return this.$auth0.user.value.email;
+    userId() { // for sending to the backend
+      return this.$auth0.user.value.sub;
     },
   },
   data() {
@@ -60,23 +60,23 @@ export default {
     };
   },
   methods: {
-    getUserInfo(email) {
-      // Send a request to the backend to get the user's information using their email
-      fetch('http://localhost:8000/api/v1/user/{email}', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email }),
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log(data);
-      });
+    // Function to get the user's information
+    getUserInfo(userId) {
+      // Send a request to the backend to get the user's information using their userId using get request
+      fetch(`http://localhost:8000/api/v1/user/${userId}`)
+        .then((response) => response.json())
+        .then((data) => {
+          this.tickets = data.tickets;
+          this.refundedTickets = data.refundedTickets;
+        });
     },
+    
+    // Function to fetch the user's information
     fetchUserInfo() {
-      this.getUserInfo(this.userEmail);
+      this.getUserInfo(this.userId);
     },
+
+    // Function to refund check if a ticket is refundable
     isRefundable(ticket) {
       // Calculate if the ticket is more than 24 hours away from the current time
       const matchTime = new Date(ticket.matchTime);
@@ -85,6 +85,8 @@ export default {
       const hoursDifference = timeDifference / (1000 * 3600);
       return hoursDifference > 24;
     },
+
+    // Function to refund tickets
     refundTicket(index) {
       // Send a request to the backend to refund the ticket
       fetch('http://localhost:8000/api/v1/refund/initiate-refund', {

@@ -10,8 +10,8 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
 
 db = SQLAlchemy(app)
 # CORS(app)
@@ -57,7 +57,6 @@ def ping():
     print("pinged")
     return "pong"
 
-
 ############################################################################################################
 #########################################    VIEW ALL USER INFO    #########################################
 ############################################################################################################
@@ -82,30 +81,21 @@ def home():
 ############################################################################################################
 ###############################    VIEW PARTICULAR USER INFO    ###########################################
 ############################################################################################################
-# view particular user's info, given by email
-@app.route("/", methods=["POST"])
+# view particular user's info, given by userID
+@app.route("/<int:id>", methods=["GET"])
 def view_user():
-    userlist = db.session.scalars(db.select(User)).all()
-    if len(userlist) == 0:
+    user = User.query.get(id)
+    if user is None:
         return jsonify(
             {
                 "code": 404,
-                "message": "No users found"
+                "message": "User not found"
             }
         )
-    data = request.json
-    for user in userlist:
-        if user.email == data["email"]:
-            return jsonify(
-                {
-                    "code": 200,
-                    "data": user.json()
-                }
-            )
     return jsonify(
         {
-            "code": 404,
-            "message": "User not found"
+            "code": 200,
+            "data": user.json()
         }
     )
 
