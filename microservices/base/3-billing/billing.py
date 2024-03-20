@@ -1,43 +1,60 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+    jsonify,
+)
 import requests
 from flask_cors import CORS
 import stripe
 import os
 import sys
-# from dotenv import load_dotenv
-# load_dotenv()
+import json
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY')
+CORS(app, resources={r"/*": {"origins": "*"}})
+# app.secret_key = "ee89f7f418d66bdfbb7fb59b07025ec2"
 
 # Initialize Stripe
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = os.environ.get('STRIPE_PUBLISHABLE_KEY')
-stripe.api_key = STRIPE_SECRET_KEY
+STRIPE_SECRET_KEY = "sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE"
+STRIPE_PUBLISHABLE_KEY = "pk_test_51Oh9s0F4chEmCmGg0Cbvmc8wbE3puY2dnkr8Gz7H1i0uVy8rAvhpIGVlO5DDBengMt5rVYRycjGU0t6wKTeoJjvg008zdJD9Vz"
+stripe.api_key = "sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE"
+
+
+@app.route("/ping", methods=["GET"])
+def ping():
+    print("pinged")
+    return jsonify({"message": "Pong!"})
+
 
 ############################################################################################################
 ##################################    STRIPE PUBLIC KEY     ################################################
 ############################################################################################################
 # public key for the frontend
-@app.route('/public-key', methods=['GET'])
+@app.route("/public-key", methods=["GET"])
 def public_key():
     """
     Returns the public key for the frontend
     """
-    return jsonify({'publicKey': STRIPE_PUBLISHABLE_KEY})
+    return jsonify({"code": 200, "publicKey": STRIPE_PUBLISHABLE_KEY})
+
 
 ############################################################################################################
 #########################    END OF STRIPE PUBLIC KEY    ###################################################
 ############################################################################################################
+
 
 ############################################################################################################
 #########################################    CHECKOUT SESSION     ##########################################
 ############################################################################################################
 # create checkout session when the user clicks on the "Buy" button
 # (https://stripe.com/docs/api/checkout/sessions/create)
-@app.route('/checkout', methods = ['GET'])
+@app.route("/checkout", methods=["POST"])
 def create_checkout_session():
     """
     This method creates a new checkout session.
@@ -48,120 +65,182 @@ def create_checkout_session():
         "tickets": [
             {"category": "A", "quantity": 2},
             {"category": "B", "quantity": 3},
-            {"category": "C", "quantity": 4},
-            {"category": "Online", "quantity": 1}
+            {"category": "C", "quantity": 4}
         ],
         "user_id": "123"
     }
     """
-    ticket_dict = {
-        "A": 100,
-        "B": 50,
-        "C": 25,
-        "Online": 10
-    }
-    if request.method == "GET":
+    ticket_dict = {"A": 100, "B": 50, "C": 25}
+    if request.method == "POST":
         try:
+            # these variables store the quantity of each ticket category for metadata use
+            A,B,C = 0,0,0
+
             # line_items shows the details of the tickets on the receipt
             line_items = []
-            for ticket in request.json['tickets']:
-                line_items.append({
-                    'price_data': {
-                        'currency': 'usd',
-                        'product_data': {
-                            'name': f"{request.json['match_name']} - {ticket['category']}"
+
+            for ticket in request.json["tickets"]:
+                # fill in metadata for Stripe
+                if ticket["category"] == "A":
+                    A = ticket["quantity"]
+                elif ticket["category"] == "B":
+                    B = ticket["quantity"]
+                elif ticket["category"] == "C":
+                    C = ticket["quantity"]
+                # fill in line_items for Stripe
+                line_items.append(
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "product_data": {
+                                "name": f"{request.json['match_name']} - {ticket['category']}"
+                            },
+                            "unit_amount": ticket_dict[ticket["category"]]
+                            * 100,  # convert to cents
                         },
-                        'unit_amount': ticket_dict[ticket['category']] * 100 # convert to cents
-                    },
-                    'quantity': ticket['quantity']
-                })
+                        "quantity": ticket["quantity"],
+                    }
+                )
 
             # create a new checkout session
+            metadata = {
+                "match_id": request.json["match_id"],
+                "user_id": request.json["user_id"],
+                "A": A,
+                "B": B,
+                "C": C,
+            }
             checkout_session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
+                payment_method_types=["card"],
                 line_items=line_items,
-                mode='payment',
-                success_url='http://localhost:9003/success',
-                cancel_url='http://localhost:9003/cancel',
+                mode="payment",
+                success_url="http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://localhost:5173/views/checkoutCancel",
+                metadata=metadata, # pass the metadata to the webhook
             )
         except Exception as e:
             return jsonify(error=str(e)), 403
+    return jsonify({"code": 200, "checkout_session": checkout_session})
 
-    return jsonify({'sessionId': checkout_session['id']})
 
-# create route for successful checkout
-ORCHESTRATOR_URL = os.environ.get('ORCHESTRATOR_URL')
-@app.route('/checkout/success', methods = ['POST'])
-def success():
-    """
-    on success, send POST back to orchestrator with the following JSON payload:
-    {
-        "order_id": "1234",
-        "show_name": "Hamilton",
-        "show_datetime": "2024-02-10T19:00:00",
-        "tickets": [
-            {"category": "A", "price": 400, "quantity": 2},
-            {"category": "B", "price": 300, "quantity": 3},
-            {"category": "C", "price": 200, "quantity": 4}
-        ],
-        "total": 2600,
-        "user_id": "123",
-        "payment_status": "success"
-    }
-    """
-    # Extract session ID from request
-    session_id = request.json['sessionId']
-    # Retreive Checkout Session from Stripe
-    checkout_session = stripe.checkout.Session.retrieve(session_id)
-    # Prepare payload to send back to orchestrator
-    payload = {
-        "order_id": request.json['order_id'],
-        "show_name": request.json['show_name'],
-        "show_datetime": request.json['show_datetime'],
-        "tickets": request.json['tickets'],
-        "total": request.json['total'],
-        "user_id": request.json['user_id'],
-        "payment_status": checkout_session['payment_status']
-    }
-    # Send POST request to orchestrator
-    response = requests.post(ORCHESTRATOR_URL, json=payload)
-    if response.ok:
-        return jsonify({"message": "Payment confirmed and orchestrator notified."}),  200
+# Stripe calls this webhook
+@app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
+def stripe_webhook():
+    endpoint_secret = 'whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df'
+    event = None
+    payload = request.data
+    sig_header = request.headers["Stripe-Signature"]
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except ValueError as e:
+        # Invalid payload
+        return "Invalid payload", 400
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return "Invalid signature", 400
+    
+    # send payment information to orchestrator
+    ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
+
+    session = event["data"]["object"]
+    # Handle the checkout.session.completed event
+    if event["type"] == "checkout.session.completed":
+        # Prepare payload to send back to orchestrator
+        payload = {
+            "status": "complete",
+            "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
+        }
+    
+    elif event["type"] == "checkout.session.expired":
+        payload = {
+            "status": "expired",
+            "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
+        }
+    elif event["type"] == "checkout.session.cancelled":
+        payload = {
+            "status": "cancelled",
+            "payment_intent": session["payment_intent"],
+            "metadata": session["metadata"],
+        }
     else:
-        return jsonify({"error": "Failed to notify the orchestrator."}),  500
+        # Unexpected event type
+        return "Unexpected event type", 400
+
+    # Send POST request to orchestrator
+    print("Tried sending to this link: ", ORCHESTRATOR_URL)
+    response = requests.post(ORCHESTRATOR_URL, json=payload)
+    print("The response from orchestrator is: ", response)
+
+    if response.ok:
+        return (
+            jsonify({"stats": "Payment confirmed and orchestrator notified."}),
+            200,
+        )
+    else:
+        print("Cannot notify orchestrator")
+        return jsonify({"error": "Failed to notify the orchestrator."}), 500
 
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################
 ############################################################################################################
 
+
 ############################################################################################################
 #########################################    PAYMENT REFUND     ############################################
 ############################################################################################################
 # refund a user's payment
-@app.route('/refund', methods = ['POST'])
+@app.route("/refund", methods=["POST"])
 def refund_payment():
     """
     This method refunds a user's payment.
-    Accepts a JSON payload about the tickets, as long as it has charge_id. Eg:
+    When the refund orchestrator calls initiate-refund, this method is called.
+    When this method is called, it will call stripe to refund the payment.
+    This method accepts a JSON payload about the tickets, as long as it has a payment_intent. Eg:
     {
-        "charge_id": "ch_1NirD82eZvKYlo2CIvbtLWuY""
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
     output: https://docs.stripe.com/api/refunds/object
+    "pi_3OvgQTF4chEmCmGg1A9ZYrVI"
+    The output will be returned to the orchestrator.
     """
     try:
-        if 'charge_id' not in request.json:
-            return jsonify({"error": "charge_id not found"}), 400
-        charge_id = request.json['charge_id']
+        # receive refund information from orchestrator
+        payload = request.json
+
+        if "payment_intent" not in payload:
+            return jsonify({"error": "payment_intent not found"}), 400
+        
+        metadata = {
+            "user_id": payload["user_id"],
+            "match_id": payload["match_id"],
+            "payment_intent": payload["payment_intent"],
+        }
+
+        # call stripe to refund the payment
         refund = stripe.Refund.create(
-            charge=charge_id,
+            payment_intent=payload["payment_intent"],
+            metadata=metadata,
         )
-        return jsonify(refund)
+        
+        # prepare refund information to send to orchestrator
+        refund_info = {
+            "status": refund.status,
+            "payment_intent": refund.payment_intent,
+            "metadata": refund.metadata,
+        }
+
+        # return refund information to orchestrator
+        return jsonify({"message": "Refund successful", "data": refund_info}), 200
+    
     except Exception as e:
-        return jsonify(error=str(e)), 403
+        return jsonify({"error": str(e)}), 500
+    
 
 ############################################################################################################
 ######################################    END OF PAYMENT REFUND    #########################################
 ############################################################################################################
-    
-if __name__ == '__main__':
-    app.run(port=9003, debug=True)
+
+if __name__ == "__main__":
+    app.run(port=9003, debug=True, host="0.0.0.0")

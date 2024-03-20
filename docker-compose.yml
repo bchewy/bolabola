@@ -6,21 +6,22 @@ volumes:
   rabbitmq_data:
   prometheus_data:
   grafana_data:
+  mysql_data:
 
 networks:
   kong-net:
     driver: bridge
     name: kong-net
 services:
-  # Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    networks:
-      - kong-net
-    ports:
-      - 80:80
+  # Frontend - removing it here.. We will deploy this seperately.
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
+  #   ports:
+  #     - 80:80
 
   match:
     build:
@@ -30,6 +31,8 @@ services:
       - kong-net
     depends_on:
       - mongodb
+    environment:
+      - PYTHONUNBUFFERED=1
 
   queue:
     build:
@@ -40,6 +43,7 @@ services:
     environment:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - PYTHONUNBUFFERED=1
 
   billing:
     build:
@@ -47,8 +51,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
-    depends_on:
-      - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
 
   user:
     build:
@@ -58,6 +62,8 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
 
   videoasset:
     build:
@@ -67,6 +73,8 @@ services:
       - kong-net
     depends_on:
       - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
 
   livematch:
     build:
@@ -79,19 +87,24 @@ services:
     depends_on:
       - mysql
       - statservice
-    
+    environment:
+      - PYTHONUNBUFFERED=1
+
   statservice:
     build:
       context: ./microservices/base/10-statservice
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   notification:
     environment:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
+      - PYTHONUNBUFFERED=1
     build:
       context: ./microservices/base/7-notification
       dockerfile: Dockerfile
@@ -123,6 +136,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   # Orchas
   match-streaming-orchestrator:
@@ -131,6 +146,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   match-booking-orchestrator:
     build:
@@ -138,6 +155,8 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   refund-orchestrator:
     build:
@@ -145,6 +164,9 @@ services:
       dockerfile: Dockerfile
     networks:
       - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
+
   # Kong ================================================
   kong-database:
     image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
@@ -233,7 +255,7 @@ services:
       - mongodb-data:/data/db
   mongo-seed:
     build: ./infrastructure/mongo/seed/.
-    # entrypoint: /app/entrypoint.sh
+    entrypoint: /app/entrypoint.sh
     networks:
       - kong-net
     depends_on:
@@ -246,10 +268,13 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: veryS3ecureP@ssword
-      MYSQL_DATABASE: ticketboost
+      MYSQL_ROOT_PASSWORD: veryS3ecurePassword
+      MYSQL_DATABASE: bolabola_user
       MYSQL_USER: ticketboost
-      MYSQL_PASSWORD: veryS3ecureP@ssword
+      MYSQL_PASSWORD: veryS3ecurePassword
+    volumes:
+      - ./microservices/base/4-user/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql
+      - mysql_data:/var/lib/mysql
 
   redis:
     image: redis
@@ -299,3 +324,13 @@ services:
       - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards
     environment:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/kong-dashboard.json
+
+  stripe-cli:
+    image: stripe/stripe-cli
+    container_name: stripe-cli
+    command: listen --api-key sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE --device-name bolabola --forward-to localhost:8000/api/v1/billing/webhook/stripe # if you change the forward to link, you need to change the link in the stripe service (tell yiji)
+    network_mode: host
+    environment:
+      STRIPE_API_KEY: sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE
+    volumes:
+      - ./infrastructure/stripe:/stripe

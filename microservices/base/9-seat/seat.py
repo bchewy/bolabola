@@ -1,73 +1,83 @@
 from flask import Flask, request, jsonify
 import redis
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
+import logging
 
 app = Flask(__name__)
-
-# MongoDB setup
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.INFO)
 mongo_client = MongoClient("mongodb://mongodb:27017/")
-mongo_db = mongo_client["ticket_db"]
+mongo_db = mongo_client["tickets"]
 tickets_collection = mongo_db["tickets"]
-
-# Redis connection setup
-app.config["REDIS_URL"] = "redis://redis:6379/0"  # Adjust as necessary
+app.config["REDIS_URL"] = "redis://redis:6379/0"
 redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
 
-# Reserve a seat
-# Sample Request Body
-# {
-#     "user_id": "123456789",
-#     "match_id": "987654321",
-#     "ticket_category": "A"
-# }
-# Do take note that the and match_id and ticket categoryshould be valid and existing
-@app.route("/reserve/", methods=["POST"])
+@app.route("/reserve", methods=["POST"])
 def reserve_seat():
+    print("Reserve seat called")
     data = request.json
     user_id = data["user_id"]
     match_id = data["match_id"]
     ticket_category = data["ticket_category"]
 
-    # Find an available ticket
-    ticket = tickets_collection.find_one(
+    # Check if user_id already has a seat reserved for this match
+    existing_ticket = tickets_collection.find_one(
+        {"match_id": match_id, "user_id": user_id}
+    )
+    if existing_ticket:
+        return (
+            jsonify({"error": "User already has a seat reserved for this match"}),
+            409,
+        )
+
+    # Find an available ticket for the given match and category
+    ticket = tickets_collection.find_one_and_update(
         {
             "match_id": match_id,
             "ticket_category": ticket_category,
-            "user_id": {"$exists": False},
-        }
+            "user_id": None,
+        },
+        {"$set": {"user_id": user_id}},
+        return_document=ReturnDocument.AFTER,
     )
 
     if ticket:
-        serial_no = ticket["serial_no"]
-        # Create a ticket hold in Redis with TTL
-        if redis_client.set(f"ticket_hold:{serial_no}", user_id, ex=300, nx=True):
-            # Update ticket with user_id to lock it temporarily
-            tickets_collection.update_one(
-                {"serial_no": serial_no}, {"$set": {"user_id": user_id}}
+        if redis_client.set(
+            f"ticket_hold:{match_id}:{ticket_category}:{ticket['_id']}",
+            user_id,
+            ex=300,
+            nx=True,
+        ):
+            return (
+                jsonify(
+                    {
+                        "message": "Seat reserved",
+                        "match_id": match_id,
+                        "ticket_category": ticket_category,
+                        "ticket_id": str(ticket["_id"]),
+                    }
+                ),
+                200,
             )
-            return jsonify({"message": "Seat reserved", "serial_no": serial_no}), 200
         else:
+            tickets_collection.update_one(
+                {"_id": ticket["_id"]}, {"$unset": {"user_id": ""}}
+            )
             return jsonify({"error": "Seat is currently on hold"}), 409
     else:
-        return jsonify({"error": "No available seats"}), 404
+        return (
+            jsonify({"error": "No available tickets for this match and category"}),
+            400,
+        )
 
 
-# Release a seat - only if the need arises.
-# Sample Request Body
-# {
-#     "serial_no": "12345"
-# }
-@app.route("/release/", methods=["POST"])
+@app.route("/release", methods=["POST"])
 def release_seat():
     data = request.json
     serial_no = data["serial_no"]
-
-    # Remove the ticket hold from Redis
     redis_client.delete(f"ticket_hold:{serial_no}")
-
-    # Set the user_id to None in MongoDB to make the seat available again
     tickets_collection.update_one({"serial_no": serial_no}, {"$unset": {"user_id": ""}})
     return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
 
@@ -76,12 +86,8 @@ def release_seat():
 def validate_reservation():
     data = request.json
     serial_no = data["serial_no"]
-
-    # Check in MongoDB if the seat has a user_id assigned
     ticket = tickets_collection.find_one({"serial_no": serial_no})
-
     if ticket and "user_id" in ticket:
-        # Check if the ticket hold still exists in Redis
         is_held = redis_client.exists(f"ticket_hold:{serial_no}")
         if is_held:
             return (
@@ -115,7 +121,7 @@ def validate_reservation():
 
 
 # Health Check
-@app.route("/health/", methods=["GET"])
+@app.route("/", methods=["GET"])
 def health_check():
     return jsonify({"status": "alive"}), 200
 

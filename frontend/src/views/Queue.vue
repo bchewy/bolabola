@@ -1,6 +1,6 @@
 <template>
   <div class="queue">
-    <h1>You are now in the queue...</h1>
+    <h1 class="text-superblue">You are now in the queue...</h1>
     <p class="lead text-dark">You are important to us and your place in the Queue is currently being processed. Please do not reload this page.
       <br>Thank you for your interest for this match and we seek your patience in this process.</p>
     <img src="/src/assets/background1.png" style="width:50%;" alt="Queue Image" class="queue-image">
@@ -14,6 +14,10 @@
 .queue {
   text-align: center;
   margin-top: 50px;
+}
+
+.text-superblue{
+  color: #5356FF;
 }
 
 .progress-container {

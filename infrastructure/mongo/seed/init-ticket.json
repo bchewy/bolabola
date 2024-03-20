@@ -1,0 +1,62 @@
+[
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "A",
+        "seat_number": 1,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "A",
+        "seat_number": 2,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "A",
+        "seat_number": 3,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "A",
+        "seat_number": 4,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "A",
+        "seat_number": 5,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "B",
+        "seat_number": 1,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "B",
+        "seat_number": 2,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "C",
+        "seat_number": 1,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "C",
+        "seat_number": 2,
+        "user_id": null
+    },
+    {
+        "match_id": "65f62f62f38df67e5a1c8cb8",
+        "ticket_category": "C",
+        "seat_number": 3,
+        "user_id": null
+    }
+]

@@ -5,16 +5,16 @@
   <div class="container-fluid p-0 scroll-container bg-image pb-5">
     <section>
       <NavBar />
-      <div class="section-background text-light text-center vh-100 d-flex align-items-center justify-content-center">
+      <div class="text-light text-center d-flex align-items-center justify-content-center" style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh;">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
-            <img src="/src/assets/background2.png" style="width:50%; margin-right: 10%;">
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
-                Discover and book tickets for your favorite teams with TicketBoost. <br>Get access to exclusive videos and enjoy a seamless ticketing experience. 
+                Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals
+                and enjoy a seamless ticketing experience.
               </p>
-              <button class="btn btn-primary" @click="$router.push('/events')">Get Started</button>
+              <button class="btn btn-primary" @click="$router.push('/about')">Get Started</button>
             </div>
           </div>
         </div>
@@ -149,9 +149,12 @@ export default {
 .text-supergreen {
   color: #a7c957;
 }
+
 .text-superblue {
-  color: lightblue;
+  /* color: lightblue; */
+  color: #5356FF;
 }
+
 .light-green {
   background-color: #d1f4d1
 }

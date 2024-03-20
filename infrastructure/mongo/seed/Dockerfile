@@ -2,6 +2,7 @@ FROM mongo:latest
 
 # Copy the JSON data and the scripts
 COPY init.json /app/init.json
+COPY init-ticket.json /app/init-ticket.json
 COPY entrypoint.sh /app/entrypoint.sh
 # COPY wait-for-it.sh /app/wait-for-it.sh
 

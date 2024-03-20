@@ -2,7 +2,7 @@
   <div>
     <NavBar />
     <div class="about-view d-flex flex-column justify-content-center align-items-center">
-      <h1 class="text-center">Profile page</h1>
+      <h1 class="text-center text-superblue">Profile page</h1>
       <p class="lead text-dark text-center">Confirmed Bookings</p>
       <table class="table table-striped">
         <thead>
@@ -45,7 +45,8 @@ export default {
         { matchName: 'Match B', matchTime: '2024-03-11T15:00:00', matchLocation: 'Location B', matchPrice: 15 },
         { matchName: 'Match C', matchTime: '2025-01-13T10:00:00', matchLocation: 'Location C', matchPrice: 20 },
       ],
-      refundedTickets: []
+      refundedTickets: [],
+      refund_success: true
     };
   },
   methods: {
@@ -58,9 +59,27 @@ export default {
       return hoursDifference > 24;
     },
     refundTicket(index) {
+      // Send a request to the backend to refund the ticket
+      fetch('http://localhost:8000/api/v1/refund/initiate-refund', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          { 
+            ticket: this.tickets[index],
+            payment_intent: 'pi_1GszsK2eZvKYlo2CfhZyoZLp' // This is the most important thing to initiate the refund!!
+          }
+        ),
+      })
+
       const refundedTicket = this.tickets.splice(index, 1)[0]; // Remove the ticket from the tickets array
       this.refundedTickets.push(refundedTicket); // Add the refunded ticket to the refundedTickets array
-      this.$router.push('/views/refund');
+      if (this.refund_success) {
+        this.$router.push('/views/refund');
+      } else {
+        alert('Unsuccessful Refund. Please try again.'); // can help to find nicer way of showing this
+      }
     }
   }
 };
@@ -71,6 +90,9 @@ export default {
 .about-view {
   text-align: center;
   margin-top: 50px;
+}
+.text-superblue{
+  color: #5356FF;
 }
 </style>
 

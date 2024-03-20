@@ -1,5 +1,6 @@
 .env
 venv/*
+infrastructure/k8/*
 
 # Frontend gitignore
 # Logs

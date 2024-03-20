@@ -1,6 +1,6 @@
 <template>
     <div class="refund">
-      <h1>Refunded Tickets</h1>
+      <h1 class="text-superblue">Refunded Tickets</h1>
       <table class="table table-striped">
         <thead>
           <tr>
@@ -22,9 +22,22 @@
     </div>
   </template>
   
-  
+
+<!-- <script>
+export default {
+  computed: {
+    refundedTickets() {
+      return this.$store.state.refundedTickets;
+    }
+  }
+};
+</script> -->
   
 <style scoped>
+.text-superblue{
+  color: #5356FF;
+}
+
 .refund {
     text-align: center;
     margin-top: 50px;
