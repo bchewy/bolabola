@@ -55,6 +55,51 @@ export default {
         }
     },
     methods: {
+
+        // IDK WHY I CANT CALL THIS URL i put in postman to test but error is route not found :< 
+        // IS THE CODE EVEN SUPP TO BE LIKE THIS :((((
+        // PLS SOS <3333
+
+    //     async selectSeat(seat) {
+    //     try {
+    //         // Check if the seat is available
+    //         if (seat.available) {
+    //             // Make a POST request to reserve the seat
+    //             const response = await fetch('http://localhost:8000/api/v1/seat/reserve', {
+    //                 method: 'POST',
+    //                 headers: {
+    //                     'Content-Type': 'application/json'
+    //                 },
+    //                 body: JSON.stringify({
+    //                     user_id: 'your_user_id', // Provide the user ID
+    //                     match_id: 'your_match_id', // Provide the match ID
+    //                     ticket_category: seat.label // Assuming seat label is the ticket category
+    //                 })
+    //             });
+
+    //             // Parse the response
+    //             const data = await response.json();
+
+    //             // Check if the reservation was successful
+    //             if (response.ok) {
+    //                 console.log('Seat reserved:', data);
+    //                 // Deselect previous seat if any
+    //                 if (this.selectedSeat) {
+    //                     this.selectedSeat.selected = false;
+    //                 }
+    //                 // Select new seat
+    //                 seat.selected = true;
+    //                 this.selectedSeat = seat;
+    //             } else {
+    //                 // Handle reservation error
+    //                 console.error('Failed to reserve seat:', data.error);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         // Handle network or parsing errors
+    //         console.error('Error reserving seat:', error);
+    //     }
+    // },
         selectSeat(seat) {
             if (seat.available) {
                 // Deselect previous seat if any
@@ -66,6 +111,7 @@ export default {
                 this.selectedSeat = seat;
             }
         },
+
         proceedToCheckout() {
             console.log('Selected seats:', this.getSelectedSeats());
             console.log('Selected quantities:', this.selectedQuantities);
