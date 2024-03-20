@@ -57,6 +57,10 @@ def ping():
     print("pinged")
     return "pong"
 
+
+############################################################################################################
+#########################################    VIEW ALL USER INFO    #########################################
+############################################################################################################
 # path to print all users
 @app.route("/", methods=["GET"])
 def home():
@@ -76,26 +80,34 @@ def home():
     )
 
 ############################################################################################################
-###############################    VIEW PARTICULAR USER TICKETS     ########################################
+###############################    VIEW PARTICULAR USER INFO    ###########################################
 ############################################################################################################
-# view all user's information
-@app.route("/<int:id>", methods=["GET"])
-def view_user(id):
-    user = User.query.get(id)
-    if user is None:
+# view particular user's info, given by email
+@app.route("/", methods=["POST"])
+def view_user():
+    userlist = db.session.scalars(db.select(User)).all()
+    if len(userlist) == 0:
         return jsonify(
             {
                 "code": 404,
-                "message": "User not found"
+                "message": "No users found"
             }
         )
+    data = request.json
+    for user in userlist:
+        if user.email == data["email"]:
+            return jsonify(
+                {
+                    "code": 200,
+                    "data": user.json()
+                }
+            )
     return jsonify(
         {
-            "code": 200,
-            "data": user.json()
+            "code": 404,
+            "message": "User not found"
         }
     )
-
 
 ############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
