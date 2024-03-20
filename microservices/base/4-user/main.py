@@ -20,21 +20,16 @@ db = SQLAlchemy(app)
 # Define the User model
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(120), primary_key=True)
     name = db.Column(db.String(80), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    stripe_id = db.Column(db.String(120), unique=True, nullable=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(120), nullable=False)
     tickets = db.Column(db.JSON, nullable=True)
     premium = db.Column(db.String(80), nullable=False)
 
-    def __init__(self, name, email, stripe_id, username, password, tickets, premium):
+    def __init__(self, id, name, email, tickets, premium):
+        self.id = id
         self.name = name
         self.email = email
-        self.stripe_id = stripe_id
-        self.username = username
-        self.password = password
         self.tickets = tickets
         self.premium = premium
 
@@ -43,9 +38,6 @@ class User(db.Model):
             "id": self.id,
             "name": self.name,
             "email": self.email,
-            "stripe_id": self.stripe_id,
-            "username": self.username,
-            "password": self.password,
             "tickets": self.tickets,
             "premium": self.premium
         }
@@ -81,10 +73,10 @@ def home():
 ############################################################################################################
 ###############################    VIEW PARTICULAR USER INFO    ###########################################
 ############################################################################################################
-# view particular user's info, given by userID
+# view particular user's info, given by user_id
 @app.route("/<int:id>", methods=["GET"])
-def view_user():
-    user = User.query.get(id)
+def view_user(id):
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
             {
@@ -100,6 +92,58 @@ def view_user():
     )
 
 ############################################################################################################
+########################################    CREATE USER     ################################################
+############################################################################################################
+# path to check if user exists, and to create a new user if not.
+@app.route("/check-create", methods=["POST"])
+def check_create_user():
+    """
+    This method creates a new user using the info received by Auth0.
+    Sample payload:
+    {
+        "name": "John Doe",
+        "email": "johndoe@example.com",
+        "user_id": "auth0|1234"
+    }
+    """
+    data = request.json
+    if data is None:
+        return jsonify(
+            {
+                "code": 400,
+                "message": "User info not provided"
+            }
+        )
+    # check if user is already in the database
+    received_user_id = data["user_id"]
+    user = User.query.filter_by(id=received_user_id).first()
+    if user is not None:
+        return jsonify(
+            {
+                "code": 400,
+                "message": "User already exists"
+            }
+        )
+    
+    # create a new user
+    user = User(
+        id=received_user_id,
+        name=data["name"],
+        email=data["email"],
+        tickets=None,
+        premium="N"
+    )
+    db.session.add(user)
+    flag_modified(user, "tickets")
+    db.session.commit()
+    return jsonify(
+        {
+            "code": 201,
+            "message": "User created successfully"
+        }
+    )
+
+############################################################################################################
 ##################################    VIEW USER TICKETS     ################################################
 ############################################################################################################
 # view all tickets bought by the user
@@ -109,7 +153,7 @@ def view_all_user_tickets(id):
     This method returns all the tickets owned by the user.
     Query will join the User and Ticket tables and return the tickets owned by the user.
     """
-    user = User.query.get(id)
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
             {
@@ -137,7 +181,7 @@ def view_ticket_by_serial_no(id, serial_no):
     """
     This method returns the details of a specific ticket owned by the user.
     """
-    user = User.query.get(id)
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
             {
@@ -169,7 +213,7 @@ def view_ticket_by_match_id(id, match_id):
     """
     This method returns the details of a specific ticket owned by the user.
     """
-    user = User.query.get(id)
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
             {
@@ -228,7 +272,7 @@ def add_ticket_to_user(id):
                     "message": "Ticket info not provided"
                 }
             )
-    user = User.query.get(id)
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
                 {
@@ -281,7 +325,7 @@ def delete_ticket_from_user(id, serial_no):
     This method deletes a ticket from the user's list of tickets.
     This will be used when the user refunds a ticket successfully.
     """
-    user = User.query.get(id)
+    user = User.query.get(str(id))
     if user is None:
         return jsonify(
             {

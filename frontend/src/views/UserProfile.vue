@@ -67,7 +67,6 @@ export default {
         .then((response) => response.json())
         .then((data) => {
           this.tickets = data.tickets;
-          this.refundedTickets = data.refundedTickets;
         });
     },
     

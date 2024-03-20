@@ -38,7 +38,24 @@ def login():
 @app.route("/callback")
 def callback():
     token = oauth.auth0.authorize_access_token()
+    # store the user information in the session
     session["user"] = token
+
+    # get the user info from the token
+    user_info = oauth.auth0.parse_id_token(token)
+    
+    # call the user service to check if user exists and create user in the database
+    conn = http.client.HTTPConnection("kong:8000")
+    headers = {
+        "Content-Type": "application/json",
+    }
+    payload = json.dumps({
+        "user_id": user_info["sub"],
+        "email": user_info["email"],
+        "name": user_info["name"],
+    })
+    conn.request("POST", "/api/v1/user/check-create", payload, headers)
+
     return redirect("/")
 
 @app.route("/logout")
