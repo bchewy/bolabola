@@ -90,7 +90,7 @@ const root = {
   },
   match_details: async ({ _id }) => {
     try {
-      return await MatchDetailsModel.findById(_id);
+      return await MatchDetailsModel.findById(new mongoose.Types.ObjectId(_id));
     } catch (error) {
       throw error;
     }
