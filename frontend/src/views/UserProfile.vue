@@ -100,6 +100,10 @@ export default {
           }
         ),
       })
+        .then((response) => response.json())
+        .then((data) => {
+          this.refund_success = data.success; // not tested yet
+        });
 
       const refundedTicket = this.tickets.splice(index, 1)[0]; // Remove the ticket from the tickets array
       this.refundedTickets.push(refundedTicket); // Add the refunded ticket to the refundedTickets array
