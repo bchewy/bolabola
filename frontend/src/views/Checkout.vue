@@ -40,7 +40,7 @@ export default {
             selectedQuantity: Number,
             match_id: "1234", // to be fetched from previous page
             match_name: "Arsenal vs Chelsea", // to be fetched from previous page
-            // user_id: "123", // to be fetched from the server or previous page
+            user_id: this.$auth0.user.value.sub,
             tickets: [
                 { category: "A", quantity: 2 },
                 { category: "B", quantity: 3 },
@@ -60,7 +60,7 @@ export default {
                         { "category": "B", "quantity": 3 },
                         { "category": "C", "quantity": 4 },
                     ],
-                    "user_id": "123"
+                    "user_id": this.user_id,
                 };
                 // make a POST request to the backend
                 fetch('http://localhost:8000/api/v1/billing/checkout', {

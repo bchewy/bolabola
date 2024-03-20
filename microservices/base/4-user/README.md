@@ -43,3 +43,13 @@ Delete the `dbdata` folder and compose up again.
 - [ ] If your user gets JSON format error, use docker compose up --force-recreate mysql
 
 ------
+if u use 
+`docker compose down`
+you will keep the data in sql
+
+if you use 
+`docker compose down -v`
+you will wipe clean the sql db
+
+if you want to keep the data for all of us to see, you can put it in `database_user.sql`
+---
