@@ -2,6 +2,8 @@
 - main.py acts as the entry point for the user microservice.
 - user_schemas is the pydantic models for the user_crud microservice and db.
 
+---
+
 The User Database will be in SQL and has 1 table:
 - User Table
 
@@ -22,7 +24,11 @@ Sample User:
 ```
 note that stripe_id is optional and is only present if the user has bought a ticket.
 
-![user db schema](schema.png)
+---
+
+When the user logs in using the navbar, the frontend will send a request to `check-create` endpoint, which will check if the user's id is in the db. If it is not, then create a new user user in the db.
+
+
 
 
 If you get this error in mysql:
@@ -30,10 +36,6 @@ If you get this error in mysql:
 Delete the `dbdata` folder and compose up again.
 
 ## To implement
-- [ ] Track the logged in user
-- [ ] Code to create a new user
-- [ ] Link code to create a new user using sub in Auth0
-- [ ] If user is not registered, create a new user
 - [ ] RabbitMQ is not working
 - [ ] Create a lot of payment intents and put into the user database. 
 
@@ -41,3 +43,13 @@ Delete the `dbdata` folder and compose up again.
 - [ ] If your user gets JSON format error, use docker compose up --force-recreate mysql
 
 ------
+if u use 
+`docker compose down`
+you will keep the data in sql
+
+if you use 
+`docker compose down -v`
+you will wipe clean the sql db
+
+if you want to keep the data for all of us to see, you can put it in `database_user.sql`
+---

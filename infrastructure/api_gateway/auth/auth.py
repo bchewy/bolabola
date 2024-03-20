@@ -5,9 +5,11 @@ import os
 import json
 from urllib.parse import quote_plus, urlencode
 from authlib.integrations.flask_client import OAuth
+from flask_cors import CORS
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('APP_SECRET_KEY')
+CORS(app)
+
 
 oauth = OAuth(app)
 
