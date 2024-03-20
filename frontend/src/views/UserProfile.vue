@@ -126,3 +126,16 @@ export default {
   color: #5356FF;
 }
 </style>
+
+
+<!-- 
+best option
+when i log in on vue, immeidaely i am created an auth0 sub.
+check the user db if the user exists in the db by calling the check-create function in user db.
+
+  worst option
+when i log in, immediately i am created an auth0 sub. 
+for every page i go to, check the user db if the user exists in the db by calling the check-create function in user db.
+  if the user does not exist, use the user information from auth0 and create the user in the db.
+  if the user exists, get the user information from the db and use it to display the user's profile page.
+-->
