@@ -10,7 +10,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
-# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 # app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_recycle": 299}
 
 db = SQLAlchemy(app)
@@ -107,6 +107,7 @@ def check_create_user():
     }
     """
     data = request.json
+    print(data)
     if data is None:
         return jsonify(
             {
@@ -417,5 +418,5 @@ def run_consumer_thread():
 
 
 if __name__ == "__main__":
-    run_consumer_thread()
+    # run_consumer_thread()
     app.run(host="0.0.0.0", port=9004, debug=True)

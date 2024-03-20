@@ -78,6 +78,13 @@ services:
       - name: logging-route
         paths:
           - "/api/v1/logging"
+  
+  - name: auth
+    url: http://auth:9010
+    routes:
+      - name: auth-route
+        paths:
+          - "/api/v1/auth"
 
   - name: match-booking-orchestrator
     url: http://match-booking-orchestrator:9101

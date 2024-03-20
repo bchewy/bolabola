@@ -154,6 +154,16 @@ services:
       - kong-net
     environment:
       - PYTHONUNBUFFERED=1
+  
+  # Auth in API Gateway
+  auth:
+    build:
+      context: ./infrastructure/api_gateway/auth
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
 
   # Kong ================================================
   kong-database:

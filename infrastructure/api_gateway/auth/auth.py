@@ -1,6 +1,6 @@
 from flask import Flask, redirect, session, url_for, render_template
 import pika
-import http.client
+import requests
 import os
 import json
 from urllib.parse import quote_plus, urlencode
@@ -45,16 +45,9 @@ def callback():
     user_info = oauth.auth0.parse_id_token(token)
     
     # call the user service to check if user exists and create user in the database
-    conn = http.client.HTTPConnection("kong:8000")
-    headers = {
-        "Content-Type": "application/json",
-    }
-    payload = json.dumps({
-        "user_id": user_info["sub"],
-        "email": user_info["email"],
-        "name": user_info["name"],
-    })
-    conn.request("POST", "/api/v1/user/check-create", payload, headers)
+    response = requests.post("http://kong:8000/api/v1/user", json=user_info)
+    if response.code != 201 or response.code != 200:
+        return "Failed to create user", 500
 
     return redirect("/")
 
@@ -75,4 +68,4 @@ def logout():
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=9010)
