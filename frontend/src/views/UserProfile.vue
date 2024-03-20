@@ -2,7 +2,7 @@
   <div>
     <NavBar />
     <div class="about-view d-flex flex-column justify-content-center align-items-center">
-      <h1 class="text-center text-superblue">Profile page</h1>
+      <h1 class="text-center text-superblue">{{ userName }}'s Profile page</h1>
       <p class="lead text-dark text-center">Confirmed Bookings</p>
       <table class="table table-striped">
         <thead>
@@ -38,6 +38,16 @@ export default {
   components: {
     NavBar,
   },
+  computed: {
+    userName() { // for displaying
+      name = this.$auth0.user.value.name;
+      // capitalize the first letter of the name
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    },
+    userEmail() { // for sending to the backend
+      return this.$auth0.user.value.email;
+    },
+  },
   data() {
     return {
       tickets: [
@@ -50,6 +60,23 @@ export default {
     };
   },
   methods: {
+    getUserInfo(email) {
+      // Send a request to the backend to get the user's information using their email
+      fetch('http://localhost:8000/api/v1/user/{email}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+      });
+    },
+    fetchUserInfo() {
+      this.getUserInfo(this.userEmail);
+    },
     isRefundable(ticket) {
       // Calculate if the ticket is more than 24 hours away from the current time
       const matchTime = new Date(ticket.matchTime);
@@ -81,6 +108,9 @@ export default {
         alert('Unsuccessful Refund. Please try again.'); // can help to find nicer way of showing this
       }
     }
+  },
+  mounted() {
+    this.fetchUserInfo();
   }
 };
 </script>
@@ -95,7 +125,3 @@ export default {
   color: #5356FF;
 }
 </style>
-
-  
-
-<!-- should have some way of showing the ticket bought, and a refund button right next to it only if the match is less than 24hours away. THANKS -->
