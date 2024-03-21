@@ -59,20 +59,20 @@ export default {
         // },
     },
     methods: {
-         // Function to get the user's information
-    // getUserInfo(userId) {
-    //   // Send a request to the backend to get the user's information using their userId using get request
-    //   fetch(`http://localhost:8000/api/v1/user/${userId}`)
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //       this.tickets = data.tickets;
-    //     });
-    // },
-    
-    // // Function to fetch the user's information
-    // fetchUserInfo() {
-    //   this.getUserInfo(this.userId);
-    // },
+        // Function to get the user's information
+        // getUserInfo(userId) {
+        //   // Send a request to the backend to get the user's information using their userId using get request
+        //   fetch(`http://localhost:8000/api/v1/user/${userId}`)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //       this.tickets = data.tickets;
+        //     });
+        // },
+
+        // // Function to fetch the user's information
+        // fetchUserInfo() {
+        //   this.getUserInfo(this.userId);
+        // },
         selectSeat(seat) {
             if (seat.available) {
                 // Deselect all other seats
@@ -80,9 +80,14 @@ export default {
                     if (selectedSeat.label !== seat.label) {
                         selectedSeat.selected = false;
                     }
-                }
+                });
+                // Toggle selected state of the clicked seat
+                seat.selected = !seat.selected;
+                // Update selectedSeats array
+                this.selectedSeats = seat.selected ? [seat] : [];
             }
         },
+
 
         proceedToCheckout() {
             const selectedTickets = [];
