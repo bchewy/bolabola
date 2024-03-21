@@ -110,7 +110,7 @@ export default {
       if (this.refund_success) {
         this.$router.push('/views/refund');
       } else {
-        alert('Unsuccessful Refund. Please try again.'); // can help to find nicer way of showing this
+        alert('Unsuccessful Refund. Please try again.'); 
       }
     }
   },

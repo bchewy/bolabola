@@ -49,17 +49,18 @@ export default {
         };
     },
     methods: {
-        redirectToCheckout() {
+        redirectToCheckout(selectedTickets) {
             try {
                 // hardcoded data to send. change this JSON dynamically according to the tickets selected
                 const data = {
                     "match_id": "1234",
                     "match_name": "Arsenal vs Chelsea",
-                    "tickets": [
-                        { "category": "A", "quantity": 2 },
-                        { "category": "B", "quantity": 3 },
-                        { "category": "C", "quantity": 4 },
-                    ],
+                    "tickets": selectedTickets // [
+                //         { "category": "A", "quantity": 2 },
+                //         { "category": "B", "quantity": 3 },
+                //         { "category": "C", "quantity": 4 },
+                // ]
+                    ,
                     "user_id": this.user_id,
                 };
                 // make a POST request to the backend
