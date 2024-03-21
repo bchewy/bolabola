@@ -7,6 +7,8 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 COPY main.py .
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt

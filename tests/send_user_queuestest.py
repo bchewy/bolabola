@@ -1,25 +1,36 @@
-import requests
-import json
-import requests
-import json
 import pika
 import json
 
-connection_params = pika.ConnectionParameters('localhost', credentials=pika.PlainCredentials('ticketboost', 'veryS3ecureP@ssword'))
-connection = pika.BlockingConnection(connection_params)
-channel = connection.channel()
+# RabbitMQ credentials
+credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
 
-# Define the queue name
-queue_name = 'user_queue'
+# RabbitMQ connection parameters
+parameters = pika.ConnectionParameters("localhost", 5672, "/", credentials)
 
-# Define the message data
-message_data = {"match_id": "1", "ticket_category": "A", "serial_no": "100"}
 
-# Convert the message data to JSON
-message_json = json.dumps(message_data)
+def test_rabbitmq_queue():
+    # Create a connection to RabbitMQ
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
 
-# Publish the message to the queue
-channel.basic_publish(exchange='', routing_key=queue_name, body=message_json)
+    # Declare the queue
+    queue_name = "user"
+    channel.queue_declare(queue=queue_name, durable=True)
 
-# Close the connection
-connection.close()
+    # Send a test message to the queue
+    test_message = {"user_id": "1", "status": "succeeded", "serial_no": "123"}
+    channel.basic_publish(
+        exchange="refunds",
+        routing_key="user.#",
+        body=json.dumps(test_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+    print(f"Test message sent to the '{queue_name}' queue")
+
+    connection.close()
+
+
+if __name__ == "__main__":
+    test_rabbitmq_queue()   

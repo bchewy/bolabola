@@ -22,7 +22,7 @@
     ],
     "exchanges": [
         {
-            "name": "mainExchange",
+            "name": "refunds",
             "vhost": "/",
             "type": "direct",
             "durable": true,
@@ -51,21 +51,21 @@
     ],
     "bindings": [
         {
-            "source": "mainExchange",
+            "source": "refunds",
             "vhost": "/",
             "destination": "user",
             "destination_type": "queue",
             "routing_key": "user.#"
         },
         {
-            "source": "mainExchange",
+            "source": "refunds",
             "vhost": "/",
             "destination": "order",
             "destination_type": "queue",
             "routing_key": "order.#"
         },
         {
-            "source": "mainExchange",
+            "source": "refunds",
             "vhost": "/",
             "destination": "payment",
             "destination_type": "queue",

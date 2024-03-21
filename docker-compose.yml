@@ -62,8 +62,17 @@ services:
       - kong-net
     depends_on:
       - mysql
+      - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
+    command: # we need this to check for rabbitMQ to be up, 
+      [ # otherwise asyncio will throw an exception error. 
+        "/wait-for-it.sh", # thereby crashing user microservice entirely.
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "/app/main.py",
+      ]
 
   videoasset:
     build:

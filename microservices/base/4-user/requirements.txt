@@ -5,3 +5,6 @@ requests
 pika
 pydantic
 flask_cors
+aio_pika
+Quart
+quart-flask-patch
