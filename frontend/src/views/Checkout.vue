@@ -11,7 +11,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(ticket, index) in tickets" :key="index">
+                <tr v-for="(ticket, index) in selectedTickets" :key="index">
                     <td>{{ match_name }}</td>
                     <td>{{ match_id }}</td>
                     <td>{{ ticket.category }}</td>
@@ -41,15 +41,16 @@ export default {
             match_id: "1234", // to be fetched from previous page
             match_name: "Arsenal vs Chelsea", // to be fetched from previous page
             user_id: this.$auth0.user.value.sub,
-            tickets: [
-                { category: "A", quantity: 2 },
-                { category: "B", quantity: 3 },
-                { category: "Online", quantity: 4 },
-            ]
+            // tickets: [
+            //     { category: "A", quantity: 2 },
+            //     { category: "B", quantity: 3 },
+            //     { category: "Online", quantity: 4 },
+            // ], 
+            selectedTickets: [],
         };
     },
     methods: {
-        redirectToCheckout(selectedTickets) {
+        redirectToCheckout() {
             try {
                 // hardcoded data to send. change this JSON dynamically according to the tickets selected
                 const data = {
@@ -85,6 +86,9 @@ export default {
             } catch (error) {
                 console.error(error);
             }
+        },
+        handleCheckout(selectedTickets) {
+            this.selectedTickets = selectedTickets; // Update selectedTickets with emitted data
         },
     }
 }
