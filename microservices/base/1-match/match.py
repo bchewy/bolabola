@@ -18,17 +18,14 @@ mongo = PyMongo(app)
 # MongoDB collection
 match_collection = mongo.db.matches
 
-
 def start_rabbitmq_consumer():
+    match_id = match_collection.id
     def callback(ch, method, properties, body):
-        read_events()
-
+        read_events(match_id)
     credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
     parameters = pika.ConnectionParameters("rabbitmq", 5672, "/", credentials)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
-
-    channel.queue_declare(queue="match", durable=True)
     channel.basic_consume(queue="match", on_message_callback=callback, auto_ack=True)
     channel.start_consuming()
 

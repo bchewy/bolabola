@@ -3,6 +3,9 @@ import redis
 from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
 import logging
+import pika
+import os
+import json
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +15,6 @@ mongo_db = mongo_client["tickets"]
 tickets_collection = mongo_db["tickets"]
 app.config["REDIS_URL"] = "redis://redis:6379/0"
 redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
-
 
 @app.route("/reserve", methods=["POST"])
 def reserve_seat():
@@ -119,6 +121,36 @@ def validate_reservation():
     else:
         return jsonify({"error": "Seat not found"}), 404
 
+# rabbitmq
+# Hardcoded credentials and connection details for RabbitMQ
+rabbitmq_user = "ticketboost"
+rabbitmq_password = "veryS3ecureP@ssword"
+rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
+rabbitmq_port = 5672
+rabbitmq_vhost = "/"
+
+
+def consume_seat():
+    credentials = pika.PlainCredentials(rabbitmq_user, rabbitmq_password)
+    parameters = pika.ConnectionParameters(
+        host=rabbitmq_host,
+        port=rabbitmq_port,
+        virtual_host=rabbitmq_vhost,
+        credentials=credentials,
+    )
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+    channel.queue_declare(name = "seat", durable = True)
+    channel.basic_consume(queue='seat', on_message_callback=callback, auto_ack=True)
+    channel.start_consuming()
+
+def callback(ch, method, properties, body):
+    print("Received message from RabbitMQ: %r" % body)
+    try:
+        reserve_seat()  # Call the reserve_seat function here
+        print("Reservation successful")
+    except Exception as e:
+        print("Error while reserving seat:", str(e))
 
 # Health Check
 @app.route("/", methods=["GET"])

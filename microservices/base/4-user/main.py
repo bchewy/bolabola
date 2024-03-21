@@ -363,12 +363,37 @@ def delete_ticket_from_user(id, serial_no):
 ############################################################################################################
 ######################################    RABBITMQ INFO    #################################################
 ############################################################################################################
+credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
+parameters = pika.ConnectionParameters("rabbitmq", 5672, "/", credentials)
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+
+# Start a RabbitMQ consumer to listen for booking events
+def consume_booking():
+    def callback(ch, method, properties, body):
+        # parse received message
+        data = json.loads(body)
+        user = User.query.get(data['user_id'])
+        new_ticket = data
+        if user is None:
+            print("User not found")
+            return
+        def add_ticket_to_user(user, new_ticket):
+            user.tickets.append(new_ticket)
+            print("Ticket added successfully")
+            return
+        print("Unable to add ticket")
+        if data["status"] == "succeeded":
+            booking_thread = Thread(target=add_ticket_to_user, args=(user, new_ticket))
+            booking_thread.start()
+            print("Booking success")
+            return
+        print("Booking failed")
+    channel.basic_consume(queue='user', on_message_callback=callback, auto_ack=True)
+    channel.start_consuming()
+
 # Start a RabbitMQ consumer to listen for refund events
 def start_rabbitmq_consumer():
-    credentials = pika.PlainCredentials("ticketboost", "veryS3ecureP@ssword")
-    parameters = pika.ConnectionParameters("rabbitmq", 5672, "/", credentials)
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
     
     channel.exchange_declare(exchange="refund", exchange_type="direct", durable=True)
     channel.queue_declare(queue="user", durable=True)  # for the user service
@@ -414,5 +439,5 @@ def run_consumer_thread():
 
 
 if __name__ == "__main__":
-    # run_consumer_thread()
+    run_consumer_thread()
     app.run(host="0.0.0.0", port=9004, debug=True)

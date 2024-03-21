@@ -36,36 +36,48 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 # Publish to AMQP - to update subsequent services about the match booking
-def publish_to_amqp():
+def publish_to_amqp(queue_name, msg):
     connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
     channel = connection.channel()
+    channel.exchange_declare(exchange='booking', exchange_type='direct', durable=True)
+
     # Publish to user to update match booking
-    channel.queue_declare(queue="user")
-    channel.basic_publish(
-        exchange="",
-        routing_key="user",
-        body="User has purchased ticket for match with id {123} !",
-    )
+    if queue_name == "user":
+        channel.queue_declare(queue="user")
+        channel.basic_publish(
+            exchange="booking",
+            routing_key="user",
+            # body="User has purchased ticket for match with id {123} !",
+            body = msg,
+            properties=pika.BasicProperties(delivery_mode=2)
+        )
 
-    # Publish to Match Queue to update ticket availablity
-    channel.queue_declare(queue="match")
-    channel.basic_publish(
-        exchange="", routing_key="match", body="Match with id {123} has been booked!"
-    )
+    elif queue_name == "match":
+        # Publish to Match Queue to update ticket availablity
+        channel.queue_declare(queue="match")
+        channel.basic_publish(
+            exchange="booking", routing_key="match", body = msg, properties=pika.BasicProperties(delivery_mode=2)
+            # body="Match with id {123} has been booked!"
+        )
 
-    # Publish to seat reservation to remove ticket lock
-    channel.queue_declare(queue="seat")
-    channel.basic_publish(
-        exchange="", routing_key="seat", body="Seat with id {123} has been booked!"
-    )
+    elif queue_name == "seat":
+        # Publish to seat reservation to remove ticket lock
+        channel.queue_declare(queue="seat")
+        channel.basic_publish(
+            exchange="booking", routing_key="seat", body = msg, properties=pika.BasicProperties(delivery_mode=2)
+            # body="Seat with id {123} has been booked!"
+        )
 
+    else:
     # Publish to notification
-    channel.queue_declare(queue="notification")
-    channel.basic_publish(
-        exchange="",
-        routing_key="notification",
-        body="Notification for match with id {123} has been sent!",
-    )
+        channel.queue_declare(queue="notification")
+        channel.basic_publish(
+            exchange="booking",
+            routing_key="notification",
+            # body="Notification for match with id {123} has been sent!",
+            body = msg,
+            properties=pika.BasicProperties(delivery_mode=2)
+        )
 
     connection.close()
 
@@ -162,6 +174,14 @@ def process_webhook():
 
         # Publish to RabbitMQ
         # publish_to_amqp()
+        metadata = data.get("metadata")
+        payment_intent = data.get("payment_intent")
+
+        # Publish to RabbitMQ
+        publish_to_amqp("user", json.dumps({"metadata": metadata, "payment_intent": payment_intent}))
+        publish_to_amqp("match", json.dumps(metadata))
+        publish_to_amqp("seat", json.dumps(metadata))
+        publish_to_amqp("notification", json.dumps(metadata))
 
         # Pls send payment_intent to user service too THANKS
 
@@ -237,7 +257,6 @@ def reserve_seat_for_user(match_id, user_id, ticket_category):
     else:
         # Other errors
         return {"error": "An unexpected error occurred."}, False
-
 
 @app.route("/")
 def hello():

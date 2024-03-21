@@ -1,6 +1,7 @@
 import boto3
 import json
 import pika
+import os
 
 
 def consume_notifications():
@@ -27,7 +28,7 @@ def consume_notifications():
     )
 
     # Declare the exchange
-    channel.exchange_declare(exchange="notifications", exchange_type="topic")
+    channel.exchange_declare(exchange="", exchange_type="direct")
 
     # Declare the queue
     result = channel.queue_declare("", exclusive=True)
@@ -35,7 +36,7 @@ def consume_notifications():
 
     # Bind the queue to the exchange
     channel.queue_bind(
-        exchange="notifications", queue=queue_name, routing_key="notification.*"
+        exchange="", queue=queue_name, routing_key="notification"
     )
 
     # Set up AWS SES client with explicit region
