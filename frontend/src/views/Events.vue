@@ -1,13 +1,13 @@
 <template>
   <div>
-    <NavBar />
+    <!-- <NavBar /> -->
     <div class="events-view">
       <h1 class="text-superblue">Matches</h1>
       <p class="lead text-dark">Find the latest games here!</p>
 
       <div class="container-fluid mt-3">
         <div class="row gx-3 gy-3">
-          <div v-for="match in matches" :key="match.id" class="col col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
+          <div v-for="match in matches" :key="match._id" class="col col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
             <div class="card" @click="displayMatchDetails(match)">
               <div class="card-body">
                 <h5 class="card-title">{{ match.name }}</h5>
@@ -25,18 +25,21 @@
 </template>
 
 <script>
-import { gql, useQuery } from '@apollo/client';
+// import gql from 'graphql-tag';
 import NavBar from '../components/Navbar.vue'; 
+import axios from 'axios';
 
-const FETCH_MATCHES = gql`
+const FETCH_MATCHES = `
   query {
-    matches {
-      id
-      name
-      home_team
-      away_team
-      home_score
-      away_score
+    matches_overview {
+      _id,
+      name,
+      home_team,
+      away_team,
+      home_score,
+      away_score,
+      date,
+      seats
     }
   }
 `;
@@ -45,39 +48,32 @@ export default {
   components: {
     NavBar
   },
-  setup() {
-    const { data, error } = useQuery(FETCH_MATCHES);
-
-    if (error) {
-      console.error('Error fetching matches:', error);
-    }
-
-    if (data) {
-      console.log('Fetched matches:', data.matches);
-    }
-
+  data() {
     return {
-      matches: data ? data.matches : [],
+      matches: [],
+      selectedMatch: null
     };
-  }, 
+  },
   created() {
     this.fetchMatches();
   },
   methods: {
     fetchMatches() {
-      axios.post('http://match:9001/graphql/api/v1/match', {
-        query: `query { matches_overview { _id name home_team away_team home_score away_score date } }`,
-        variables: {
-          id: "65f42e711c248818445678d3"
-        }
+      axios.post('http://localhost:8000/api/v1/match/', {
+        query: FETCH_MATCHES,
       })
         .then(response => {
-          this.matches = response.data.data.match_details.map(match => {
+          this.matches = response.data.data.matches_overview.map(match => {
             // Assuming your backend returns an array of match details
             // You might need to adjust based on the actual structure
+            console.log(match);
             return {
               id: match._id, // Adjust based on your data structure
               title: `${match.home_team} vs ${match.away_team}`,
+              home_team: match.home_team,
+              away_team: match.away_team,
+              home_score: match.home_score,
+              away_score: match.away_score,
               date: new Date(parseInt(match.date)).toLocaleString(), // Convert timestamp to readable date
               description: match.description,
               venue: match.venue
