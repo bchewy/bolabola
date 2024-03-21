@@ -119,6 +119,13 @@ plugins:
     config:
       origins:
         - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
   - name: prometheus
     config:
       status_code_metrics: true
