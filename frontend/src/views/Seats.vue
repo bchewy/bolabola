@@ -69,21 +69,30 @@ export default {
             }
         },
 
-        // proceedToCheckout() {
-        //     console.log('Selected seats:', this.getSelectedSeats());
-        //     console.log('Selected quantities:', this.selectedQuantities);
-        //     this.$router.push('/views/checkout');
-        // },
         proceedToCheckout() {
-        const selectedTickets = [];
-        for (const seat of this.selectedSeats) {
-            const category = seat.label;
-            const quantity = this.selectedQuantities[category];
-            selectedTickets.push({ category, quantity });
-        }
-        this.$emit('checkout', selectedTickets);
-        this.$router.push('/views/checkout');
-    },
+            const selectedTickets = [];
+            for (const seat of this.selectedSeats) {
+                const category = seat.label;
+                const quantity = this.selectedQuantities[category];
+                selectedTickets.push({ category, quantity });
+            }
+            this.$emit('checkout', selectedTickets);
+
+            // // send a response to the backend to create a checkout session
+            // fetch(`http://localhost:8000/api/v1/booking/init-match-booking/${match_id}?userid=${userid}&cat=${cat}&qty=${qty}`)
+            //     .then((response) => response.json())
+            //     .then((data) => {
+            //         // if response successful, redirect to the checkout page
+            //         if (data.code === 200) {
+            //             this.$router.push('/views/checkout');
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         console.error('Error:', error);
+            //     });
+
+            this.$router.push('/views/checkout');
+        },
         getSelectedSeats() {
             return this.selectedSeats.map(seat => seat.label);
         }

@@ -94,9 +94,11 @@ def init_match_booking(match_id):
         # Once the ticket is locked, call the billing service to create a checkout session
         if locked:
             continue_match_booking(match_id, user_id, ticket_category)
-
-    return (response, locked)
-    # return jsonify(match_details, {"seatCount": seatCount})
+            return jsonify({"code": 200, "message": "Seat locked successfully!"})
+        else:
+            return jsonify(
+                {"message": "The selected seat is currently on hold. Please try selecting another seat.", "code": 409}
+            )
 
 
 # app.route("/continue-match-booking/<match_id>", methods=["GET"])
