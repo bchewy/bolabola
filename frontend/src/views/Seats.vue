@@ -55,11 +55,6 @@ export default {
         }
     },
     methods: {
-
-        // IDK WHY I CANT CALL THIS URL i put in postman to test but error is route not found :< 
-        // IS THE CODE EVEN SUPP TO BE LIKE THIS :((((
-        // PLS SOS <3333
-
     //     async selectSeat(seat) {
     //     try {
     //         // Check if the seat is available
@@ -115,6 +110,30 @@ export default {
         proceedToCheckout() {
             console.log('Selected seats:', this.getSelectedSeats());
             console.log('Selected quantities:', this.selectedQuantities);
+
+            // Send post request to reserve the selected seats
+            // link for this seat is to be changed correctly. 
+            fetch('http://localhost:8000/api/v1/booking/init-match-booking/2?userid=1&cat=3', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    seats: this.getSelectedSeats(),
+                    quantities: this.selectedQuantities
+                })
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log('Booking response:', data);
+                })
+                .catch((error) => {
+                    console.error('Error booking seats:', error);
+                });
+
+            
+
+            // Redirect to the checkout page
             this.$router.push('/views/checkout');
         },
         getSelectedSeats() {

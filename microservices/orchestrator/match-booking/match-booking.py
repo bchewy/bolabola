@@ -73,7 +73,6 @@ def publish_to_amqp():
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
 
-    readyToPay = False
     # get userid
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
@@ -91,8 +90,11 @@ def init_match_booking(match_id):
         # TODO: Add minus seat count for the selected seat from Match Service
         response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
 
-        readyToPay = True  # Upon readyToPay being true, frontend should progress to match checkout UI.
-    return (response, locked, readyToPay)
+        # Once the ticket is locked, call the billing service to create a checkout session
+        if locked:
+            continue_match_booking(match_id, user_id, ticket_category)
+
+    return (response, locked)
     # return jsonify(match_details, {"seatCount": seatCount})
 
 
@@ -100,6 +102,7 @@ def init_match_booking(match_id):
 
 def continue_match_booking(match_id, user_id, ticket_category):
     # TODO: Call billing service to send billing/purchase details, and wait for response
+    # This function should only be called after locking seat ticket
     """
     This method should send the billing details to the billing service. An example of the payload of billing details is:
     {
