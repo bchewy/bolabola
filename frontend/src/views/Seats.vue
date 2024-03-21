@@ -5,8 +5,8 @@
         <!-- Always display the seat map -->
         <div class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
-                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="selectSeat(seat)"
-                     class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
+                <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="selectSeat(seat)" class="seat"
+                    :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
             </div>
         </div>
         <!-- Display quantity selectors for each selected seat -->
@@ -24,18 +24,19 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
     data() {
         return {
             seatMap: [
-                [{ label: 'A', selected: false, available: true }, { label: 'B', selected: false, available: false }, { label: 'C', selected: false, available: true }],
+                [{ label: 'A', selected: false, available: true }, { label: 'B', selected: false, available: true }, { label: 'C', selected: false, available: true }],
                 [{ label: 'D', selected: false, available: true }, { label: 'E', selected: false, available: true }, { label: 'F', selected: false, available: true }],
-                [{ label: 'G', selected: false, available: false }, { label: 'H', selected: false, available: true }, { label: 'I', selected: false, available: true }],
+                [{ label: 'G', selected: false, available: true }, { label: 'H', selected: false, available: true }, { label: 'I', selected: false, available: true }],
                 [{ label: 'Online', selected: false, available: true }]
             ],
             selectedQuantities: {
                 'A': 0,
-                'B': 0, 
+                'B': 0,
                 'C': 0,
                 'D': 0,
                 'E': 0,
@@ -52,22 +53,41 @@ export default {
     computed: {
         proceedEnabled() {
             return this.selectedSeats.length > 0;
-        }
+        },
+        // userId() { // for sending to the backend
+        //     return this.$auth0.user.value.sub;
+        // },
     },
     methods: {
+        // Function to get the user's information
+        // getUserInfo(userId) {
+        //   // Send a request to the backend to get the user's information using their userId using get request
+        //   fetch(`http://localhost:8000/api/v1/user/${userId}`)
+        //     .then((response) => response.json())
+        //     .then((data) => {
+        //       this.tickets = data.tickets;
+        //     });
+        // },
+
+        // // Function to fetch the user's information
+        // fetchUserInfo() {
+        //   this.getUserInfo(this.userId);
+        // },
         selectSeat(seat) {
             if (seat.available) {
-                seat.selected = !seat.selected; // Toggle selected state
-                if (seat.selected) {
-                    this.selectedSeats.push(seat); // Add selected seat to the array
-                } else {
-                    const index = this.selectedSeats.findIndex(selectedSeat => selectedSeat.label === seat.label);
-                    if (index !== -1) {
-                        this.selectedSeats.splice(index, 1); // Remove deselected seat from the array
+                // Deselect all other seats
+                this.selectedSeats.forEach(selectedSeat => {
+                    if (selectedSeat.label !== seat.label) {
+                        selectedSeat.selected = false;
                     }
-                }
+                });
+                // Toggle selected state of the clicked seat
+                seat.selected = !seat.selected;
+                // Update selectedSeats array
+                this.selectedSeats = seat.selected ? [seat] : [];
             }
         },
+
 
         proceedToCheckout() {
             const selectedTickets = [];
@@ -96,7 +116,9 @@ export default {
         getSelectedSeats() {
             return this.selectedSeats.map(seat => seat.label);
         }
+
     }
+
 };
 </script>
 
@@ -143,6 +165,3 @@ export default {
     margin-top: 10px;
 }
 </style>
-
-
-
