@@ -41,43 +41,51 @@ def publish_to_amqp(queue_name, msg):
     channel = connection.channel()
     channel.exchange_declare(exchange='booking', exchange_type='direct', durable=True)
 
+    channel.queue_declare(queue=queue_name)
+    channel.basic_publish(
+        exchange = "booking",
+        routing_key = queue_name,
+        body = msg,
+        properties=pika.BasicProperties(delivery_mode=2)
+    )
+
     # Publish to user to update match booking
-    if queue_name == "user":
-        channel.queue_declare(queue="user")
-        channel.basic_publish(
-            exchange="booking",
-            routing_key="user",
-            # body="User has purchased ticket for match with id {123} !",
-            body = msg,
-            properties=pika.BasicProperties(delivery_mode=2)
-        )
+    # if queue_name == "user":
+    #     channel.queue_declare(queue="user")
+    #     channel.basic_publish(
+    #         exchange="booking",
+    #         routing_key="user",
+    #         # body="User has purchased ticket for match with id {123} !",
+    #         body = msg,
+    #         properties=pika.BasicProperties(delivery_mode=2)
+    #     )
 
-    elif queue_name == "match":
-        # Publish to Match Queue to update ticket availablity
-        channel.queue_declare(queue="match")
-        channel.basic_publish(
-            exchange="booking", routing_key="match", body = msg, properties=pika.BasicProperties(delivery_mode=2)
-            # body="Match with id {123} has been booked!"
-        )
+    # elif queue_name == "match":
+    #     # Publish to Match Queue to update ticket availablity
+    #     channel.queue_declare(queue="match")
+    #     channel.basic_publish(
+    #         exchange="booking", routing_key="match", body = msg, properties=pika.BasicProperties(delivery_mode=2)
+    #         # body="Match with id {123} has been booked!"
+    #     )
 
-    elif queue_name == "seat":
-        # Publish to seat reservation to remove ticket lock
-        channel.queue_declare(queue="seat")
-        channel.basic_publish(
-            exchange="booking", routing_key="seat", body = msg, properties=pika.BasicProperties(delivery_mode=2)
-            # body="Seat with id {123} has been booked!"
-        )
+    # elif queue_name == "seat":
+    #     # Publish to seat reservation to remove ticket lock
+    #     channel.queue_declare(queue="seat")
+    #     channel.basic_publish(
+    #         exchange="booking", routing_key="seat", body = msg, properties=pika.BasicProperties(delivery_mode=2)
+    #         # body="Seat with id {123} has been booked!"
+    #     )
 
-    else:
-    # Publish to notification
-        channel.queue_declare(queue="notification")
-        channel.basic_publish(
-            exchange="booking",
-            routing_key="notification",
-            # body="Notification for match with id {123} has been sent!",
-            body = msg,
-            properties=pika.BasicProperties(delivery_mode=2)
-        )
+    # else:
+    # # Publish to notification
+    #     channel.queue_declare(queue="notification")
+    #     channel.basic_publish(
+    #         exchange="booking",
+    #         routing_key="notification",
+    #         # body="Notification for match with id {123} has been sent!",
+    #         body = msg,
+    #         properties=pika.BasicProperties(delivery_mode=2)
+    #     )
 
     connection.close()
 
