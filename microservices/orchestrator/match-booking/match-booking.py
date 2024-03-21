@@ -73,9 +73,10 @@ def publish_to_amqp():
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
 
-    # get userid
+    # get userid, category and quantity as requested by the user
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
+    quantity = request.args.get("qty")
 
     # Retrieve match details
     match_details = retrieve_match_from_match_service(match_id)
@@ -87,7 +88,7 @@ def init_match_booking(match_id):
             {"message": "No seats available for this match!"}
         )  # Return to frontend if unavailable.
     else:
-        # TODO: Add minus seat count for the selected seat from Match Service
+        # TODO: Add minus seat count for the selected seat from Match Service based on the quantity
         response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
 
         # Once the ticket is locked, call the billing service to create a checkout session
