@@ -52,8 +52,17 @@ services:
       - kong-net
     depends_on:
       - mysql
+      - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
+    command:
+      [
+        "/wait-for-it.sh",
+        "rabbitmq:5672",
+        "--",
+        "python",
+        "/app/main.py",
+      ]
   
   # Auth in API Gateway
   auth:
