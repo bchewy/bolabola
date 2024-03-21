@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "cd2567ab-6437-4c73-b3de-de52b2e5f617",
+		"_postman_id": "a90cbb41-d44d-4379-ba53-3420b18f27ac",
 		"name": "ESD - Bola Bola",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "3625507"
+		"_exporter_id": "23749162"
 	},
 	"item": [
 		{
@@ -126,41 +126,56 @@
 			"name": "Match",
 			"item": [
 				{
-					"name": "Matches - Get All",
+					"name": "Matches - Get Details",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query Query($_id: String!) {\n    match_details (_id: $_id) {\n        _id,\n        name,\n        description,\n        venue,\n        home_team,\n        away_team,\n        home_score,\n        away_score,\n        date,\n        seats\n    }\n}",
+								"variables": "{\n    \"_id\": \"65f40de537374675b8b0751a\"\n}"
+							}
+						},
 						"url": {
-							"raw": "localhost:8000/match/matches/",
+							"raw": "http://localhost:8000/api/v1/match",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
-								"match",
-								"matches",
-								""
+								"api",
+								"v1",
+								"match"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Matches - Get 1",
+					"name": "Matches - Get All Overview",
 					"request": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "{\n    matches_overview {\n        _id,\n        name,\n        home_team,\n        away_team,\n        home_score,\n        away_score,\n        date,\n        seats\n    }\n}",
+								"variables": ""
+							}
+						},
 						"url": {
-							"raw": "localhost:8000/match/matches/65ec7688811b4f8541b54de4/",
+							"raw": "http://localhost:8000/api/v1/match",
+							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
-								"match",
-								"matches",
-								"65ec7688811b4f8541b54de4",
-								""
+								"api",
+								"v1",
+								"match"
 							]
 						}
 					},
