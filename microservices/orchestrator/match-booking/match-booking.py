@@ -76,7 +76,7 @@ def init_match_booking(match_id):
     # get userid, category and quantity as requested by the user
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
-    quantity = request.args.get("qty")
+    seatUserPurchasing = request.args.get("seat") # seat number user is purchasing
 
     # Retrieve match details
     match_details = retrieve_match_from_match_service(match_id)
@@ -260,4 +260,5 @@ def hello():
 #     channel.start_consuming()
 
 if __name__ == "__main__":
+    run_consumer_thread()
     app.run(port=9101, debug=True, host="0.0.0.0")
