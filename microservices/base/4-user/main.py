@@ -1,16 +1,30 @@
+# from flask import Flask, jsonify, request
+
 import quart_flask_patch
-from quart import Quart
-from flask import Flask, jsonify, request
+from quart import Quart, jsonify, request
+
+
+# SQLAlchemy
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
+from sqlalchemy import func, Column, Integer, String, JSON, select
 from sqlalchemy.orm.attributes import flag_modified
+
+# SQLAlchemy Asynchronous
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# Others
 import pika
 import os
 import json
 from threading import Thread
 from flask_cors import CORS
+
+# Asynchronous things
 import asyncio
 import aio_pika
+import aiomysql
 
 
 ## AMQP items ################################################################################################
@@ -31,24 +45,66 @@ async def amqp():
 
 ## AMQP items end ################################################################################################
 
+## OLD SQL Alchemy Code ################################################################################################
 # app = Flask(__name__)
+# app.config["SQLALCHEMY_DATABASE_URI"] = (
+#     "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
+# )
+# app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
+# db = SQLAlchemy()
+# db = db.init_app(app)
+# db.app = app
+
+##  Old Model Code
+# class User(db.Model):
+#     __tablename__ = "user"
+#     id = db.Column(db.String(120), primary_key=True)
+#     name = db.Column(db.String(80), nullable=False)
+#     email = db.Column(db.String(120), unique=True, nullable=False)
+#     tickets = db.Column(db.JSON, nullable=True)
+#     premium = db.Column(db.String(80), nullable=False)
+
+#     def __init__(self, id, name, email, tickets, premium):
+#         self.id = id
+#         self.name = name
+#         self.email = email
+#         self.tickets = tickets
+#         self.premium = premium
+
+#     def json(self):
+#         return {
+#             "id": self.id,
+#             "name": self.name,
+#             "email": self.email,
+#             "tickets": self.tickets,
+#             "premium": self.premium,
+#         }
+## OLD SQL Alchemy Code end ################################################################################################
+
+
 app = Quart(__name__)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "mysql+mysqlconnector://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
+DATABASE_URL = (
+    "mysql+aiomysql://ticketboost:veryS3ecurePassword@mysql:3306/bolabola_user"
 )
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
 
-db = SQLAlchemy(app)
+engine = create_async_engine(DATABASE_URL, echo=True)
+
+# Create a base class for your models
+Base = declarative_base()
+
+# Configure Session class to use AsyncSession
+AsyncSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+)
 
 
-class User(db.Model):
+class User(Base):
     __tablename__ = "user"
-    id = db.Column(db.String(120), primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    tickets = db.Column(db.JSON, nullable=True)
-    premium = db.Column(db.String(80), nullable=False)
+    id = Column(String(120), primary_key=True)
+    name = Column(String(80), nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    tickets = Column(JSON, nullable=True)
+    premium = Column(String(80), nullable=False)
 
     def __init__(self, id, name, email, tickets, premium):
         self.id = id
@@ -80,10 +136,14 @@ async def ping():
 # path to print all users
 @app.route("/", methods=["GET"])
 async def home():
-    userlist = db.session.scalars(db.select(User)).all()
-    if len(userlist) == 0:
-        return jsonify({"code": 404, "message": "No users found"})
-    return jsonify({"code": 200, "data": [user.json() for user in userlist]})
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            result = await session.execute(select(User))
+            userlist = result.scalars().all()
+            if len(userlist) == 0:
+                return jsonify({"code": 404, "message": "No users found"})
+            data = [user.json() for user in userlist]
+            return jsonify({"code": 200, "data": data})
 
 
 ############################################################################################################
@@ -92,10 +152,11 @@ async def home():
 # view particular user's info, given by user_id
 @app.route("/<int:id>", methods=["GET"])
 async def view_user(id):
-    user = User.query.get(str(id))
-    if user is None:
-        return jsonify({"code": 404, "message": "User not found"})
-    return jsonify({"code": 200, "data": user.json()})
+    async with AsyncSessionLocal() as session:
+        user = await session.get(User, str(id))
+        if user is None:
+            return jsonify({"code": 404, "message": "User not found"})
+        return jsonify({"code": 200, "data": user.json()})
 
 
 ############################################################################################################
@@ -113,27 +174,38 @@ async def check_create_user():
         "user_id": "auth0|1234"
     }
     """
-    data = request.json
-    print(data)
+    data = await request.get_json()  # Asynchronously get the JSON data from the request
     if data is None:
         return jsonify({"code": 400, "message": "User info not provided"})
-    # check if user is already in the database
-    received_user_id = data["user_id"]
-    user = User.query.filter_by(id=received_user_id).first()
-    if user is not None:
-        return jsonify({"code": 400, "message": "User already exists"})
 
-    # create a new user
-    user = User(
-        id=received_user_id,
-        name=data["name"],
-        email=data["email"],
-        tickets=None,
-        premium="N",
-    )
-    db.session.add(user)
-    flag_modified(user, "tickets")
-    db.session.commit()
+    received_user_id = data["user_id"]
+
+    # Use an async session to interact with the database
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            # Asynchronously query for an existing user
+            existing_user = await session.execute(
+                select(User).filter_by(id=received_user_id)
+            )
+            user = existing_user.scalars().first()
+
+            if user is not None:
+                # If user exists, return an error message
+                return jsonify({"code": 400, "message": "User already exists"})
+
+            # If user does not exist, create a new User instance
+            new_user = User(
+                id=received_user_id,
+                name=data["name"],
+                email=data["email"],
+                tickets=None,
+                premium="N",
+            )
+
+            # Add the new user to the session and commit the changes asynchronously
+            session.add(new_user)
+            await session.commit()
+
     return jsonify({"code": 201, "message": "User created successfully"})
 
 
