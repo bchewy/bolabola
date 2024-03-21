@@ -21,7 +21,6 @@ services:
       - name: match-graphql-route
         paths:
           - "/api/v1/match"
-        methods: ["POST", "GET"]
 
   - name: queue
     url: http://queue:9002
