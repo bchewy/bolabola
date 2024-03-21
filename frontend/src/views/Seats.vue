@@ -9,10 +9,10 @@
                      class="seat" :class="{ 'selected': seat.selected, 'unavailable': !seat.available }">{{ seat.label }}</div>
             </div>
         </div>
-        <!-- Display quantity selector when a seat is selected -->
-        <div v-if="selectedSeat" class="quantity-selector">
-            <label>Select Quantity for {{ selectedSeat.label }}:</label>
-            <select v-model="selectedQuantities[selectedSeat.label]">
+        <!-- Display quantity selectors for each selected seat -->
+        <div v-for="seat in selectedSeats" :key="seat.label" class="quantity-selector">
+            <label>Select Quantity for {{ seat.label }}:</label>
+            <select v-model="selectedQuantities[seat.label]">
                 <option v-for="n in maxQuantity" :value="n">{{ n }}</option>
             </select>
         </div>
@@ -46,115 +46,51 @@ export default {
                 'Online': 0
             },
             maxQuantity: 4, // Maximum selectable quantity
-            selectedSeat: null // Track the currently selected seat
+            selectedSeats: [] // Track the currently selected seats
         };
     },
     computed: {
         proceedEnabled() {
-            return this.selectedSeat !== null;
+            return this.selectedSeats.length > 0;
         }
     },
     methods: {
-
-        // IDK WHY I CANT CALL THIS URL i put in postman to test but error is route not found :< 
-        // IS THE CODE EVEN SUPP TO BE LIKE THIS :((((
-        // PLS SOS <3333
-
-    //     async selectSeat(seat) {
-    //     try {
-    //         // Check if the seat is available
-    //         if (seat.available) {
-    //             // Make a POST request to reserve the seat
-    //             const response = await fetch('http://localhost:8000/api/v1/seat/reserve', {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json'
-    //                 },
-    //                 body: JSON.stringify({
-    //                     user_id: 'your_user_id', // Provide the user ID
-    //                     match_id: 'your_match_id', // Provide the match ID
-    //                     ticket_category: seat.label // Assuming seat label is the ticket category
-    //                 })
-    //             });
-
-    //             // Parse the response
-    //             const data = await response.json();
-
-    //             // Check if the reservation was successful
-    //             if (response.ok) {
-    //                 console.log('Seat reserved:', data);
-    //                 // Deselect previous seat if any
-    //                 if (this.selectedSeat) {
-    //                     this.selectedSeat.selected = false;
-    //                 }
-    //                 // Select new seat
-    //                 seat.selected = true;
-    //                 this.selectedSeat = seat;
-    //             } else {
-    //                 // Handle reservation error
-    //                 console.error('Failed to reserve seat:', data.error);
-    //             }
-    //         }
-    //     } catch (error) {
-    //         // Handle network or parsing errors
-    //         console.error('Error reserving seat:', error);
-    //     }
-    // },
         selectSeat(seat) {
             if (seat.available) {
-                // Deselect previous seat if any
-                if (this.selectedSeat) {
-                    this.selectedSeat.selected = false;
-                }
-                // Select new seat
-                seat.selected = true;
-                this.selectedSeat = seat;
-            }
-        },
-
-        proceedToCheckout() {
-            console.log('Selected seats:', this.getSelectedSeats());
-            console.log('Selected quantities:', this.selectedQuantities);
-
-            // Send post request to reserve the selected seats
-            // link for this seat is to be changed correctly. 
-            fetch('http://localhost:8000/api/v1/booking/init-match-booking/2?userid=1&cat=3', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    seats: this.getSelectedSeats(),
-                    quantities: this.selectedQuantities
-                })
-            })
-                .then((response) => response.json())
-                .then((data) => {
-                    console.log('Booking response:', data);
-                })
-                .catch((error) => {
-                    console.error('Error booking seats:', error);
-                });
-
-            
-
-            // Redirect to the checkout page
-            this.$router.push('/views/checkout');
-        },
-        getSelectedSeats() {
-            const selectedSeats = [];
-            for (let i = 0; i < this.seatMap.length; i++) {
-                for (let j = 0; j < this.seatMap[i].length; j++) {
-                    if (this.seatMap[i][j].selected) {
-                        selectedSeats.push(this.seatMap[i][j].label);
+                seat.selected = !seat.selected; // Toggle selected state
+                if (seat.selected) {
+                    this.selectedSeats.push(seat); // Add selected seat to the array
+                } else {
+                    const index = this.selectedSeats.findIndex(selectedSeat => selectedSeat.label === seat.label);
+                    if (index !== -1) {
+                        this.selectedSeats.splice(index, 1); // Remove deselected seat from the array
                     }
                 }
             }
-            return selectedSeats;
+        },
+
+        // proceedToCheckout() {
+        //     console.log('Selected seats:', this.getSelectedSeats());
+        //     console.log('Selected quantities:', this.selectedQuantities);
+        //     this.$router.push('/views/checkout');
+        // },
+        proceedToCheckout() {
+        const selectedTickets = [];
+        for (const seat of this.selectedSeats) {
+            const category = seat.label;
+            const quantity = this.selectedQuantities[category];
+            selectedTickets.push({ category, quantity });
+        }
+        this.$emit('checkout', selectedTickets);
+        this.$router.push('/views/checkout');
+    },
+        getSelectedSeats() {
+            return this.selectedSeats.map(seat => seat.label);
         }
     }
 };
 </script>
+
 
 <style scoped>
 .text-superblue {
@@ -198,7 +134,6 @@ export default {
     margin-top: 10px;
 }
 </style>
-
 
 
 
