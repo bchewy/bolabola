@@ -19,5 +19,57 @@
             "write": ".*",
             "read": ".*"
         }
+    ],
+    "exchanges": [
+        {
+            "name": "mainExchange",
+            "vhost": "/",
+            "type": "direct",
+            "durable": true,
+            "auto_delete": false
+        }
+    ],
+    "queues": [
+        {
+            "name": "user",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "order",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "payment",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        }
+    ],
+    "bindings": [
+        {
+            "source": "mainExchange",
+            "vhost": "/",
+            "destination": "user",
+            "destination_type": "queue",
+            "routing_key": "user.#"
+        },
+        {
+            "source": "mainExchange",
+            "vhost": "/",
+            "destination": "order",
+            "destination_type": "queue",
+            "routing_key": "order.#"
+        },
+        {
+            "source": "mainExchange",
+            "vhost": "/",
+            "destination": "payment",
+            "destination_type": "queue",
+            "routing_key": "payment.#"
+        }
     ]
 }

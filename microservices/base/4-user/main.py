@@ -414,5 +414,5 @@ def run_consumer_thread():
 
 
 if __name__ == "__main__":
-    # run_consumer_thread()
-    app.run(host="0.0.0.0", port=9004, debug=True)
+    run_consumer_thread()
+    app.run(host="0.0.0.0", port=9004, debug=False)

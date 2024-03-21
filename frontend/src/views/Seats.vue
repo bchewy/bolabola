@@ -80,11 +80,7 @@ export default {
                     if (selectedSeat.label !== seat.label) {
                         selectedSeat.selected = false;
                     }
-                });
-                // Toggle selected state of the clicked seat
-                seat.selected = !seat.selected;
-                // Update selectedSeats array
-                this.selectedSeats = seat.selected ? [seat] : [];
+                }
             }
         },
 
@@ -95,34 +91,22 @@ export default {
                 const quantity = this.selectedQuantities[category];
                 selectedTickets.push({ category, quantity });
             }
-            console.log(selectedTickets);
-            // this.$emit('checkout', selectedTickets);
-            // this.$router.push('/views/checkout');
+            this.$emit('checkout', selectedTickets);
 
-            // Make a POST request to backend to reserve the seat
-            axios.post('http://localhost:8000/api/v1/seat/reserve', {
-                user_id: this.user_id,
-                match_id: '1234', // Replace with the appropriate match ID
-                ticket_category: selectedTickets[0].category // Assuming only one category is selected
-            })
-                .then(response => {
-                    console.log(response.data);
-                    // Check if the response indicates success or failure
-                    if (response.status === 200) {
-                        // Seat reserved successfully, emit checkout event and redirect to checkout page
-                        this.$emit('checkout', selectedTickets);
-                        this.$router.push('/views/checkout');
-                    } else {
-                        // Handle error, e.g., display error message to the user
-                        console.error('Error:', response.data.error);
-                    }
-                })
-                .catch(error => {
-                    // Handle error, e.g., display error message to the user
-                    console.error('Error during checkout:', error);
-                });
+            // // send a response to the backend to create a checkout session
+            // fetch(`http://localhost:8000/api/v1/booking/init-match-booking/${match_id}?userid=${userid}&cat=${cat}&qty=${qty}`)
+            //     .then((response) => response.json())
+            //     .then((data) => {
+            //         // if response successful, redirect to the checkout page
+            //         if (data.code === 200) {
+            //             this.$router.push('/views/checkout');
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         console.error('Error:', error);
+            //     });
 
-
+            this.$router.push('/views/checkout');
         },
         getSelectedSeats() {
             return this.selectedSeats.map(seat => seat.label);

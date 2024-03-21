@@ -73,10 +73,10 @@ def publish_to_amqp():
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
 
-    readyToPay = False
-    # get userid
+    # get userid, category and quantity as requested by the user
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
+    seatUserPurchasing = request.args.get("seat") # seat number user is purchasing
 
     # Retrieve match details
     match_details = retrieve_match_from_match_service(match_id)
@@ -88,18 +88,24 @@ def init_match_booking(match_id):
             {"message": "No seats available for this match!"}
         )  # Return to frontend if unavailable.
     else:
-        # TODO: Add minus seat count for the selected seat from Match Service
+        # TODO: Add minus seat count for the selected seat from Match Service based on the quantity
         response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
 
-        readyToPay = True  # Upon readyToPay being true, frontend should progress to match checkout UI.
-    return (response, locked, readyToPay)
-    # return jsonify(match_details, {"seatCount": seatCount})
+        # Once the ticket is locked, call the billing service to create a checkout session
+        if locked:
+            continue_match_booking(match_id, user_id, ticket_category)
+            return jsonify({"code": 200, "message": "Seat locked successfully!"})
+        else:
+            return jsonify(
+                {"message": "The selected seat is currently on hold. Please try selecting another seat.", "code": 409}
+            )
 
 
 # app.route("/continue-match-booking/<match_id>", methods=["GET"])
 
 def continue_match_booking(match_id, user_id, ticket_category):
     # TODO: Call billing service to send billing/purchase details, and wait for response
+    # This function should only be called after locking seat ticket
     """
     This method should send the billing details to the billing service. An example of the payload of billing details is:
     {
@@ -256,4 +262,5 @@ def hello():
 #     channel.start_consuming()
 
 if __name__ == "__main__":
+    run_consumer_thread()
     app.run(port=9101, debug=True, host="0.0.0.0")

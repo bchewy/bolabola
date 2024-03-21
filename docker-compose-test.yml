@@ -1,25 +1,190 @@
 version: "3"
 
+volumes:
+  mongodb-data:
+  pgdata:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+  mysql_data:
+
+networks:
+  kong-net:
+    driver: bridge
+    name: kong-net
 services:
-  # RabbitMQ Service
+  match:
+    build:
+      context: ./microservices/base/1-match
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    depends_on:
+      - mongodb
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  queue:
+    build:
+      context: ./microservices/base/2-queue
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    environment:
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - PYTHONUNBUFFERED=1
+
+  billing:
+    build:
+      context: ./microservices/base/3-billing
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  user:
+    build:
+      context: ./microservices/base/4-user
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    depends_on:
+      - mysql
+    environment:
+      - PYTHONUNBUFFERED=1
+  
+  # Auth in API Gateway
+  auth:
+    build:
+      context: ./infrastructure/api_gateway/auth
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Kong ================================================
+  kong-database:
+    image: postgres:15 # tested 20231101; Ref: https://docs.konghq.com/gateway/latest/support/third-party/
+    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+    restart: always
+    networks:
+      - kong-net
+    environment:
+      POSTGRES_DB: kong
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  kong-migration:
+    image: kong/kong-gateway:3.2.2.5 # tested 20231101
+    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+    command: "kong migrations bootstrap"
+    restart: on-failure
+    networks:
+      - kong-net
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
+    depends_on:
+      - kong-database
+
+  kong:
+    image: kong/kong-gateway:3.2.2.5 # tested 20231101
+    platform: linux/amd64 # <- required for Mac M1 chip. Otherwise, can remove
+    restart: always
+    networks:
+      - kong-net
+    environment:
+      # Alternatively, if we want to use db-less we can turn this off
+      # KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-database
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: password
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_ADMIN_GUI_URL: http://localhost:8002
+    depends_on:
+      - kong-migration
+    ports:
+      # https://docs.konghq.com/gateway/latest/production/networking/default-ports/
+      - "8000:8000" # Takes incoming HTTP traffic from Consumers, and forwards it to upstream Services.
+      - "8443:8443" # Takes incoming HTTPS traffic from Consumers, and forwards it to upstream Services.
+      - "8001:8001" # Admin API. Listens for calls from the command line over HTTP.
+      - "8444:8444" # Admin API. Listens for calls from the command line over HTTPS.
+      - "8002:8002" # Kong Manager (GUI). Listens for HTTP traffic.
+      - "8445:8445" # Kong Manager (GUI). Listens for HTTPS traffic.
+      - "8003:8003" # Dev Portal. Listens for HTTP traffic, assuming Dev Portal is enabled.
+      - "8446:8446" # Dev Portal. Listens for HTTP traffic, assuming Dev Portal is enabled.
+      - "8004:8004" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
+      - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
+    volumes:
+      - ./infrastructure/kong/kong.yml:/etc/kong/kong.yml
+    command: >
+      /bin/sh -c "
+        kong config db_import /etc/kong/kong.yml &&
+        kong start
+      "
+
+  mongodb:
+    image: mongo:latest
+    networks:
+      - kong-net
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+  mongo-seed:
+    build: ./infrastructure/mongo/seed/.
+    entrypoint: /app/entrypoint.sh
+    networks:
+      - kong-net
+    depends_on:
+      - mongodb
+
+  mysql:
+    image: mysql/mysql-server:8.0
+    networks:
+      - kong-net
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: veryS3ecurePassword
+      MYSQL_DATABASE: bolabola_user
+      MYSQL_USER: ticketboost
+      MYSQL_PASSWORD: veryS3ecurePassword
+    volumes:
+      - ./microservices/base/4-user/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql
+      - mysql_data:/var/lib/mysql
+
   rabbitmq:
     image: rabbitmq:3-management
+    networks:
+      - kong-net
     ports:
-      - "5672:5672" # AMQP protocol
-      - "15672:15672" # Management interface
+      - 5672:5672
+      - 15672:15672
     volumes:
-      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - ./rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - ./infrastructure/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./infrastructure/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json
+      - rabbitmq_data:/var/lib/rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: ticketboost
       RABBITMQ_DEFAULT_PASS: veryS3ecureP@ssword
-
-  # Notification Service
-  notification:
-    build:
-      context: ./notification
-      dockerfile: Dockerfile
-    depends_on:
-      - rabbitmq
-    command: ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "/app/notification.py"]
-
