@@ -61,7 +61,15 @@ const router = createRouter({
       path: '/views/refund',
       name: 'refund',
       component: () => import('./views/Refund.vue')
-    }
+    },
+
+    // Streaming extras
+    {
+      path: '/streaming/:id',
+      name: 'Streaming',
+      component: () => import('./views/Streaming.vue'),
+      props: true,
+    },
 
   ]
 })
