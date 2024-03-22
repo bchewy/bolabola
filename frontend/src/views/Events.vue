@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- <NavBar /> -->
+    <NavBar />
     <div class="events-view">
       <h1 class="text-superblue">Matches</h1>
       <p class="lead text-dark">Find the latest games here!</p>
