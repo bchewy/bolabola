@@ -12,8 +12,11 @@
           <p>Seats Left: {{ match.seats }}</p>
         </div>
       </div>
-      <div v-else>
+      <div v-else-if="loading">
         <p>Loading match details...</p>
+      </div>
+      <div v-else>
+        <p>Match not found.</p>
       </div>
     </div>
   </div>
@@ -31,6 +34,7 @@ export default {
   data() {
     return {
       match: null,
+      loading: true,
     };
   },
   created() {
@@ -53,6 +57,9 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching match details:', error);
+        })
+        .finally(() => {
+          this.loading = false;
         });
     },
   },

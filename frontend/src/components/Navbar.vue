@@ -179,16 +179,6 @@ import axios from "axios";
 export default {
     setup() {
         const { loginWithRedirect, user, isAuthenticated, logout } = useAuth0();
-        // check if the user is authenticated
-        watchEffect(() => {
-            if (isAuthenticated.value) {
-                console.log('User is authenticated');
-                console.log('User:', user.value);
-                checkUser();
-            } else {
-                console.log('User is not authenticated');
-            }
-        });
 
         const checkUser = async () => {
             if (isAuthenticated.value) {
@@ -224,6 +214,17 @@ export default {
                 console.log('User is not authenticated');
             }
         }
+
+        // check if the user is authenticated
+        watchEffect(() => {
+            if (isAuthenticated.value) {
+                console.log('User is authenticated');
+                console.log('User:', user.value);
+                checkUser();
+            } else {
+                console.log('User is not authenticated');
+            }
+        });
 
         return {
             login: async () => {
