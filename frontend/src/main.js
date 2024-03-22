@@ -33,16 +33,16 @@ const app = createApp(App)
 //     link: authMiddleware.concat(httpLink),
 //     cache: new InMemoryCache(),
 // });
-  
+
 // const apolloProvider = createApolloProvider({
 //     defaultClient: apolloClient,
-    
+
 // })
 
 app.use(
     createAuth0({
         domain: "bchewy.auth0.com",
-        clientId: `${import.meta.env.VITE_AUTH0_CLIENTID}`,
+        clientId: `Mq0NzZPGFcxVVcm7vRY08xo7mYBHGNWZ`,
         authorizationParams: {
             redirect_uri: window.location.origin
         }
