@@ -190,7 +190,7 @@ export default {
             }
         });
 
-        const checkUser = async() => {
+        const checkUser = async () => {
             if (isAuthenticated.value) {
                 console.log('User is authenticated');
                 let user_id = user.value.sub;
@@ -208,14 +208,14 @@ export default {
                                 name: user.value.name,
                             }),
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Successfully checked:', data);
-                    })
-                    .catch((error) => {
-                        console.error('Error in check gg:', error);
-                    });
-                }   
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Successfully checked:', data);
+                        })
+                        .catch((error) => {
+                            console.error('Error in check gg:', error);
+                        });
+                }
                 catch (error) {
                     console.error('Error in check:', error);
                 }

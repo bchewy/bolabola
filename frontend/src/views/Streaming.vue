@@ -3,7 +3,7 @@
   <div class="about-view d-flex flex-column justify-content-center align-items-center">
     <h1 class="text-center text-superblue">Streaming</h1>
     <p class="lead text-dark text-center">Tune in and experience the thrill of live football!</p>
-</div>
+  </div>
 </template>
 
 <script>
@@ -25,9 +25,7 @@ export default {
   margin-top: 50px;
 }
 
-.text-superblue{
+.text-superblue {
   color: #5356FF;
 }
-
-
 </style>
