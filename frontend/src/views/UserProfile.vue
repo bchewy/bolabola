@@ -45,7 +45,7 @@ export default {
       return name.charAt(0).toUpperCase() + name.slice(1);
     },
     userId() { // for sending to the backend
-      return this.$auth0.user.value.sub;
+      return this.$auth0.user.value.sub.split('|')[1];
     },
   },
   data() {
@@ -130,16 +130,3 @@ export default {
   color: #5356FF;
 }
 </style>
-
-
-<!-- 
-best option
-when i log in on vue, immeidaely i am created an auth0 sub.
-check the user db if the user exists in the db by calling the check-create function in user db.
-
-  worst option
-when i log in, immediately i am created an auth0 sub. 
-for every page i go to, check the user db if the user exists in the db by calling the check-create function in user db.
-  if the user does not exist, use the user information from auth0 and create the user in the db.
-  if the user exists, get the user information from the db and use it to display the user's profile page.
--->
