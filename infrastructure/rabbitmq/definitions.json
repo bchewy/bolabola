@@ -27,6 +27,13 @@
             "type": "direct",
             "durable": true,
             "auto_delete": false
+        },
+        {
+            "name": "booking",
+            "vhost": "/",
+            "type": "direct",
+            "durable": true,
+            "auto_delete": false
         }
     ],
     "queues": [
@@ -44,6 +51,24 @@
         },
         {
             "name": "payment",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "match",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "seat",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
+        },
+        {
+            "name": "notification",
             "vhost": "/",
             "durable": true,
             "auto_delete": false
@@ -70,6 +95,34 @@
             "destination": "payment",
             "destination_type": "queue",
             "routing_key": "payment.#"
+        },
+        {
+            "source": "booking",
+            "vhost": "/",
+            "destination": "user",
+            "destination_type": "queue",
+            "routing_key": "booking.user"
+        },
+        {
+            "source": "booking",
+            "vhost": "/",
+            "destination": "match",
+            "destination_type": "queue",
+            "routing_key": "booking.user"
+        },
+        {
+            "source": "booking",
+            "vhost": "/",
+            "destination": "seat",
+            "destination_type": "queue",
+            "routing_key": "booking.seat"
+        },
+        {
+            "source": "booking",
+            "vhost": "/",
+            "destination": "notification",
+            "destination_type": "queue",
+            "routing_key": "booking.notification"
         }
     ]
 }
