@@ -55,7 +55,7 @@ export default {
             return this.selectedSeats.length > 0;
         },
         // userId() { // for sending to the backend
-        //     return this.$auth0.user.value.sub;
+        //     return this.$auth0.user.value.sub.split('|')[1];
         // },
     },
     methods: {

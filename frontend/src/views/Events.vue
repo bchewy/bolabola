@@ -13,8 +13,14 @@
                 <h5 class="card-title">{{ match.name }}</h5>
                 <p class="card-text">Home Team: {{ match.home_team }}</p>
                 <p class="card-text">Away Team: {{ match.away_team }}</p>
-                <p class="card-text">Home Score: {{ match.home_score }}</p>
-                <p class="card-text">Away Score: {{ match.away_score }}</p>
+                <!-- <p class="card-text">Home Score: {{ match.home_score }}</p>
+                <p class="card-text">Away Score: {{ match.away_score }}</p> -->
+                <p class="card-text">Date: {{ match.date }}</p>
+                <p class="card-text">Seats Left: {{ match.seats }}</p>
+              </div>
+              <div class="card-footer">
+                {{ match.id }}
+                <button class="btn btn-primary" @click="watchMatch(match)">Watch Live</button>
               </div>
             </div>
           </div>
@@ -26,7 +32,7 @@
 
 <script>
 // import gql from 'graphql-tag';
-import NavBar from '../components/Navbar.vue'; 
+import NavBar from '../components/Navbar.vue';
 import axios from 'axios';
 
 const FETCH_MATCHES = `
@@ -58,6 +64,10 @@ export default {
     this.fetchMatches();
   },
   methods: {
+    // Watch match Handling: Scenario 3
+    watchMatch(match) {
+      this.$router.push({ name: 'Streaming', params: { id: match.id } });
+    },
     fetchMatches() {
       axios.post('http://localhost:8000/api/v1/match/', {
         query: FETCH_MATCHES,
@@ -76,7 +86,8 @@ export default {
               away_score: match.away_score,
               date: new Date(parseInt(match.date)).toLocaleString(), // Convert timestamp to readable date
               description: match.description,
-              venue: match.venue
+              venue: match.venue,
+              seats: match.seats
             };
           });
         })
@@ -100,7 +111,7 @@ export default {
   margin-top: 50px;
 }
 
-.text-superblue{
+.text-superblue {
   color: #5356FF;
 }
 
