@@ -226,6 +226,41 @@ export default {
             }
         });
 
+        const checkUser = async() => {
+            if (isAuthenticated.value) {
+                console.log('User is authenticated');
+                let user_id = user.value.sub;
+                let user_id_after_split = user_id.split('|')[1];
+                try {
+                    // send a post request to the backend to add a new user
+                    fetch(`http://localhost:8000/api/v1/user/check-create`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                                user_id: user_id_after_split,
+                                email: user.value.email,
+                                name: user.value.name,
+                            }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Successfully checked:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error in check gg:', error);
+                    });
+                }   
+                catch (error) {
+                    console.error('Error in check:', error);
+                }
+            }
+            else {
+                console.log('User is not authenticated');
+            }
+        }
+
         return {
             login: async () => {
                 try {
