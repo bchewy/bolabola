@@ -96,6 +96,7 @@ export default {
                 const quantity = this.selectedQuantities[category];
                 selectedTickets.push({ category, quantity });
             }
+            console.log(selectedTickets);
             this.$emit('checkout', selectedTickets);
 
             // // send a response to the backend to create a checkout session

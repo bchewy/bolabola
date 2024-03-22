@@ -20,6 +20,7 @@
               </div>
               <div class="card-footer">
                 {{ match.id }}
+                <button class="btn btn-success" @click="$router.push('/views/queue')">Book Now</button> &nbsp;
                 <button class="btn btn-primary" @click="watchMatch(match)">Watch Live</button>
               </div>
             </div>
@@ -102,7 +103,6 @@ export default {
 
 };
 </script>
-
 
 
 <style scoped>

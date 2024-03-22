@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@vue/apollo-option": "^4.0.0"
+  }
+}
