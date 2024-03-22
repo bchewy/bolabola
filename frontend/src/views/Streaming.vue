@@ -2,6 +2,7 @@
   <div>
     <NavBar />
     <div class="streaming-view">
+      {{ matchId }}
       <div v-if="match">
         <h1 class="text-center text-superblue">{{ match.title }}</h1>
         <p class="lead text-dark text-center">Tune in and experience the thrill of live football!</p>
@@ -35,10 +36,12 @@ export default {
     return {
       match: null,
       loading: true,
+      matchID: this.$route.params.id,
     };
   },
   created() {
     const matchId = this.$route.params.id;
+    this.matchID = matchId;
     this.fetchMatchDetails(matchId);
   },
   methods: {
