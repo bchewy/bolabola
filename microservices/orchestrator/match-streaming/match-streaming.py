@@ -24,35 +24,36 @@ match_url = "http://kong:8000/api/v1/match/"
 # 4. Somehow need to stream it back to the UI.
 
 
-class Match(graphene.ObjectType):
-    id = graphene.String()
-    name = graphene.String()
+# class Match(graphene.ObjectType):
+#     id = graphene.String()
+#     name = graphene.String()
     # Add more fields as needed
 
 
-class Query(graphene.ObjectType):
-    match = graphene.Field(Match, id=graphene.String())
+# class Query(graphene.ObjectType):
+#     match = graphene.Field(Match, id=graphene.String())
 
-    def resolve_match(self, info, id):
-        url = f"http://kong:8000/api/v1/match/{id}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            match_data = response.json()
-            match = Match(
-                id=match_data["id"],
-                name=match_data["name"],
-                # Add more fields as needed
-            )
-            return match
-        else:
-            return None
+#     def resolve_match(self, info, id):
+#         url = f"http://kong:8000/api/v1/match/{id}"
+#         response = requests.get(url)
+#         if response.status_code == 200:
+#             match_data = response.json()
+#             match = Match(
+#                 id=match_data["id"],
+#                 name=match_data["name"],
+#                 # Add more fields as needed
+#             )
+#             return match
+#         else:
+#             return None
 
 
 def retrieve_video_url(match_id):
     print("entering retrieve_video_url")
     url = videoasset_url + "video?id=" + match_id
-    response = requests.get(url)
+    response = requests.post(url)
     if response.status_code == 200:
+        print("response received from video asset ms")
         video_url = response.json()
         return video_url
     else:
@@ -68,7 +69,31 @@ def retrieve_video_url(match_id):
 
 @app.route("/<string:id>")
 def retrieve_match(id):
-    print("entering retrieve_match")
+    # Retrieve match from match service using GraphQL
+    query = '''
+    {
+        match_details(_id: "%s") {
+            _id
+            name
+            description
+            venue
+            home_team
+            away_team
+            home_score
+            away_score
+            date
+            seats
+        }
+    }
+    ''' % id
+
+    url = match_url + ""
+    response = requests.post(url, json={'query': query})
+    if response.status_code == 200:
+            match_data = response.json()
+            return match_data['data']['match_details']
+    else:
+            return "Match not found"
 
 
 # AMQP consumer

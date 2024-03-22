@@ -193,10 +193,10 @@ export default {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                                user_id: user_id_after_split,
-                                email: user.value.email,
-                                name: user.value.name,
-                            }),
+                            user_id: user_id_after_split,
+                            email: user.value.email,
+                            name: user.value.name,
+                        }),
                     })
                         .then(response => response.json())
                         .then(data => {
