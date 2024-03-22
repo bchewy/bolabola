@@ -22,11 +22,11 @@ const router = createRouter({
       component: () => import('./views/Events.vue'),
       beforeEnter: authGuard
     }, 
-    {
-      path: '/views/eventItem',
-      name: 'eventItem',
-      component: () => import('./views/EventItem.vue')
-    }, 
+    // {
+    //   path: '/views/eventItem',
+    //   name: 'eventItem',
+    //   component: () => import('./views/EventItem.vue')
+    // }, 
     {
       path: '/views/queue',
       name: 'queue',

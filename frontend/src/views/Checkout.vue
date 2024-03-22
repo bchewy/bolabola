@@ -27,11 +27,12 @@
 
 
 <script>
-import SeatSelection from './Seats.vue';
+// import SeatSelection from './Seats.vue';
+import selectedTickets from './Seats.vue';
 import axios from 'axios';
 export default {
     components: {
-        SeatSelection,
+        selectedTickets,
     },
     data() {
         return {
