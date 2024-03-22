@@ -40,7 +40,7 @@ export default {
             selectedQuantity: Number,
             match_id: "1234", // to be fetched from previous page
             match_name: "Arsenal vs Chelsea", // to be fetched from previous page
-            user_id: this.$auth0.user.value.sub,
+            user_id: this.$auth0.user.value.sub.split('|')[1],
             // tickets: [
             //     { category: "A", quantity: 2 },
             //     { category: "B", quantity: 3 },
