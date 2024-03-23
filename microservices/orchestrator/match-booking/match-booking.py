@@ -36,33 +36,36 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 
 # Publish to AMQP - to update subsequent services about the match booking
-def publish_to_amqp():
+def publish_to_amqp(data):
     connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
     channel = connection.channel()
+
     # Publish to user to update match booking
-    channel.queue_declare(queue="user")
     channel.basic_publish(
-        exchange="",
-        routing_key="user",
+        exchange="booking",
+        routing_key="booking.user",
         body="User has purchased ticket for match with id {123} !",
     )
 
     # Publish to Match Queue to update ticket availablity
-    channel.queue_declare(queue="match")
     channel.basic_publish(
-        exchange="", routing_key="match", body="Match with id {123} has been booked!"
+        exchange="booking", routing_key="match", body="Match with id {123} has been booked!"
     )
 
     # Publish to seat reservation to remove ticket lock
-    channel.queue_declare(queue="seat")
+    test_message = {"user_id": "1", "status": "succeeded", "serial_no": "123"}
     channel.basic_publish(
-        exchange="", routing_key="seat", body="Seat with id {123} has been booked!"
+        exchange="booking", 
+        routing_key="seat", 
+        body="Seat with id {123} has been booked!",
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
     )
 
     # Publish to notification
-    channel.queue_declare(queue="notification")
     channel.basic_publish(
-        exchange="",
+        exchange="booking",
         routing_key="notification",
         body="Notification for match with id {123} has been sent!",
     )
