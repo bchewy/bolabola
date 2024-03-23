@@ -4,18 +4,16 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Match Name</th>
                     <th>Match ID</th>
                     <th>Category</th>
                     <th>Quantity</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(ticket, index) in selectedTickets" :key="index">
-                    <td>{{ match_name }}</td>
+                <tr v-for="(item, index) in selectedTickets" :key="index">
                     <td>{{ match_id }}</td>
-                    <td>{{ ticket.category }}</td>
-                    <td>{{ ticket.quantity }}</td>
+                    <td>{{ item.category }}</td>
+                    <td>{{ item.quantity }}</td>
                 </tr>
             </tbody>
         </table>
@@ -27,42 +25,38 @@
 
 
 <script>
-// import SeatSelection from './Seats.vue';
-import selectedTickets from './Seats.vue';
 import axios from 'axios';
 export default {
-    components: {
-        selectedTickets,
-    },
+    name: 'checkout',
+    // props: ['selectedTickets'],
     data() {
         return {
-            selectedOption: String,
-            selectedSeats: Array,
-            selectedQuantity: Number,
-            match_id: "1234", // to be fetched from previous page
-            match_name: "Arsenal vs Chelsea", // to be fetched from previous page
             user_id: this.$auth0.user.value.sub.split('|')[1],
-            // tickets: [
-            //     { category: "A", quantity: 2 },
-            //     { category: "B", quantity: 3 },
-            //     { category: "Online", quantity: 4 },
-            // ], 
-            selectedTickets: [],
+            match_id: null,
+
         };
+    },
+    mounted() {
+        // Retrieve match ID and selected tickets from route parameters
+        this.match_id = this.$route.params.id;
+        // this.selectedTickets = this.$route.params.selectedTickets;
+        // this.selectedTickets = JSON.parse(this.$route.params.selectedTickets); // Parse JSON string
+        // console.log("selected tickets in CHECKOUT.VUE", this.$route.params.selectedTickets);
+        console.log("selected tickets in CHECKOUT.VUE", this.selectedTickets);
+
+    },
+    computed: {
+        selectedTickets() {
+            return this.$store.getters.getSelectedTickets;
+        }
     },
     methods: {
         redirectToCheckout() {
             try {
                 // hardcoded data to send. change this JSON dynamically according to the tickets selected
                 const data = {
-                    "match_id": "1234",
-                    "match_name": "Arsenal vs Chelsea",
-                    "tickets": selectedTickets // [
-                //         { "category": "A", "quantity": 2 },
-                //         { "category": "B", "quantity": 3 },
-                //         { "category": "C", "quantity": 4 },
-                // ]
-                    ,
+                    "match_id": this.match_id,
+                    "tickets": this.selectedTickets,
                     "user_id": this.user_id,
                 };
                 // make a POST request to the backend

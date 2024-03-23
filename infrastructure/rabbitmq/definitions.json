@@ -108,7 +108,7 @@
             "vhost": "/",
             "destination": "match",
             "destination_type": "queue",
-            "routing_key": "booking.user"
+            "routing_key": "booking.match"
         },
         {
             "source": "booking",
