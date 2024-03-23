@@ -30,6 +30,7 @@
 <script>
 import axios from 'axios';
 export default {
+    // props: ['match_id', 'selectedTickets'],
     data() {
         return {
             seatMap: [
@@ -77,21 +78,37 @@ export default {
 
 
         proceedToCheckout() {
-            const selectedTickets = [];
-            for (const seat of this.selectedSeats) {
-                const category = seat.label;
-                const quantity = this.selectedQuantities[category];
-                selectedTickets.push({ category, quantity });
-            }
-            console.log(selectedTickets);
+            // const selectedTickets = [];
+            // for (const seat of this.selectedSeats) {
+            //     const category = seat.label;
+            //     const quantity = this.selectedQuantities[category];
+            //     selectedTickets.push({ category, quantity });
+            // }
+            // console.log("SELECTED SEATS IN SEAT.VUE", selectedTickets);
             // this.$router.push({ name: 'checkout', params: { id: this.match_id, selectedTickets: this.selectedTickets } });
+
+
+            // Passing non parameter data to the checkout page
+            const selectedTickets = this.selectedSeats.map(seat => ({
+                category: seat.label,
+                quantity: this.selectedQuantities[seat.label]
+            }));
+
+            this.$store.dispatch('updateSelectedTickets', selectedTickets);
+
+
             this.$router.push({
                 name: 'checkout',
                 params: {
                     id: this.$route.params.id,
-                    selectedTickets: this.$route.params.selectedTickets
+                    // selectedTickets: JSON.stringify(selectedTickets) // Convert to JSON string
+                },
+                props: {
+                    selectedTickets: selectedTickets
                 }
             });
+            // emit over to checkout
+            // this.$emit('checkout', selectedTickets);
 
             // // send a response to the backend to create a checkout session
             // fetch(`http://localhost:8000/api/v1/booking/init-match-booking/${match_id}?userid=${userid}&cat=${cat}&qty=${qty}`)
