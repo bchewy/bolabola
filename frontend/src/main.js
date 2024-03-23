@@ -8,9 +8,11 @@ import router from './router'
 import { createAuth0 } from '@auth0/auth0-vue';
 import { createApolloProvider } from '@vue/apollo-option'
 import { ApolloClient, ApolloLink, InMemoryCache, createHttpLink } from '@apollo/client/core'
+import store from './store';
 
 
 const app = createApp(App)
+app.use(store)
 
 // const cache = new InMemoryCache()
 
