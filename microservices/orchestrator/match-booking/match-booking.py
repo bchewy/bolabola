@@ -42,7 +42,14 @@ def publish_to_amqp(data):
     channel = connection.channel()
 
     # Publish to user to update match booking
-    user_message = {"user_id": data["user_id"], "match_id": data["match_id"], "category":data["category"], "serial_no": data["serial_no"], "payment_intent": data["payment_intent"]}
+    category = ""
+    if data["metadata"]["A"] != "0":
+        category = "A"
+    elif data["metadata"]["B"] != "0":
+        category = "B"
+    elif data["metadata"]["C"] != "0":
+        category = "C"
+    user_message = {"user_id": data["metadata"]["user_id"], "match_id": data["metadata"]["match_id"], "category":category, "serial_no": data["metadata"]["serial_no"], "payment_intent": data["payment_intent"]}
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.user",
@@ -53,7 +60,8 @@ def publish_to_amqp(data):
     )
 
     # Publish to Match Queue to update ticket availablity
-    match_message = {"match_id": data["match_id"], "quantity": data["quantity"]}
+    quantity = int(data["metadata"]["A"]) + int(data["metadata"]["B"]) + int(data["metadata"]["C"])
+    match_message = {"match_id": data["metadata"]["match_id"], "quantity": quantity}
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.match", 
@@ -64,7 +72,7 @@ def publish_to_amqp(data):
     )
 
     # Publish to seat reservation to remove ticket lock
-    seat_message = {"serial_no": data["serial_no"]}
+    seat_message = {"serial_no": data["metadata"]["serial_no"]}
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.seat", 
@@ -144,13 +152,16 @@ def process_webhook():
 
     Sample payload received from billing microservice:
     {
-        "status": "complete",
-        "user_id": "1",
-        "match_id": "456",
-        "category": "A",
-        "quantity": 2,
-        "serial_no": "1234",
-        "payment_intent": "pi_1234"
+        'status': 'complete', 
+        'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU', 
+        'metadata': {
+                'user_id': '106225716514519006902', 
+                'A': '0', 
+                'B': '0'
+                'C': '2', 
+                'match_id': '65fe9fb32082209e71e8f34a', 
+                'serial_no': '1'
+            }
     }
     """
     data = request.json

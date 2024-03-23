@@ -67,7 +67,8 @@ def create_checkout_session():
             {"category": "B", "quantity": 3},
             {"category": "C", "quantity": 4}
         ],
-        "user_id": "123"
+        "user_id": "123",
+        "serial_no": "1"
     }
     """
     ticket_dict = {"A": 100, "B": 50, "C": 25}
@@ -110,6 +111,7 @@ def create_checkout_session():
                 "A": A,
                 "B": B,
                 "C": C,
+                "serial_no": "1", # to get dynamically
             }
             print("Doing stripe checkout now")
             checkout_session = stripe.checkout.Session.create(
