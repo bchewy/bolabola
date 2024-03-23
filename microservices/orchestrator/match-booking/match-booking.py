@@ -70,7 +70,9 @@ def publish_to_amqp():
     connection.close()
 
 
+
 # HANDLE SELECT SEAT AND QUANTITY FLOW
+# THIS CALL SHOULD ONLY HAPPEN IN THE VIEWS/CHECKOUT PAGE
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
 
@@ -86,29 +88,14 @@ def init_match_booking(match_id):
     print("=====================================")
     print("Match Details here: ", match_details)
     print("=====================================")
-    # Check ticket availability - from graphQL Query.
 
-    # if seatCount == 0:
-    #     return jsonify(
-    #         {"message": "No seats available for this match!"}
-    #     )  # Return to frontend if unavailable.
-    # else:
-    #     # TODO: Add minus seat count for the selected seat from Match Service based on the quantity
-    #     response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
+    # Check ticket availability - from seat service # we will use frontend
 
-    #     # Once the ticket is locked, call the billing service to create a checkout session
-    #     if locked:
-    #         continue_match_booking(match_id, user_id, ticket_category)
-    #         return jsonify({"code": 200, "message": "Seat locked successfully!"})
-    #     else:
-    #         return jsonify(
-    #             {
-    #                 "message": "The selected seat is currently on hold. Please try selecting another seat.",
-    #                 "code": 409,
-    #             }
-    #         )
+    # if availabe reserve
 
-    return jsonify({"message": "Match details retrieved successfully!", "match": match_details})
+    return jsonify(
+        {"message": "Match details retrieved successfully!", "match": match_details}
+    )
 
 
 # app.route("/continue-match-booking/<match_id>", methods=["GET"])
@@ -198,7 +185,6 @@ def process_webhook():
 
 
 def retrieve_match_from_match_service(match_id):
-
     query = """
     query GetMatchDetails($id: String) {
         match_details(_id: $id) {
@@ -273,5 +259,5 @@ def hello():
 #     channel.start_consuming()
 
 if __name__ == "__main__":
-    run_consumer_thread()
+    # run_consumer_thread()
     app.run(port=9101, debug=True, host="0.0.0.0")
