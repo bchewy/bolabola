@@ -31,8 +31,10 @@ services:
       - kong-net
     depends_on:
       - mongodb
+      - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
+    command: ["/wait-for-it.sh", "rabbitmq:5672", "--", "node", "index.js"]
 
   queue:
     build:
@@ -65,8 +67,9 @@ services:
       - rabbitmq
     environment:
       - PYTHONUNBUFFERED=1
-    command: # we need this to check for rabbitMQ to be up, 
-      [ # otherwise asyncio will throw an exception error. 
+    command: # we need this to check for rabbitMQ to be up,
+      [
+        # otherwise asyncio will throw an exception error.
         "/wait-for-it.sh", # thereby crashing user microservice entirely.
         "rabbitmq:5672",
         "--",
@@ -83,7 +86,7 @@ services:
     depends_on:
       - mysql
     environment:
-    - PYTHONUNBUFFERED=1
+      - PYTHONUNBUFFERED=1
 
   livematch:
     build:
@@ -163,7 +166,7 @@ services:
       - kong-net
     environment:
       - PYTHONUNBUFFERED=1
-  
+
   # Auth in API Gateway
   auth:
     build:
@@ -336,8 +339,7 @@ services:
     image: stripe/stripe-cli
     container_name: stripe-cli
     command: listen --api-key sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE --device-name bolabola --forward-to localhost:8000/api/v1/billing/webhook/stripe # if you change the forward to link, you need to change the link in the stripe service (tell yiji)
-    network_mode:
-      host
+    network_mode: host
     environment:
       STRIPE_API_KEY: sk_test_51Oh9s0F4chEmCmGgIJNiU5gOrEeqWv3IX8F0drbkTvI8STRNH060El8kYr1wUnA6JhLjq2HmNx8KtYSzqZFsATAY00EjgRxXmE
     volumes:
