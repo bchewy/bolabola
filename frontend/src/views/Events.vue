@@ -20,8 +20,8 @@
               </div>
               <div class="card-footer">
                 {{ match.id }}
-                <button class="btn btn-success" @click="bookMatch(match)">Book Now</button> &nbsp;
-                <button class="btn btn-primary" @click="watchMatch(match)">Watch Live</button>
+                <button class="btn btn-success" style="background-color: #67C6E3;" @click="bookMatch(match)">Book Now</button> &nbsp;
+                <button class="btn btn-primary" style="background-color: #378CE7;" @click="watchMatch(match)">Watch Live</button>
               </div>
             </div>
           </div>

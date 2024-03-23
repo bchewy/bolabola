@@ -18,7 +18,7 @@
             </tbody>
         </table>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3">
-            <button class="btn btn-primary" @click="initMatchBooking()">Proceed to Checkout</button>
+            <button class="btn btn-primary" style="background-color: #5356FF;" @click="initMatchBooking()">Proceed to Checkout</button>
         </div>
     </div>
 </template>

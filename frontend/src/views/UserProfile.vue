@@ -21,7 +21,7 @@
             <td>{{ ticket.matchLocation }}</td>
             <td>{{ ticket.matchPrice }}</td>
             <td>
-              <button v-if="isRefundable(ticket)" class="btn btn-primary" @click="refundTicket(index)">Refund</button>
+              <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;" @click="refundTicket(index)">Refund</button>
             </td>
           </tr>
         </tbody>

@@ -58,7 +58,7 @@ export default {
 
 .progress-bar {
   height: 20px;
-  background-color: #007bff; /* Adjust color as needed */
+  background-color: #5356FF; /* Adjust color as needed */
 }
 
 .card-container {

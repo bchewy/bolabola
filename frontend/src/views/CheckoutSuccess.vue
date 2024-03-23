@@ -3,7 +3,7 @@
         <h1>thnx for buying</h1>
         
         <!-- back home -->
-        <router-link to="/" class="btn btn-primary">Back to Home</router-link>
+        <router-link to="/" class="btn btn-primary" style="background-color: #5356FF;">Back to Home</router-link>
     </div>
 </template>
   

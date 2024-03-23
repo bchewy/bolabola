@@ -11,10 +11,10 @@
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
-                Discover and book tickets for your favorite events with TicketBoost. <br>Get access to exclusive deals
+                Discover and book tickets for your favorite football events with TicketBoost. <br>Get access to exclusive deals
                 and enjoy a seamless ticketing experience.
               </p>
-              <button class="btn btn-primary" @click="$router.push('/about')">Get Started</button>
+              <button class="btn btn-primary" style="background-color: #5356FF;" @click="$router.push('/events')">Get Started</button>
             </div>
           </div>
         </div>
