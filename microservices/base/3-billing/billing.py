@@ -226,6 +226,8 @@ def refund_payment():
         metadata = {
             "user_id": payload["user_id"],
             "match_id": payload["match_id"],
+            "category": payload["category"],
+            "quantity": payload["quantity"],
             "payment_intent": payload["payment_intent"],
         }
 

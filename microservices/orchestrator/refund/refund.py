@@ -38,6 +38,8 @@ def refund():
     {
         "user_id": "1234",
         "match_id": "5678",
+        "category": "A",
+        "quantity": 2,
         "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
 
@@ -45,9 +47,11 @@ def refund():
     {
         "status": "succeeded",
         "message": "Refund successful",
-        "data": {
+        "metadata": {
             "user_id": "1234",
             "match_id": "5678",
+            "category": "A",
+            "quantity": 2,
             "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
         }
     }
@@ -59,12 +63,27 @@ def refund():
         "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
     """
-    # 1. receive ticket and user information from frontend
-    data = request.json
+    # 1.1. receive ticket and user information from frontend
+    data_from_frontend = request.json
+
+    # 1.2. call the user service to get the payment_intent
+    user_id = data_from_frontend["user_id"]
+    serial_no = data_from_frontend["serial_no"]
+    user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{serial_no}"
+    response = requests.get(user_service_url)
+    payment_intent = response.json()["payment_intent"]
 
     # 2. call billing service for refund
-    billing_service_url = "http://kong:8000/api/v1/billing/refund"
-    response = requests.post(billing_service_url, json=data)
+    billing_service_refund_url = "http://kong:8000/api/v1/billing/refund"
+    data_for_sending = {
+        "user_id": user_id,
+        "match_id": data_from_frontend["match_id"],
+        "category": data_from_frontend["category"],
+        "quantity": data_from_frontend["quantity"],
+        "serial_no": serial_no, 
+        "payment_intent": payment_intent
+    }
+    response = requests.post(billing_service_refund_url, json=data_for_sending)
 
     # 3. receive a status from billing service, success/failure
     if response.status_code != 200:

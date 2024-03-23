@@ -56,9 +56,9 @@ async def on_message(message: aio_pika.IncomingMessage):
                     print("User not found")
                     return
                 if user.tickets is None:
-                    user.tickets = [{"match_id": match_id, "category": category, "serial_no": serial_no, "payment_intent": payment_intent}]
+                    user.tickets = [{"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent}]
                 else:
-                    user.tickets.append({"match_id": match_id, "category": category, "serial_no": serial_no, "payment_intent": payment_intent})
+                    user.tickets.append({"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent})
                 flag_modified(user, "tickets")
                 await session.commit()
                 print("Ticket added successfully")
@@ -356,26 +356,32 @@ async def add_ticket_to_user(id):
 ############################################################################################################
 ####################################    DELETE A USER TICKET     ###########################################
 ############################################################################################################
-# delete a ticket from the user's list of tickets
-@app.route("/<int:id>/tickets/<int:serial_no>", methods=["DELETE"])
-async def delete_ticket_from_user(id, serial_no):
+# delete a ticket from the user's list of tickets using the payment intent
+# this will be used when the user refunds a transaction successfully
+# because each transaction can have multiple tickets, we have to look for the whole list of tickets
+@app.route("/<int:id>/tickets", methods=["DELETE"])
+async def delete_ticket_from_user(id):
     """
     This method deletes a ticket from the user's list of tickets.
     This will be used when the user refunds a ticket successfully.
     """
     async with AsyncSessionLocal() as session:
         async with session.begin():
+            payment_intent = request.json.get("payment_intent")
+            tickets_deleted = False
             user = await session.get(User, str(id))
             if user is None:
                 return jsonify({"code": 404, "message": "User not found"})
             if user.tickets is None:
                 return jsonify({"code": 404, "message": "User has no tickets"})
-            for ticket in user.tickets:
-                if ticket["serial_no"] == str(serial_no):
+            for ticket in user.tickets: # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
+                if ticket["payment_intent"] == payment_intent:
                     user.tickets.remove(ticket)
                     flag_modified(user, "tickets")
                     await session.commit()
-                    return jsonify({"code": 200, "message": "Ticket deleted successfully"})
+                    tickets_deleted = True 
+            if tickets_deleted:
+                return jsonify({"code": 200, "message": "Ticket deleted successfully"})
             return jsonify({"code": 404, "message": "Ticket not found"})
 
 ############################################################################################################
