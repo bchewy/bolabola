@@ -27,20 +27,25 @@ const router = createRouter({
     //   name: 'eventItem',
     //   component: () => import('./views/EventItem.vue')
     // }, 
+
     {
-      path: '/views/queue',
-      name: 'queue',
-      component: () => import('./views/Queue.vue')
-    }, 
+      path: '/views/queue/:id',
+      name: 'Queue',
+      component: () => import('./views/Queue.vue'),
+      props: true,
+    },
+
     {
-      path: '/views/seats',
+      path: '/views/seats/:id',
       name: 'seats',
-      component: () => import('./views/Seats.vue')
+      component: () => import('./views/Seats.vue'), 
+      props: true,
     }, 
     {
-      path: '/views/checkout',
+      path: '/views/checkout/:id',
       name: 'checkout',
-      component: () => import('./views/Checkout.vue')
+      component: () => import('./views/Checkout.vue'), 
+      props: true,
     }, 
     {
       path: '/views/checkoutSuccess',
@@ -70,6 +75,9 @@ const router = createRouter({
       component: () => import('./views/Streaming.vue'),
       props: true,
     },
+
+    
+
 
   ]
 })

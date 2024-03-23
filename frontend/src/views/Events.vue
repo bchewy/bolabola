@@ -20,7 +20,7 @@
               </div>
               <div class="card-footer">
                 {{ match.id }}
-                <button class="btn btn-success" @click="$router.push('/views/queue')">Book Now</button> &nbsp;
+                <button class="btn btn-success" @click="bookMatch(match)">Book Now</button> &nbsp;
                 <button class="btn btn-primary" @click="watchMatch(match)">Watch Live</button>
               </div>
             </div>
@@ -68,6 +68,10 @@ export default {
     // Watch match Handling: Scenario 3
     watchMatch(match) {
       this.$router.push({ name: 'Streaming', params: { id: match.id } });
+    },
+    bookMatch(match){
+      this.$router.push({ name: 'Queue', params: { id: match.id } });
+      // this.$router.push('/views/queue');
     },
     fetchMatches() {
       axios.post('http://localhost:8000/api/v1/match/', {
