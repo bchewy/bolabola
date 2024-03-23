@@ -4,6 +4,7 @@ var { buildSchema } = require("graphql")
 var mongoose = require("mongoose");
 var { ruruHTML } = require("ruru/server")
 var cors = require("cors"); // Import cors
+var amqp = require('amqplib'); // Import the amqplib library for async messaging
 
 
 // Add CORS middleware
@@ -137,4 +138,27 @@ app.get("/", (_req, res) => {
 //   res.end(prometheus.register.metrics());
 // });
 
+// function to handle incoming messages
+const handleIncomingMessage = async (msg) => {
+  console.log("Received message:", msg.content.toString());
+  await msg.ack();
+}
+
+// function to set up RabbitMQ consumer
+const setupRabbitMQConsumer = async () => {
+  try {
+     const connection = await amqp.connect('amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/');
+     const channel = await connection.createChannel();
+     const queue = await channel.assertQueue("your_queue_name", { durable: true });
+ 
+     console.log("Waiting for messages in %s. To exit press CTRL+C", queue.queue);
+ 
+     // Use the promise-based consume method
+     await channel.consume(queue.queue, handleIncomingMessage, { noAck: false });
+  } catch (error) {
+     console.error("Error setting up RabbitMQ consumer:", error);
+  }
+ };
+ 
 app.listen(9001)
+setupRabbitMQConsumer();
