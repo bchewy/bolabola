@@ -76,20 +76,18 @@ async def amqp():
 
 
 @app.route("/availabletickets/<id>", methods=["GET"])
-def get_available_tickets(id):
+async def get_available_tickets(id):
     # match_id = request.args.get('id')
     available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
     tickets_list = []
-    for ticket in available_tickets:
-        tickets_list.append(
-            {
-                "match_id": ticket["match_id"],
-                "ticket_category": ticket["ticket_category"],
-                "seat_number": ticket["seat_number"],
-                "user_id": ticket["user_id"] if ticket["user_id"] else "None",
-                "ticket_id": str(ticket["_id"]),
-            }
-        )
+    async for ticket in available_tickets:
+        tickets_list.append({
+            "match_id": ticket["match_id"],
+            "ticket_category": ticket["ticket_category"],
+            "seat_number": ticket["seat_number"],
+            "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+            "ticket_id": str(ticket["_id"])
+        })
     return jsonify(tickets_list), 200
 
 
