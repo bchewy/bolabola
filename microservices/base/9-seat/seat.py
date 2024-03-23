@@ -21,7 +21,6 @@ from flask_cors import CORS
 # Asynchronous things
 import asyncio
 import aio_pika
-import aiomysql
 
 # app = Flask(__name__)
 # logging.basicConfig(level=logging.INFO)
@@ -42,8 +41,8 @@ mongo_client = MongoClient("mongodb://mongodb:27017/")
 # tickets_collection = mongo_db["tickets"]
 
 app.config["MONGO_URI"] = "mongodb://mongodb:27017/"
-mongo_client = AsyncIOMotorClient("mongodb://mongodb:27017/")
-mongo_db = mongo_client["tickets"]
+engine = AsyncIOMotorClient(app.config["MONGO_URI"])
+mongo_db = engine["tickets"]
 tickets_collection = mongo_db["tickets"]
 
 # Redis setup
@@ -54,12 +53,15 @@ redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         print(f"Received message: {message.body.decode()}")
+        # to insert the message into the database
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
-    queue = await channel.declare_queue("seat", durable=True)
+    exchange = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
+    queue = await channel.declare_queue("seat",durable=True)
+    await queue.bind(exchange, "booking.seat")
     await queue.consume(on_message)
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
