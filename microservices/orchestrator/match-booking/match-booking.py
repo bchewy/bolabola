@@ -76,6 +76,13 @@ def publish_to_amqp(data):
 
     connection.close()
 
+#RETURNS AVAILABLE TICKETS
+@app.route("/availabletickets/<match_id>", methods=["GET"])
+def get_available_tickets(match_id):
+    availableticket = ''
+    response = requests.get(SEAT_URL + "/availabletickets/" + match_id)
+    availableticket = response.json()
+    return jsonify(availableticket)
 
 
 # HANDLE SELECT SEAT AND QUANTITY FLOW
