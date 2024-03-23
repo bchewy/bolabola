@@ -3,3 +3,11 @@ requests
 flask_cors
 redis
 pymongo
+pika
+aio_pika
+Quart
+quart-flask-patch
+aiomysql
+cryptography
+aiohttp
+Motor
