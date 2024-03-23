@@ -2,6 +2,10 @@
     <div class="seat-selection">
         <h1 class="text-superblue">Select Your Seats</h1>
         <p class="lead text-dark">Click on available seats to select them.</p>
+        <p>
+            User ID: {{ this.$auth0.user.value.sub.split('|')[1] }} <br>
+            Match ID: {{ $route.params.id }}
+        </p>
         <!-- Always display the seat map -->
         <div class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
@@ -26,6 +30,7 @@
 <script>
 import axios from 'axios';
 export default {
+    // props: ['match_id', 'selectedTickets'],
     data() {
         return {
             seatMap: [
@@ -54,25 +59,8 @@ export default {
         proceedEnabled() {
             return this.selectedSeats.length > 0;
         },
-        // userId() { // for sending to the backend
-        //     return this.$auth0.user.value.sub.split('|')[1];
-        // },
     },
     methods: {
-        // Function to get the user's information
-        // getUserInfo(userId) {
-        //   // Send a request to the backend to get the user's information using their userId using get request
-        //   fetch(`http://localhost:8000/api/v1/user/${userId}`)
-        //     .then((response) => response.json())
-        //     .then((data) => {
-        //       this.tickets = data.tickets;
-        //     });
-        // },
-
-        // // Function to fetch the user's information
-        // fetchUserInfo() {
-        //   this.getUserInfo(this.userId);
-        // },
         selectSeat(seat) {
             if (seat.available) {
                 // Deselect all other seats
@@ -90,14 +78,37 @@ export default {
 
 
         proceedToCheckout() {
-            const selectedTickets = [];
-            for (const seat of this.selectedSeats) {
-                const category = seat.label;
-                const quantity = this.selectedQuantities[category];
-                selectedTickets.push({ category, quantity });
-            }
-            console.log(selectedTickets);
-            this.$emit('checkout', selectedTickets);
+            // const selectedTickets = [];
+            // for (const seat of this.selectedSeats) {
+            //     const category = seat.label;
+            //     const quantity = this.selectedQuantities[category];
+            //     selectedTickets.push({ category, quantity });
+            // }
+            // console.log("SELECTED SEATS IN SEAT.VUE", selectedTickets);
+            // this.$router.push({ name: 'checkout', params: { id: this.match_id, selectedTickets: this.selectedTickets } });
+
+
+            // Passing non parameter data to the checkout page
+            const selectedTickets = this.selectedSeats.map(seat => ({
+                category: seat.label,
+                quantity: this.selectedQuantities[seat.label]
+            }));
+
+            this.$store.dispatch('updateSelectedTickets', selectedTickets);
+
+
+            this.$router.push({
+                name: 'checkout',
+                params: {
+                    id: this.$route.params.id,
+                    // selectedTickets: JSON.stringify(selectedTickets) // Convert to JSON string
+                },
+                props: {
+                    selectedTickets: selectedTickets
+                }
+            });
+            // emit over to checkout
+            // this.$emit('checkout', selectedTickets);
 
             // // send a response to the backend to create a checkout session
             // fetch(`http://localhost:8000/api/v1/booking/init-match-booking/${match_id}?userid=${userid}&cat=${cat}&qty=${qty}`)
@@ -112,7 +123,6 @@ export default {
             //         console.error('Error:', error);
             //     });
 
-            this.$router.push('/views/checkout');
         },
         getSelectedSeats() {
             return this.selectedSeats.map(seat => seat.label);
