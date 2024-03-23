@@ -127,5 +127,5 @@ func NewServer(connection_manager *connection.ConnectionManager) *Server {
 func (s *Server) Start() {
 	SetupRoutes()
 	sess = awsutil.SetupAWSSession()
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":9002", nil))
 }
