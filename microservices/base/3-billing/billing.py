@@ -118,6 +118,7 @@ def create_checkout_session():
                 cancel_url="http://localhost:5173/views/checkoutCancel",
                 metadata=metadata, # pass the metadata to the webhook
             )
+            # send over the link to match-booking orchestrator
         except Exception as e:
             return jsonify(error=str(e)), 403
     return jsonify({"code": 200, "checkout_session": checkout_session})

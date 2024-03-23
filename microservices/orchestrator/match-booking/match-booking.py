@@ -37,7 +37,9 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Publish to AMQP - to update subsequent services about the match booking
 def publish_to_amqp(data):
-    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+    rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
+    parameters = pika.URLParameters(rabbitmq_url)
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
     # Publish to user to update match booking
