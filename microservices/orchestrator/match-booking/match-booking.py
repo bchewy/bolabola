@@ -44,14 +44,14 @@ def publish_to_amqp(data):
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.user",
-        body="User has purchased ticket for match with id {123} !",
+        body="User has purchased ticket for match with id {data} !",
     )
 
     # Publish to Match Queue to update ticket availablity
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.match", 
-        body="Match with id {123} has been booked!"
+        body="Match with id {data} has been booked!"
     )
 
     # Publish to seat reservation to remove ticket lock
@@ -59,7 +59,7 @@ def publish_to_amqp(data):
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.seat", 
-        body="Seat with id {123} has been booked!",
+        body="Seat with id {data} has been booked!",
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
         ),
@@ -69,7 +69,7 @@ def publish_to_amqp(data):
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.notification",
-        body="Notification for match with id {123} has been sent!",
+        body="Notification for match with id {data} has been sent!",
     )
 
     connection.close()
@@ -184,7 +184,7 @@ def process_webhook():
     if data["status"] == "complete":
 
         # Publish to RabbitMQ
-        # publish_to_amqp()
+        publish_to_amqp("12345")
 
         # Pls send payment_intent to user service too THANKS
 
@@ -278,5 +278,5 @@ def hello():
 #     channel.start_consuming()
 
 if __name__ == "__main__":
-    run_consumer_thread()
+    # run_consumer_thread()
     app.run(port=9101, debug=True, host="0.0.0.0")
