@@ -49,14 +49,16 @@ def publish_to_amqp(data):
 
     # Publish to Match Queue to update ticket availablity
     channel.basic_publish(
-        exchange="booking", routing_key="match", body="Match with id {123} has been booked!"
+        exchange="booking", 
+        routing_key="booking.match", 
+        body="Match with id {123} has been booked!"
     )
 
     # Publish to seat reservation to remove ticket lock
     test_message = {"user_id": "1", "status": "succeeded", "serial_no": "123"}
     channel.basic_publish(
         exchange="booking", 
-        routing_key="seat", 
+        routing_key="booking.seat", 
         body="Seat with id {123} has been booked!",
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -66,7 +68,7 @@ def publish_to_amqp(data):
     # Publish to notification
     channel.basic_publish(
         exchange="booking",
-        routing_key="notification",
+        routing_key="booking.notification",
         body="Notification for match with id {123} has been sent!",
     )
 
