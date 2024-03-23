@@ -1,8 +1,10 @@
 # from flask import Flask, request, jsonify
 import redis
+from flask import Response
 from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
 import logging
+import json
 
 import quart_flask_patch
 from quart import Quart, jsonify, request
@@ -64,6 +66,22 @@ async def amqp():
 
 ## AMQP items end ################################################################################################
 
+@app.route("/availabletickets/<id>", methods=["GET"])
+def get_available_tickets(id):
+    # match_id = request.args.get('id')
+    available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
+    tickets_list = []
+    for ticket in available_tickets:
+        tickets_list.append({
+            "match_id": ticket["match_id"],
+            "ticket_category": ticket["ticket_category"],
+            "seat_number": ticket["seat_number"],
+            "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+            "ticket_id": str(ticket["_id"])
+        })
+    return jsonify(tickets_list), 200
+
+
 @app.route("/reserve", methods=["POST"])
 def reserve_seat():
     print("Reserve seat called")
@@ -71,7 +89,6 @@ def reserve_seat():
     user_id = data["user_id"]
     match_id = data["match_id"]
     ticket_category = data["ticket_category"]
-
     # Check if user_id already has a seat reserved for this match
     existing_ticket = tickets_collection.find_one(
         {"match_id": match_id, "user_id": user_id}
