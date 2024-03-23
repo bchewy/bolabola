@@ -2,16 +2,16 @@
   <div>
     <NavBar />
     <div class="streaming-view">
-      {{ matchId }}
+      <p>{{ matchId }}</p>
       <div v-if="match">
-        <h1 class="text-center text-superblue">{{ match.title }}</h1>
+        <!-- <h1 class="text-center text-superblue">{{ match.title }}</h1>
         <p class="lead text-dark text-center">Tune in and experience the thrill of live football!</p>
         <div class="match-details">
           <p>Home Team: {{ match.home_team }}</p>
           <p>Away Team: {{ match.away_team }}</p>
           <p>Date: {{ match.date }}</p>
           <p>Seats Left: {{ match.seats }}</p>
-        </div>
+        </div> -->
       </div>
       <div v-else-if="loading">
         <p>Loading match details...</p>
@@ -43,9 +43,11 @@ export default {
     const matchId = this.$route.params.id;
     this.matchID = matchId;
     this.fetchMatchDetails(matchId);
+    this.getMatchStreamingMatchDetails(matchId);
   },
   methods: {
     fetchMatchDetails(matchId) {
+      console.log('Match ID:', matchId);
       axios.get(`http://localhost:8000/api/v1/match/${matchId}`)
         .then(response => {
           const match = response.data;
@@ -63,6 +65,17 @@ export default {
         })
         .finally(() => {
           this.loading = false;
+        });
+    },
+    getMatchStreamingMatchDetails(matchId) {
+      axios.post(`http://localhost:8000/api/v1/streaming/retrieve/${matchId}`)
+        .then(response => {
+          const streamingDetails = response.data;
+          // Process the streaming details as needed
+          console.log('Streaming details:', streamingDetails);
+        })
+        .catch(error => {
+          console.error('Error retrieving streaming details:', error);
         });
     },
   },
