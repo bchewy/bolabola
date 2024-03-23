@@ -1,17 +1,85 @@
-from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify
 import redis
+from flask import Response
 from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
 import logging
+import json
 
-app = Flask(__name__)
+import quart_flask_patch
+from quart import Quart, jsonify, request
+# from quart_motor import Motor
+from motor.motor_asyncio import AsyncIOMotorClient
+
+# Others
+import pika
+import os
+import json
+from threading import Thread
+from flask_cors import CORS
+
+# Asynchronous things
+import asyncio
+import aio_pika
+import aiomysql
+
+# app = Flask(__name__)
+# logging.basicConfig(level=logging.INFO)
+# app.logger.setLevel(logging.INFO)
+# mongo_client = MongoClient("mongodb://mongodb:27017/")
+# mongo_db = mongo_client["tickets"]
+# tickets_collection = mongo_db["tickets"]
+# app.config["REDIS_URL"] = "redis://redis:6379/0"
+# redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
+
+app = Quart(__name__)
 logging.basicConfig(level=logging.INFO)
 app.logger.setLevel(logging.INFO)
+
+# MongoDB setup
 mongo_client = MongoClient("mongodb://mongodb:27017/")
+# mongo_db = mongo_client["tickets"]
+# tickets_collection = mongo_db["tickets"]
+
+app.config["MONGO_URI"] = "mongodb://mongodb:27017/"
+mongo_client = AsyncIOMotorClient("mongodb://mongodb:27017/")
 mongo_db = mongo_client["tickets"]
 tickets_collection = mongo_db["tickets"]
+
+# Redis setup
 app.config["REDIS_URL"] = "redis://redis:6379/0"
 redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
+
+## AMQP items ################################################################################################
+async def on_message(message: aio_pika.IncomingMessage):
+    async with message.process():
+        print(f"Received message: {message.body.decode()}")
+
+async def amqp():
+    rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
+    connection = await aio_pika.connect_robust(rabbitmq_url)
+    channel = await connection.channel()
+    queue = await channel.declare_queue("seat", durable=True)
+    await queue.consume(on_message)
+    print("RabbitMQ consumer started")
+    await asyncio.Future()  # Run forever
+
+## AMQP items end ################################################################################################
+
+@app.route("/availabletickets/<id>", methods=["GET"])
+def get_available_tickets(id):
+    # match_id = request.args.get('id')
+    available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
+    tickets_list = []
+    for ticket in available_tickets:
+        tickets_list.append({
+            "match_id": ticket["match_id"],
+            "ticket_category": ticket["ticket_category"],
+            "seat_number": ticket["seat_number"],
+            "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+            "ticket_id": str(ticket["_id"])
+        })
+    return jsonify(tickets_list), 200
 
 
 @app.route("/reserve", methods=["POST"])
@@ -21,7 +89,6 @@ def reserve_seat():
     user_id = data["user_id"]
     match_id = data["match_id"]
     ticket_category = data["ticket_category"]
-
     # Check if user_id already has a seat reserved for this match
     existing_ticket = tickets_collection.find_one(
         {"match_id": match_id, "user_id": user_id}
@@ -125,6 +192,11 @@ def validate_reservation():
 def health_check():
     return jsonify({"status": "alive"}), 200
 
-
 if __name__ == "__main__":
-    app.run(port=9009, debug=True, host="0.0.0.0")
+    async def main():
+        await asyncio.gather(
+        app.run_task(port=9009, debug=True, host="0.0.0.0"),
+        amqp(),  # Run AMQP here
+        )
+
+    asyncio.run(main())
