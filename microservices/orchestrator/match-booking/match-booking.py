@@ -20,7 +20,6 @@ def start_rabbitmq_consumer():
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
-    channel.queue_declare(queue="match", durable=True)
     channel.basic_consume(queue="match", on_message_callback=callback, auto_ack=True)
     channel.start_consuming()
 
@@ -92,16 +91,15 @@ def get_available_tickets(match_id):
     availableticket = response.json()
     return jsonify(availableticket)
 
-
 # HANDLE SELECT SEAT AND QUANTITY FLOW
 # THIS CALL SHOULD ONLY HAPPEN IN THE VIEWS/CHECKOUT PAGE
-@app.route("/init-match-booking/<match_id>", methods=["GET"])
+@app.route("/init-match-booking/<match_id>", methods=["POST"])
 def init_match_booking(match_id):
 
-    # get userid, category and quantity as requested by the user
-    user_id = request.args.get("userid")
-    ticket_category = request.args.get("cat")
-    seatUserPurchasing = request.args.get("seat")  # seat number user is purchasing
+    # RETRIEVE THE USER ID, TICKET CATEGORY AND QUANTITY FROM THE FRONTEND
+    user_id = request.json.get("user_id")
+    ticket_category = request.json.get("category")
+    seatUserPurchasing = request.json.get("quantity")
 
     # Retrieve match details
     match_details = retrieve_match_from_match_service(match_id)
@@ -113,52 +111,26 @@ def init_match_booking(match_id):
 
     # Check ticket availability - from seat service # we will use frontend
 
-    # if availabe reserve
+    # if availabe reserve # lock
 
-    return jsonify(
-        {"message": "Match details retrieved successfully!", "match": match_details}
-    )
-
-
-# app.route("/continue-match-booking/<match_id>", methods=["GET"])
-
-
-def continue_match_booking(match_id, user_id, ticket_category):
-    # TODO: Call billing service to send billing/purchase details, and wait for response
-    # This function should only be called after locking seat ticket
-    """
-    This method should send the billing details to the billing service. An example of the payload of billing details is:
-    {
-        "match_id": "1234",
-        "match_name": "Arsenal vs Chelsea",
-        "tickets": [
-            {"category": "A", "quantity": 2},
-            {"category": "B", "quantity": 3},
-            {"category": "C", "quantity": 4},
-        ],
-        "user_id": "123"
-    }
-    """
-    payload = {  # hardcoded now, but should be dynamic
+    # once lock - call billing
+    # Send to billing service to create a checkout session
+    payload_to_billing = {
         "match_id": match_id,
-        "match_name": "Arsenal vs Chelsea",
-        "tickets": [
-            {"category": "A", "quantity": 2},
-            {"category": "B", "quantity": 3},
-            {"category": "C", "quantity": 4},
-        ],
+        "match_name": match_details["name"],
+        "tickets": [{"category": ticket_category, "quantity": seatUserPurchasing}],
         "user_id": user_id,
     }
+    response = requests.post(BILLING_URL + "/checkout", json=payload_to_billing)
 
-    # Send to billing service to create a checkout session
-    response = requests.post(BILLING_URL + "/checkout", json=payload)
-
+    print("Response from billing service: ", response.json())
     # Check if the checkout_session was created successfully
-    if response["code"] == 200:
-        checkout_session = response["checkout_session"]
-        return jsonify({"checkout_session": checkout_session})
+    # Response object is not subscriptiable, but retrieve the checkout url
+    checkout_url = response.json()['checkout_session']['url']
+    if checkout_url:
+        return checkout_url
     else:
-        return jsonify({"error": "Unable to create checkout session."})
+        return jsonify({"error": "Seomthing went wrong."})
 
 
 # Receive the transaction status from billing service

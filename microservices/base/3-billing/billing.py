@@ -73,8 +73,9 @@ def create_checkout_session():
     ticket_dict = {"A": 100, "B": 50, "C": 25}
     if request.method == "POST":
         try:
+            print("Billing service received the following payload: ", request.json)
             # these variables store the quantity of each ticket category for metadata use
-            A,B,C = 0,0,0
+            A, B, C = 0, 0, 0
 
             # line_items shows the details of the tickets on the receipt
             line_items = []
@@ -110,24 +111,30 @@ def create_checkout_session():
                 "B": B,
                 "C": C,
             }
+            print("Doing stripe checkout now")
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
                 success_url="http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
                 cancel_url="http://localhost:5173/views/checkoutCancel",
-                metadata=metadata, # pass the metadata to the webhook
+                metadata=metadata,  # pass the metadata to the webhook
             )
             # send over the link to match-booking orchestrator
         except Exception as e:
+            print("Error: ", str(e))
             return jsonify(error=str(e)), 403
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
 
 # Stripe calls this webhook
-@app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
+@app.route(
+    "/webhook/stripe", methods=["POST"]
+)  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
-    endpoint_secret = 'whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df'
+    endpoint_secret = (
+        "whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df"
+    )
     event = None
     payload = request.data
     sig_header = request.headers["Stripe-Signature"]
@@ -139,7 +146,7 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
-    
+
     # send payment information to orchestrator
     ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
 
@@ -152,7 +159,7 @@ def stripe_webhook():
             "payment_intent": session["payment_intent"],
             "metadata": session["metadata"],
         }
-    
+
     elif event["type"] == "checkout.session.expired":
         payload = {
             "status": "expired",
@@ -183,6 +190,7 @@ def stripe_webhook():
         print("Cannot notify orchestrator")
         return jsonify({"error": "Failed to notify the orchestrator."}), 500
 
+
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################
 ############################################################################################################
@@ -212,7 +220,7 @@ def refund_payment():
 
         if "payment_intent" not in payload:
             return jsonify({"error": "payment_intent not found"}), 400
-        
+
         metadata = {
             "user_id": payload["user_id"],
             "match_id": payload["match_id"],
@@ -224,7 +232,7 @@ def refund_payment():
             payment_intent=payload["payment_intent"],
             metadata=metadata,
         )
-        
+
         # prepare refund information to send to orchestrator
         refund_info = {
             "status": refund.status,
@@ -234,10 +242,10 @@ def refund_payment():
 
         # return refund information to orchestrator
         return jsonify({"message": "Refund successful", "data": refund_info}), 200
-    
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 
 ############################################################################################################
 ######################################    END OF PAYMENT REFUND    #########################################

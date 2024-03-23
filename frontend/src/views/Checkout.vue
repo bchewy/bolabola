@@ -18,7 +18,7 @@
             </tbody>
         </table>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3">
-            <button class="btn btn-primary" @click="redirectToCheckout">Proceed to Checkout</button>
+            <button class="btn btn-primary" @click="initMatchBooking()">Proceed to Checkout</button>
         </div>
     </div>
 </template>
@@ -28,7 +28,6 @@
 import axios from 'axios';
 export default {
     name: 'checkout',
-    // props: ['selectedTickets'],
     data() {
         return {
             user_id: this.$auth0.user.value.sub.split('|')[1],
@@ -51,36 +50,23 @@ export default {
         }
     },
     methods: {
-        redirectToCheckout() {
-            try {
-                // hardcoded data to send. change this JSON dynamically according to the tickets selected
-                const data = {
-                    "match_id": this.match_id,
-                    "tickets": this.selectedTickets,
-                    "user_id": this.user_id,
-                };
-                // make a POST request to the backend
-                fetch('http://localhost:8000/api/v1/billing/checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                })
-                    .then((result) => result.json())
-                    .then((data) => {
-                        console.log(data);
-                        // redirect to url
-                        window.location.href = data.checkout_session.url;
-                    })
-                    .then((res) => {
-                        console.log(res);
-                    })
-                // Handle response if required
+        initMatchBooking() {
+            let urlmatch = `http://localhost:8000/api/v1/booking/init-match-booking/${this.match_id}`;
+            console.log("URL", urlmatch);    
+            console.log("User ID", this.user_id);
+            console.log("Selected Tickets", this.selectedTickets);
+            axios.post(urlmatch, {
+                user_id: this.user_id,
+                category: this.selectedTickets[0].category,
+                quantity: this.selectedTickets[0].quantity
+
+            })
+            .then(response => {
+                console.log("RESPONSE", response.data);
                 console.log(response.data);
-            } catch (error) {
-                console.error(error);
-            }
+                // redirect the user to response url
+                window.location.href = response.data
+            })
         },
         handleCheckout(selectedTickets) {
             this.selectedTickets = selectedTickets; // Update selectedTickets with emitted data

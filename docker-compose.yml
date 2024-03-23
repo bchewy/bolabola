@@ -139,13 +139,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     command:
-      [
-        "/wait-for-it.sh",
-        "rabbitmq:5672",
-        "--",
-        "python",
-        "/app/seat.py",
-      ]
+      ["/wait-for-it.sh", "rabbitmq:5672", "--", "python", "/app/seat.py"]
 
   # Orchas
   match-streaming-orchestrator:
@@ -161,6 +155,8 @@ services:
     build:
       context: ./microservices/orchestrator/match-booking
       dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
     networks:
       - kong-net
     environment:
