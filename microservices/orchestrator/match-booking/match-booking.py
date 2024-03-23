@@ -69,6 +69,7 @@ def publish_to_amqp():
 
     connection.close()
 
+
 # HANDLE SELECT SEAT AND QUANTITY FLOW
 @app.route("/init-match-booking/<match_id>", methods=["GET"])
 def init_match_booking(match_id):
@@ -76,32 +77,42 @@ def init_match_booking(match_id):
     # get userid, category and quantity as requested by the user
     user_id = request.args.get("userid")
     ticket_category = request.args.get("cat")
-    seatUserPurchasing = request.args.get("seat") # seat number user is purchasing
+    seatUserPurchasing = request.args.get("seat")  # seat number user is purchasing
 
     # Retrieve match details
     match_details = retrieve_match_from_match_service(match_id)
-    match_details["match_id"] = match_id
-    # Retrieve ticket availability
-    seatCount = match_details["seats"]
-    if seatCount == 0:
-        return jsonify(
-            {"message": "No seats available for this match!"}
-        )  # Return to frontend if unavailable.
-    else:
-        # TODO: Add minus seat count for the selected seat from Match Service based on the quantity
-        response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
+    if match_details is None:
+        return jsonify({"error": "Match details not found!"})
+    print("=====================================")
+    print("Match Details here: ", match_details)
+    print("=====================================")
+    # Check ticket availability - from graphQL Query.
 
-        # Once the ticket is locked, call the billing service to create a checkout session
-        if locked:
-            continue_match_booking(match_id, user_id, ticket_category)
-            return jsonify({"code": 200, "message": "Seat locked successfully!"})
-        else:
-            return jsonify(
-                {"message": "The selected seat is currently on hold. Please try selecting another seat.", "code": 409}
-            )
+    # if seatCount == 0:
+    #     return jsonify(
+    #         {"message": "No seats available for this match!"}
+    #     )  # Return to frontend if unavailable.
+    # else:
+    #     # TODO: Add minus seat count for the selected seat from Match Service based on the quantity
+    #     response, locked = reserve_seat_for_user(match_id, user_id, ticket_category)
+
+    #     # Once the ticket is locked, call the billing service to create a checkout session
+    #     if locked:
+    #         continue_match_booking(match_id, user_id, ticket_category)
+    #         return jsonify({"code": 200, "message": "Seat locked successfully!"})
+    #     else:
+    #         return jsonify(
+    #             {
+    #                 "message": "The selected seat is currently on hold. Please try selecting another seat.",
+    #                 "code": 409,
+    #             }
+    #         )
+
+    return jsonify({"message": "Match details retrieved successfully!", "match": match_details})
 
 
 # app.route("/continue-match-booking/<match_id>", methods=["GET"])
+
 
 def continue_match_booking(match_id, user_id, ticket_category):
     # TODO: Call billing service to send billing/purchase details, and wait for response
@@ -119,7 +130,7 @@ def continue_match_booking(match_id, user_id, ticket_category):
         "user_id": "123"
     }
     """
-    payload = { # hardcoded now, but should be dynamic
+    payload = {  # hardcoded now, but should be dynamic
         "match_id": match_id,
         "match_name": "Arsenal vs Chelsea",
         "tickets": [
@@ -129,7 +140,7 @@ def continue_match_booking(match_id, user_id, ticket_category):
         ],
         "user_id": user_id,
     }
-    
+
     # Send to billing service to create a checkout session
     response = requests.post(BILLING_URL + "/checkout", json=payload)
 
@@ -138,7 +149,8 @@ def continue_match_booking(match_id, user_id, ticket_category):
         checkout_session = response["checkout_session"]
         return jsonify({"checkout_session": checkout_session})
     else:
-        return jsonify({"error": "Unable to create checkout session."}) 
+        return jsonify({"error": "Unable to create checkout session."})
+
 
 # Receive the transaction status from billing service
 @app.route("/process-webhook", methods=["POST"])
@@ -176,17 +188,16 @@ def process_webhook():
     elif data["status"] == "expired":
         # send a message to the frontend to inform the user that the payment link has expired
         return jsonify({"message": "Payment link expired!"})
-    
+
     elif data["status"] == "cancelled":
         # send a message to the frontend to inform the user that the payment link has been cancelled
         return jsonify({"message": "Payment link cancelled!"})
-    
+
     else:
         return jsonify({"error": "Unexpected status received."})
 
 
 def retrieve_match_from_match_service(match_id):
-    url = MATCH_URL
 
     query = """
     query GetMatchDetails($id: String) {
@@ -208,7 +219,7 @@ def retrieve_match_from_match_service(match_id):
     variables = {"id": match_id}
     headers = {"Content-Type": "application/json"}
     payload = {"query": query, "variables": variables}
-    response = requests.post(url, headers=headers, json=payload)
+    response = requests.post(MATCH_URL, headers=headers, json=payload)
 
     # Check if the request was successful
     if response.status_code == 200:
