@@ -79,6 +79,16 @@ var schema = buildSchema(`
   }  
 `)
 
+// Logging midddleware - just to view logs in the console
+function logGraphQLRequests(req, res, next) {
+  console.log('GraphQL Request:', {
+    query: req.body.query,
+    variables: req.body.variables,
+    operationName: req.body.operationName,
+  });
+  next();
+}
+
 // The root provides a resolver function for each API endpoint
 const root = {
   matches_overview: async () => {
@@ -97,11 +107,15 @@ const root = {
   }
 };
 
+// Express server
 const app = express();
 app.use(cors());
+app.use(express.json());
+
 // Create and use the GraphQL handler
 app.all(
   "/graphql",
+  logGraphQLRequests,
   createHandler({
     schema: schema,
     rootValue: root,
