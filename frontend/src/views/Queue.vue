@@ -7,8 +7,36 @@
     <div class="progress-container">
       <div class="progress-bar" :style="{ width: progress + '%' }"></div>
     </div>
+    <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p>
+    <p>Match ID: {{ matchID }}</p>
   </div>
 </template>
+
+<script>
+export default {
+  name: 'Queue',
+  data() {
+    return {
+      progress: 20, // Initial progress percentage
+      matchID: null,
+    };
+  },
+  mounted() {
+    this.matchID = this.$route.params.id; 
+    // Simulate progress increase over time
+    const interval = setInterval(() => {
+      if (this.progress < 100) {
+        this.progress += 10; // Increase progress by 10% (adjust as needed)
+      } else {
+        clearInterval(interval); // Stop the interval when progress reaches 100%
+        // Navigate to the next page when progress reaches 100%
+        this.$router.push({ name: 'seats', params: { id: this.matchID} });
+      }
+    }, 1000); // Adjust interval as needed
+  },
+};
+</script>
+
 
 <style scoped>
 .queue {
@@ -54,28 +82,6 @@
   margin-bottom: 0;
 }
 </style>
-
-<script>
-export default {
-  data() {
-    return {
-      progress: 20, // Initial progress percentage
-    };
-  },
-  mounted() {
-    // Simulate progress increase over time
-    const interval = setInterval(() => {
-      if (this.progress < 100) {
-        this.progress += 10; // Increase progress by 10% (adjust as needed)
-      } else {
-        clearInterval(interval); // Stop the interval when progress reaches 100%
-        // Navigate to the next page when progress reaches 100%
-        this.$router.push('/views/seats');
-      }
-    }, 1000); // Adjust interval as needed
-  },
-};
-</script>
 
   
   
