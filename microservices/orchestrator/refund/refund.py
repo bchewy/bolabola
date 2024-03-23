@@ -29,7 +29,8 @@ def ping():
 @app.route('/initiate-refund', methods=['POST'])
 def refund():
     """
-    1. receives ticket and user information from frontend
+    1.1. receives ticket and user information from frontend
+    1.2. call the user service to get the payment_intent
     2. calls billing service for refund
     3. receives a status from billing service, success/failure
     4. if success, send ticket information to RabbitMQ to update db
@@ -67,9 +68,12 @@ def refund():
     data_from_frontend = request.json
 
     # 1.2. call the user service to get the payment_intent
-    user_id = data_from_frontend["user_id"]
-    serial_no = data_from_frontend["serial_no"]
-    user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{serial_no}"
+    user_id = data_from_frontend["ticket_info"]["user_id"]
+    match_id = data_from_frontend["ticket_info"]["match_id"]
+    category = data_from_frontend["ticket_info"]["category"]
+    quantity = data_from_frontend["ticket_info"]["quantity"]
+    serial_no = data_from_frontend["ticket_info"]["serial_no"]
+    user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
     response = requests.get(user_service_url)
     payment_intent = response.json()["payment_intent"]
 
@@ -77,9 +81,9 @@ def refund():
     billing_service_refund_url = "http://kong:8000/api/v1/billing/refund"
     data_for_sending = {
         "user_id": user_id,
-        "match_id": data_from_frontend["match_id"],
-        "category": data_from_frontend["category"],
-        "quantity": data_from_frontend["quantity"],
+        "match_id": match_id,
+        "category": category,
+        "quantity": quantity,
         "serial_no": serial_no, 
         "payment_intent": payment_intent
     }

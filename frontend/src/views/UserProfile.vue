@@ -95,8 +95,8 @@ export default {
         },
         body: JSON.stringify(
           { 
-            ticket: this.tickets[index],
-            payment_intent: 'pi_1GszsK2eZvKYlo2CfhZyoZLp' // This is the most important thing to initiate the refund!!
+            ticket_info: this.tickets[index],
+            userId: this.userId
           }
         ),
       })
