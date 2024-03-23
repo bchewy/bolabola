@@ -43,25 +43,33 @@ def publish_to_amqp(data):
     channel = connection.channel()
 
     # Publish to user to update match booking
+    user_message = {"user_id": data["user_id"], "match_id": data["match_id"], "category":data["category"], "serial_no": data["serial_no"], "payment_intent": data["payment_intent"]}
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.user",
-        body="User has purchased ticket for match with id {data} !",
+        body=json.dumps(user_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
     )
 
     # Publish to Match Queue to update ticket availablity
+    match_message = {"match_id": data["match_id"], "quantity": data["quantity"]}
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.match", 
-        body="Match with id {data} has been booked!"
+        body=json.dumps(match_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
     )
 
     # Publish to seat reservation to remove ticket lock
-    test_message = {"user_id": "1", "status": "succeeded", "serial_no": "123"}
+    seat_message = {"serial_no": data["serial_no"]}
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.seat", 
-        body="Seat with id {data} has been booked!",
+        body=json.dumps(seat_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
         ),
@@ -71,7 +79,7 @@ def publish_to_amqp(data):
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.notification",
-        body="Notification for match with id {data} has been sent!",
+        body="SEND WHAT AH",
     )
 
     connection.close()
@@ -153,18 +161,18 @@ def process_webhook():
     This method receives a POST request from the billing service.
     If the status is "success", it publishes the match and user data to the RabbitMQ queue.
     Sample payload sent over by billing microservice:
-    payload = {
-            "status": "complete",
-            "payment_intent": "pi_3OvDsfF4chEmCmGg1efgabcI,
-            "metadata": {
-                            "match_id": "1234",
-                            "user_id": "123",
-                            "A": 2,
-                            "B": 3,
-                            "C": 4,
-                        }
+    
+
+    Sample payload received from billing microservice:
+    {
+        "status": "complete",
+        "user_id": "1",
+        "match_id": "456",
+        "category": "A",
+        "quantity": 2,
+        "serial_no": "1234",
+        "payment_intent": "pi_1234"
     }
-    Note: A, B, C are the ticket categories and their respective quantities.
     """
     data = request.json
     print("The Match Booking orcha received the following from billing service: ")
@@ -173,7 +181,8 @@ def process_webhook():
     if data["status"] == "complete":
 
         # Publish to RabbitMQ
-        publish_to_amqp("12345")
+        # data here should be about match and shit
+        publish_to_amqp(data)
 
         # Pls send payment_intent to user service too THANKS
 

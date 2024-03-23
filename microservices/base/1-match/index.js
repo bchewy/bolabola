@@ -138,9 +138,18 @@ app.get("/", (_req, res) => {
 //   res.end(prometheus.register.metrics());
 // });
 
-// function to handle incoming messages
-const handleIncomingMessage = async (msg) => {
-  console.log("Received message:", msg.content.toString());
+// function to handle incoming json
+const handleIncomingMessage = async (data) => {
+  // change data to json
+  const message = JSON.parse(data.content.toString());
+  console.log("Received message:", message);
+
+  // remove the number of seats from the match based on quantity in message
+  const match = await MatchOverviewModel.findById(message.match_id);
+  console.log(`Match ${match._id} at first had ${match.seats} seats available`);
+  match.seats -= message.quantity;
+  await match.save();
+  console.log(`Match ${match._id} now has ${match.seats} seats available`);
 }
 
 // function to set up RabbitMQ consumer

@@ -159,6 +159,12 @@ def release_seat():
     tickets_collection.update_one({"serial_no": serial_no}, {"$unset": {"user_id": ""}})
     return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
 
+# because i'm not sure if i can internally call release_seat again
+def release_seat2(data):
+    serial_no = data["serial_no"]
+    redis_client.delete(f"ticket_hold:{serial_no}")
+    tickets_collection.update_one({"serial_no": serial_no}, {"$unset": {"user_id": ""}})
+    return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
 
 @app.route("/validate_reservation/", methods=["POST"])
 def validate_reservation():
