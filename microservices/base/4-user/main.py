@@ -28,7 +28,7 @@ import aiomysql
 
 
 ## AMQP items ################################################################################################
-async def on_message(message: aio_pika.IncomingMessage):
+async def add_ticket(message: aio_pika.IncomingMessage):
     """
     Sample data received after json.loads(message.body.decode()):
     {
@@ -44,9 +44,11 @@ async def on_message(message: aio_pika.IncomingMessage):
         data = json.loads(message.body.decode())
         user_id = data["user_id"]
         match_id = data["match_id"]
+        quantity = data["quantity"]
         category = data["category"]
         serial_no = data["serial_no"]
         payment_intent = data["payment_intent"]
+
 
         # Add the ticket into the user's database
         async with AsyncSessionLocal() as session:
@@ -55,27 +57,34 @@ async def on_message(message: aio_pika.IncomingMessage):
                 if user is None:
                     print("User not found")
                     return
-                if user.tickets is None:
-                    user.tickets = [{"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent}]
+                if user.tickets is None or len(user.tickets) == 0:
+                    user.tickets = [{"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent, "quantity": quantity}]
                 else:
-                    user.tickets.append({"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent})
+                    user.tickets.append({"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent, "quantity": quantity})
                 flag_modified(user, "tickets")
                 await session.commit()
                 print("Ticket added successfully")
+
+async def delete_ticket(message: aio_pika.IncomingMessage):
+    print(f"Received message: {message.body.decode()}")
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
 
-    exchange = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
-
-    queue = await channel.declare_queue("user", durable=True)
+    exchangeBooking = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
+    queueBooking = await channel.declare_queue("user", durable=True)
     # Bind the queue to the exchange
-    await queue.bind(exchange, "booking.user")
+    await queueBooking.bind(exchangeBooking, "booking.user")
+    await queueBooking.consume(add_ticket)
+    print("RabbitMQ for booking started")
 
-    await queue.consume(on_message)
-    print("RabbitMQ consumer started")
+    exchangeRefund = await channel.declare_exchange("refund", aio_pika.ExchangeType.DIRECT, durable=True)
+    queueRefund = await channel.declare_queue("user", durable=True)
+    # Bind the queue to the exchange
+    await queueRefund.bind(exchangeRefund, "refund.user")
+    await queueRefund.consume(delete_ticket)
     await asyncio.Future()  # Run forever
 
 
@@ -284,7 +293,7 @@ async def view_ticket_by_serial_no(id, serial_no):
             return jsonify({"code": 404, "message": "Ticket not found"})
 
 # view a specific ticket bought by the user by match id
-@app.route("/<int:id>/tickets/match/<int:match_id>", methods=["GET"])
+@app.route("/<int:id>/tickets/match/<string:match_id>", methods=["GET"])
 async def view_ticket_by_match_id(id, match_id):
     """
     This method returns the details of a specific ticket owned by the user.

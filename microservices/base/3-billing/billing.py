@@ -229,6 +229,7 @@ def refund_payment():
             "category": payload["category"],
             "quantity": payload["quantity"],
             "payment_intent": payload["payment_intent"],
+            "serial_no": payload["serial_no"],
         }
 
         # call stripe to refund the payment
@@ -236,6 +237,7 @@ def refund_payment():
             payment_intent=payload["payment_intent"],
             metadata=metadata,
         )
+        print("Refund info: ", refund)
 
         # prepare refund information to send to orchestrator
         refund_info = {

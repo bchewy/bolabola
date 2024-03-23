@@ -41,7 +41,7 @@ def publish_to_amqp(data):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
-    # Publish to user to update match booking - doing
+    # Publish to user to update match booking - DONE
     category = ""
     if data["metadata"]["A"] != "0":
         category = "A"
@@ -49,7 +49,8 @@ def publish_to_amqp(data):
         category = "B"
     elif data["metadata"]["C"] != "0":
         category = "C"
-    user_message = {"user_id": data["metadata"]["user_id"], "match_id": data["metadata"]["match_id"], "category":category, "serial_no": data["metadata"]["serial_no"], "payment_intent": data["payment_intent"]}
+    quantity = int(data["metadata"]["A"]) + int(data["metadata"]["B"]) + int(data["metadata"]["C"])
+    user_message = {"user_id": data["metadata"]["user_id"], "match_id": data["metadata"]["match_id"], "category":category, "serial_no": data["metadata"]["serial_no"], "payment_intent": data["payment_intent"], "quantity": quantity}
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.user",
@@ -60,7 +61,6 @@ def publish_to_amqp(data):
     )
 
     # Publish to Match Queue to update ticket availablity - DONE
-    quantity = int(data["metadata"]["A"]) + int(data["metadata"]["B"]) + int(data["metadata"]["C"])
     match_message = {"match_id": data["metadata"]["match_id"], "quantity": quantity}
     channel.basic_publish(
         exchange="booking", 
@@ -71,8 +71,8 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to seat reservation to remove ticket lock
-    seat_message = {"serial_no": data["metadata"]["serial_no"]}
+    # Publish to seat reservation to remove ticket lock - not done
+    seat_message = {"user_id": data["metadata"]["user_id"], "serial_no": data["metadata"]["serial_no"]}
     channel.basic_publish(
         exchange="booking", 
         routing_key="booking.seat", 
@@ -82,7 +82,7 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to notification
+    # Publish to notification - not done
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.notification",
@@ -160,7 +160,7 @@ def process_webhook():
                 'B': '0'
                 'C': '2', 
                 'match_id': '65fe9fb32082209e71e8f34a', 
-                'serial_no': '1'
+                'serial_no': '1',
             }
     }
     """
@@ -173,8 +173,6 @@ def process_webhook():
         # Publish to RabbitMQ
         # data here should be about match and shit
         publish_to_amqp(data)
-
-        # Pls send payment_intent to user service too THANKS
 
         return jsonify({"message": "Match booking info sent to AMQP"})
 

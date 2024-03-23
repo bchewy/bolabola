@@ -35,6 +35,17 @@ def refund():
     3. receives a status from billing service, success/failure
     4. if success, send ticket information to RabbitMQ to update db
 
+    SAMPLE PAYLOAD FORMAT FROM FRONTEND
+    {
+        "user_id": "1234",
+        "ticket_info": {
+            "match_id": "5678",
+            "category": "A",
+            "quantity": 2,
+            "serial_no": "123456"
+            }
+    }
+
     Sends the following JSON payload to the billing service:
     {
         "user_id": "1234",
@@ -53,29 +64,26 @@ def refund():
             "match_id": "5678",
             "category": "A",
             "quantity": 2,
-            "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
+            "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY",
+            "serial_no": "123456"
         }
-    }
-
-    Sends the following JSON payload to the RabbitMQ:
-    {
-        "user_id": "1234",
-        "match_id": "5678",
-        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
     }
     """
     # 1.1. receive ticket and user information from frontend
     data_from_frontend = request.json
 
     # 1.2. call the user service to get the payment_intent
-    user_id = data_from_frontend["ticket_info"]["user_id"]
+    user_id = data_from_frontend["user_id"]
     match_id = data_from_frontend["ticket_info"]["match_id"]
     category = data_from_frontend["ticket_info"]["category"]
     quantity = data_from_frontend["ticket_info"]["quantity"]
     serial_no = data_from_frontend["ticket_info"]["serial_no"]
+
     user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
+
     response = requests.get(user_service_url)
-    payment_intent = response.json()["payment_intent"]
+    print(response.json())
+    payment_intent = response.json()["data"]["payment_intent"]
 
     # 2. call billing service for refund
     billing_service_refund_url = "http://kong:8000/api/v1/billing/refund"
@@ -88,36 +96,66 @@ def refund():
         "payment_intent": payment_intent
     }
     response = requests.post(billing_service_refund_url, json=data_for_sending)
+    print(response.json()["data"])
 
-    # 3. receive a status from billing service, success/failure
-    if response.status_code != 200:
+    # 3. receive a status from billing service about the refund, success/failure
+    if response.json()["data"]["status"] == "failed":
         return jsonify({"message": "Failed to initiate refund"}), 500
-    
-    try: 
-        # 4. if success, send refund information to RabbitMQ to update db
-        connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
-        channel = connection.channel()
-
-        channel.exchange_declare(exchange='refund', exchange_type='direct', durable=True)
-
-        channel.queue_declare(queue='user', durable=True) # for the user service
-
-        channel.queue_declare(queue='match', durable=True) # for the match service
-
-        # Set up the refund information to be sent
-        msg = json.dumps(response.json())
-
-        channel.basic_publish(
-            exchange='refund',
-            routing_key='refund.user',
-            body=msg,
-            properties=pika.BasicProperties(delivery_mode=2)  # make message persistent
-        )
-
-        connection.close()
+    if response.json()["data"]["status"] == "succeeded":
+        # 4. if success, send ticket information to RabbitMQ to update db
+        publish_to_amqp(response.json()["data"])
         return jsonify({"message": "Refund initiated successfully"}), 200
-    except Exception as e:
+    else:
         return jsonify({"message": "Failed to initiate refund"}), 500
+
+def publish_to_amqp(data):
+    rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
+    parameters = pika.URLParameters(rabbitmq_url)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()  
+
+    # NOT TESTED: Extract the necessary data from the response
+    user_id = data["metadata"]["user_id"]
+    match_id = data["metadata"]["match_id"]
+    payment_intent = data["payment_intent"]
+    category = data["metadata"]["category"]
+    quantity = data["metadata"]["quantity"]
+    serial_no = data["metadata"]["serial_no"]
+
+    # Publish to user to remove ticket from user account
+    user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} # doing this half awake so need to verify thanks
+    channel.basic_publish(
+        exchange="refund",
+        routing_key="refund.user",
+        body=json.dumps(user_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+    # Publish to match to update available tickets
+    match_message = {"match_id":match_id, "quantity":quantity} # doing this half awake so need to verify thanks
+    channel.basic_publish(
+        exchange="refund",
+        routing_key="refund.match",
+        body=json.dumps(match_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+    # Publish to seat to remove the seat from tickets  
+    seat_message = {"serial_no": serial_no} # doing this half awake so need to verify thanks
+    channel.basic_publish(
+        exchange="refund",
+        routing_key="refund.seat",
+        body=json.dumps(seat_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+    connection.close()
 
 if __name__ == '__main__':
     app.run(port=9103, debug=True, host="0.0.0.0")
