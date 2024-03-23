@@ -8,6 +8,7 @@ import json
 
 import quart_flask_patch
 from quart import Quart, jsonify, request
+
 # from quart_motor import Motor
 from motor.motor_asyncio import AsyncIOMotorClient
 
@@ -49,24 +50,30 @@ tickets_collection = mongo_db["tickets"]
 app.config["REDIS_URL"] = "redis://redis:6379/0"
 redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
+
 ## AMQP items ################################################################################################
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         print(f"Received message: {message.body.decode()}")
         # to insert the message into the database
 
+
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
-    exchange = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
-    queue = await channel.declare_queue("seat",durable=True)
+    exchange = await channel.declare_exchange(
+        "booking", aio_pika.ExchangeType.DIRECT, durable=True
+    )
+    queue = await channel.declare_queue("seat", durable=True)
     await queue.bind(exchange, "booking.seat")
     await queue.consume(on_message)
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
 
+
 ## AMQP items end ################################################################################################
+
 
 @app.route("/availabletickets/<id>", methods=["GET"])
 def get_available_tickets(id):
@@ -74,13 +81,15 @@ def get_available_tickets(id):
     available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
     tickets_list = []
     for ticket in available_tickets:
-        tickets_list.append({
-            "match_id": ticket["match_id"],
-            "ticket_category": ticket["ticket_category"],
-            "seat_number": ticket["seat_number"],
-            "user_id": ticket["user_id"] if ticket["user_id"] else "None",
-            "ticket_id": str(ticket["_id"])
-        })
+        tickets_list.append(
+            {
+                "match_id": ticket["match_id"],
+                "ticket_category": ticket["ticket_category"],
+                "seat_number": ticket["seat_number"],
+                "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+                "ticket_id": str(ticket["_id"]),
+            }
+        )
     return jsonify(tickets_list), 200
 
 
@@ -194,11 +203,13 @@ def validate_reservation():
 def health_check():
     return jsonify({"status": "alive"}), 200
 
+
 if __name__ == "__main__":
+
     async def main():
         await asyncio.gather(
-        app.run_task(port=9009, debug=True, host="0.0.0.0"),
-        amqp(),  # Run AMQP here
+            app.run_task(port=9009, debug=True, host="0.0.0.0"),
+            amqp(),  # Run AMQP here
         )
 
     asyncio.run(main())
