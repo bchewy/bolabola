@@ -41,7 +41,7 @@ def publish_to_amqp(data):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
-    # Publish to user to update match booking
+    # Publish to user to update match booking - doing
     category = ""
     if data["metadata"]["A"] != "0":
         category = "A"
@@ -59,7 +59,7 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to Match Queue to update ticket availablity
+    # Publish to Match Queue to update ticket availablity - DONE
     quantity = int(data["metadata"]["A"]) + int(data["metadata"]["B"]) + int(data["metadata"]["C"])
     match_message = {"match_id": data["metadata"]["match_id"], "quantity": quantity}
     channel.basic_publish(

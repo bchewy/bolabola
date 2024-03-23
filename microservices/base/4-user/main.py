@@ -29,15 +29,51 @@ import aiomysql
 
 ## AMQP items ################################################################################################
 async def on_message(message: aio_pika.IncomingMessage):
+    """
+    Sample data received after json.loads(message.body.decode()):
+    {
+        "user_id": "auth0|1234",
+        "match_id": "1",
+        "category": "A",
+        "serial_no": "100",
+        "payment_intent": "pi_1J3s4aJGdJy1w4fF3"
+    }
+    """
     async with message.process():
         print(f"Received message: {message.body.decode()}")
+        data = json.loads(message.body.decode())
+        user_id = data["user_id"]
+        match_id = data["match_id"]
+        category = data["category"]
+        serial_no = data["serial_no"]
+        payment_intent = data["payment_intent"]
 
+        # Add the ticket into the user's database
+        async with AsyncSessionLocal() as session:
+            async with session.begin():
+                user = await session.get(User, user_id)
+                if user is None:
+                    print("User not found")
+                    return
+                if user.tickets is None:
+                    user.tickets = [{"match_id": match_id, "category": category, "serial_no": serial_no, "payment_intent": payment_intent}]
+                else:
+                    user.tickets.append({"match_id": match_id, "category": category, "serial_no": serial_no, "payment_intent": payment_intent})
+                flag_modified(user, "tickets")
+                await session.commit()
+                print("Ticket added successfully")
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
+
+    exchange = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
+
     queue = await channel.declare_queue("user", durable=True)
+    # Bind the queue to the exchange
+    await queue.bind(exchange, "booking.user")
+
     await queue.consume(on_message)
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
