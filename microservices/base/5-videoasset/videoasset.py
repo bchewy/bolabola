@@ -18,6 +18,7 @@ print(os.getenv("AWS_ACCESS_KEY_ID"))
 print(os.getenv("AWS_SECRET_ACCESS_KEY"))
 table = dynamodb.Table("ESD-VideoMetaData")
 
+# it is important to note here that the √ideo id equals to the match id.
 
 # Cache size depends on your needs; here, we cache the latest 128 requests
 @lru_cache(maxsize=128)
@@ -46,7 +47,7 @@ def get_video_path(video_id):
 @app.route("/video", methods=["POST"])
 def create_video_asset():
     video_id = request.json.get("id")
-    video_url = "https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/videos/franklampard-video.mp4" # set as default
+    video_url = "https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/videos/franklampard-video.mp4"  # set as default
     # video_url = request.json.get("url")
     if not video_id or not video_url:
         return jsonify({"error": "Missing video id or url"}), 400
@@ -62,6 +63,7 @@ def create_video_asset():
 @app.route("/video", methods=["GET"])
 def get_video():
     video_id = request.args.get("id")
+    print("video_id: " + str(video_id))
     if not video_id:
         return jsonify({"error": "Missing video id"}), 400
 
