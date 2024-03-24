@@ -10,18 +10,21 @@
             <th scope="col">Match Name</th>
             <th scope="col">Match Time</th>
             <th scope="col">Match Location</th>
-            <th scope="col">Match Price</th>
+            <th scope="col">Quantity</th>
+            <th scope="col">Category</th>
             <th scope="col">Refund</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(ticket, index) in tickets" :key="index">
-            <td>{{ ticket.matchName }}</td>
-            <td>{{ ticket.matchTime }}</td>
-            <td>{{ ticket.matchLocation }}</td>
-            <td>{{ ticket.matchPrice }}</td>
+            <td>{{ ticket[0] }}</td>
+            <td>{{ ticket[1] }}</td>
+            <td>{{ ticket[2] }}</td>
+            <td>{{ ticket[3] }}</td>
+            <td>{{ ticket[4] }}</td>
             <td>
-              <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;" @click="refundTicket(index)">Refund</button>
+              <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;"
+                @click="refundTicket(index)">Refund</button>
             </td>
           </tr>
         </tbody>
@@ -50,16 +53,33 @@ export default {
   },
   data() {
     return {
-      tickets: [
-        { matchName: 'Match A', matchTime: '2024-03-10T14:00:00', matchLocation: 'Location A', matchPrice: 10 },
-        { matchName: 'Match B', matchTime: '2024-03-11T15:00:00', matchLocation: 'Location B', matchPrice: 15 },
-        { matchName: 'Match C', matchTime: '2025-01-13T10:00:00', matchLocation: 'Location C', matchPrice: 20 },
-      ],
+      tickets: [],
       refundedTickets: [],
       refund_success: true
     };
   },
   methods: {
+    // Function to get the user's tickets
+    getUserTickets(userId) {
+      // Send a request to the backend to get the user's tickets using their userId
+      fetch(`http://localhost:8000/api/v1/user/${userId}/tickets`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch user tickets');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          this.tickets = data.data;
+        })
+        .catch((error) => {
+          console.error('Error fetching user tickets:', error);
+        });
+    },
+     // Function to fetch the user's tickets
+     fetchUserTickets() {
+      this.getUserTickets(this.userId);
+    },
     // Function to get the user's information
     getUserInfo(userId) {
       // Send a request to the backend to get the user's information using their userId using get request
@@ -69,7 +89,7 @@ export default {
           this.tickets = data.tickets;
         });
     },
-    
+
     // Function to fetch the user's information
     fetchUserInfo() {
       this.getUserInfo(this.userId);
@@ -94,7 +114,7 @@ export default {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(
-          { 
+          {
             ticket_info: this.tickets[index],
             userId: this.userId
           }
@@ -110,12 +130,13 @@ export default {
       if (this.refund_success) {
         this.$router.push('/views/refund');
       } else {
-        alert('Unsuccessful Refund. Please try again.'); 
+        alert('Unsuccessful Refund. Please try again.');
       }
     }
   },
   mounted() {
     this.fetchUserInfo();
+    this.fetchUserTickets();
   }
 };
 </script>
@@ -126,7 +147,8 @@ export default {
   text-align: center;
   margin-top: 50px;
 }
-.text-superblue{
+
+.text-superblue {
   color: #5356FF;
 }
 </style>
