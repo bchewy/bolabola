@@ -17,11 +17,11 @@
         </thead>
         <tbody>
           <tr v-for="(ticket, index) in tickets" :key="index">
-            <td>{{ ticket[0] }}</td>
-            <td>{{ ticket[1] }}</td>
-            <td>{{ ticket[2] }}</td>
-            <td>{{ ticket[3] }}</td>
-            <td>{{ ticket[4] }}</td>
+            <td>{{ ticket.matchName }}</td> 
+            <td>{{ ticket.matchTime }}</td>
+            <td>{{ ticket.matchLocation }}</td>
+            <td>{{ ticket.quantity }}</td>
+            <td>{{ ticket.category }}</td>
             <td>
               <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;"
                 @click="refundTicket(index)">Refund</button>
@@ -70,7 +70,7 @@ export default {
           return response.json();
         })
         .then((data) => {
-          this.tickets = data.data;
+          this.tickets = data;
         })
         .catch((error) => {
           console.error('Error fetching user tickets:', error);
