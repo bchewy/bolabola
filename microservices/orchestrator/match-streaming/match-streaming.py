@@ -24,30 +24,6 @@ MATCH_URL = "http://kong:8000/api/v1/match/"
 # 4. Somehow need to stream it back to the UI.
 
 
-# class Match(graphene.ObjectType):
-#     id = graphene.String()
-#     name = graphene.String()
-# Add more fields as needed
-
-
-# class Query(graphene.ObjectType):
-#     match = graphene.Field(Match, id=graphene.String())
-
-#     def resolve_match(self, info, id):
-#         url = f"http://kong:8000/api/v1/match/{id}"
-#         response = requests.get(url)
-#         if response.status_code == 200:
-#             match_data = response.json()
-#             match = Match(
-#                 id=match_data["id"],
-#                 name=match_data["name"],
-#                 # Add more fields as needed
-#             )
-#             return match
-#         else:
-#             return None
-
-
 def retrieve_video_url(match_id):
     print("entering retrieve_video_url")
     url = VIDEOASS_URL + "video?id=" + match_id
@@ -68,7 +44,6 @@ def retrieve_video_url(match_id):
             return "Video URL not found or invalid."
 
 
-# @app.route("/<string:id>")
 @app.route("/retrieve/<string:id>")
 def retrieve_match(id):
     # Retrieve match from match service using GraphQL
