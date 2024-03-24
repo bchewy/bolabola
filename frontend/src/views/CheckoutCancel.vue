@@ -1,6 +1,6 @@
 <template>
     <div class="checkout">
-        <h1>try again</h1>
+        <h1>Please try again</h1>
         
     </div>
 </template>
