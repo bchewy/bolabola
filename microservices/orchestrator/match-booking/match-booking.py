@@ -49,8 +49,19 @@ def publish_to_amqp(data):
         category = "B"
     elif data["metadata"]["C"] != "0":
         category = "C"
-    quantity = int(data["metadata"]["A"]) + int(data["metadata"]["B"]) + int(data["metadata"]["C"])
-    user_message = {"user_id": data["metadata"]["user_id"], "match_id": data["metadata"]["match_id"], "category":category, "serial_no": data["metadata"]["serial_no"], "payment_intent": data["payment_intent"], "quantity": quantity}
+    quantity = (
+        int(data["metadata"]["A"])
+        + int(data["metadata"]["B"])
+        + int(data["metadata"]["C"])
+    )
+    user_message = {
+        "user_id": data["metadata"]["user_id"],
+        "match_id": data["metadata"]["match_id"],
+        "category": category,
+        "serial_no": data["metadata"]["serial_no"],
+        "payment_intent": data["payment_intent"],
+        "quantity": quantity,
+    }
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.user",
@@ -63,8 +74,8 @@ def publish_to_amqp(data):
     # Publish to Match Queue to update ticket availablity - DONE
     match_message = {"match_id": data["metadata"]["match_id"], "quantity": quantity}
     channel.basic_publish(
-        exchange="booking", 
-        routing_key="booking.match", 
+        exchange="booking",
+        routing_key="booking.match",
         body=json.dumps(match_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -72,10 +83,13 @@ def publish_to_amqp(data):
     )
 
     # Publish to seat reservation to remove ticket lock - not done
-    seat_message = {"user_id": data["metadata"]["user_id"], "serial_no": data["metadata"]["serial_no"]}
+    seat_message = {
+        "user_id": data["metadata"]["user_id"],
+        "serial_no": data["metadata"]["serial_no"],
+    }
     channel.basic_publish(
-        exchange="booking", 
-        routing_key="booking.seat", 
+        exchange="booking",
+        routing_key="booking.seat",
         body=json.dumps(seat_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -91,13 +105,20 @@ def publish_to_amqp(data):
 
     connection.close()
 
-#RETURNS AVAILABLE TICKETS
+
+# RETURNS AVAILABLE TICKETS
 @app.route("/availabletickets/<match_id>", methods=["GET"])
 def get_available_tickets(match_id):
-    availableticket = ''
+    availableticket = ""
     response = requests.get(SEAT_URL + "/availabletickets/" + match_id)
     availableticket = response.json()
+    print(
+        "Retrieving available tickets, for the match id {}, available tickets: {}".format(
+            match_id, availableticket
+        )
+    )
     return jsonify(availableticket)
+
 
 # HANDLE SELECT SEAT AND QUANTITY FLOW
 # THIS CALL SHOULD ONLY HAPPEN IN THE VIEWS/CHECKOUT PAGE
@@ -134,7 +155,7 @@ def init_match_booking(match_id):
     print("Response from billing service: ", response.json())
     # Check if the checkout_session was created successfully
     # Response object is not subscriptiable, but retrieve the checkout url
-    checkout_url = response.json()['checkout_session']['url']
+    checkout_url = response.json()["checkout_session"]["url"]
     if checkout_url:
         return checkout_url
     else:
@@ -148,18 +169,18 @@ def process_webhook():
     This method receives a POST request from the billing service.
     If the status is "success", it publishes the match and user data to the RabbitMQ queue.
     Sample payload sent over by billing microservice:
-    
+
 
     Sample payload received from billing microservice:
     {
-        'status': 'complete', 
-        'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU', 
+        'status': 'complete',
+        'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU',
         'metadata': {
-                'user_id': '106225716514519006902', 
-                'A': '0', 
+                'user_id': '106225716514519006902',
+                'A': '0',
                 'B': '0'
-                'C': '2', 
-                'match_id': '65fe9fb32082209e71e8f34a', 
+                'C': '2',
+                'match_id': '65fe9fb32082209e71e8f34a',
                 'serial_no': '1',
             }
     }
