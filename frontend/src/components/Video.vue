@@ -9,7 +9,6 @@
     autoplay
     :volume="0.6"
     :height="320"
-    :playback-rates="[0.7, 1.0, 1.5, 2.0]"
     @mounted="handleMounted"
     @ready="handleEvent($event)"
     @play="handleEvent($event)"
@@ -46,7 +45,7 @@
       const player = shallowRef<VideoJsPlayer>();
       const handleMounted = (payload: any) => {
         player.value = payload.player;
-        if(props.playNow){
+        if (props.playNow) {
           player.value.play();
         }
         console.log("Basic player mounted:", payload);
