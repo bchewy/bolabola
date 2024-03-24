@@ -51,14 +51,17 @@ var MatchDetailsSchema = new mongoose.Schema({
 var TicketSchema = new mongoose.Schema({
   match_id: { type: mongoose.Schema.Types.ObjectId, ref: 'MatchOverview' },
   seat_number: Number,
-  user_id: mongoose.Schema.Types.ObjectId, // This can be null initially, to signify that the user
+  user_id: mongoose.Schema.Types.ObjectId, // This can be null initially, to signify that the user has not booked the ticket
   category: String, // Added category field
 
 });
 
 const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema, "matches");
 const MatchDetailsModel = mongoose.model("MatchDetails", MatchDetailsSchema, "matches");
-const Ticket = mongoose.model("Ticket", TicketSchema, "tickets");
+
+// Create another connection to tickets collection, to store tickets.
+var mongoose_tickets = mongoose.createConnection("mongodb://mongodb:27017/tickets");
+const Ticket = mongoose_tickets.model("Ticket", TicketSchema, "tickets");
 
 var schema = buildSchema(`
   type MatchOverview {
@@ -155,18 +158,18 @@ const root = {
       console.log('Categories:', categories);
 
       // Generate tickets for the match based on categories
-      for (const category of categories) {
-        for (let i = 1; i <= category.quantity; i++) {
+      for (let i = 0; i < categories.length; i++) {
+        const category = categories[i];
+        for (let j = 1; j <= category.quantity; j++) {
           const newTicket = new Ticket({
             match_id: newMatch._id,
-            seat_number: i,
+            seat_number: j,
             user_id: null, // Initially, tickets are not assigned to any user
             category: category.category, // Assuming you have a category field in your Ticket schema
           });
           await newTicket.save();
         }
       }
-
       // Return the created match
       return newMatch;
     } catch (error) {
