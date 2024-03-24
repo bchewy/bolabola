@@ -18,19 +18,9 @@ import os
 import json
 from threading import Thread
 from flask_cors import CORS
-
-# Asynchronous things
 import asyncio
 import aio_pika
 
-# app = Flask(__name__)
-# logging.basicConfig(level=logging.INFO)
-# app.logger.setLevel(logging.INFO)
-# mongo_client = MongoClient("mongodb://mongodb:27017/")
-# mongo_db = mongo_client["tickets"]
-# tickets_collection = mongo_db["tickets"]
-# app.config["REDIS_URL"] = "redis://redis:6379/0"
-# redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
 app = Quart(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -38,20 +28,56 @@ app.logger.setLevel(logging.INFO)
 
 # MongoDB setup
 mongo_client = MongoClient("mongodb://mongodb:27017/")
-# mongo_db = mongo_client["tickets"]
-# tickets_collection = mongo_db["tickets"]
-
 app.config["MONGO_URI"] = "mongodb://mongodb:27017/"
-engine = AsyncIOMotorClient(app.config["MONGO_URI"])
+engine = AsyncIOMotorClient(app.config["MONGO_URI"])  # using AsyncIOMotorClient
 mongo_db = engine["tickets"]
 tickets_collection = mongo_db["tickets"]
+
+# Ticket Serial Counter Collection
+ticket_serial_counter = mongo_db["ticket_serial_counters"]
 
 # Redis setup
 app.config["REDIS_URL"] = "redis://redis:6379/0"
 redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
 
-## AMQP items ################################################################################################
+# ==== Ticket Counter MONGO Functions ====
+async def get_next_ticket_serial():
+    serial_counter = await ticket_serial_counter.find_one_and_update(
+        {"_id": "ticket_serial"},
+        {"$inc": {"seq": 1}},
+        return_document=ReturnDocument.AFTER,
+    )
+    return serial_counter["seq"]
+
+
+async def create_ticket_for_user(user_id, match_id, ticket_category):
+    # Get the next serial number
+    serial_no = await get_next_ticket_serial()
+
+    # Create a new ticket document
+    new_ticket = {
+        "serial_no": serial_no,
+        "match_id": match_id,
+        "ticket_category": ticket_category,
+        "user_id": user_id,
+        # Add other necessary fields
+    }
+
+    # Insert the new ticket into the tickets collection
+    await tickets_collection.insert_one(new_ticket)
+
+    # Update the user's document in the users collection with the new ticket's serial number
+    await mongo_db["users"].update_one(
+        {"_id": user_id}, {"$push": {"tickets": serial_no}}
+    )
+
+    return new_ticket
+
+
+# ==== AMQP Functions ====
+
+
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process():
         print(f"Received message: {message.body.decode()}")
@@ -72,7 +98,10 @@ async def amqp():
     await asyncio.Future()  # Run forever
 
 
-## AMQP items end ################################################################################################
+# ==== AMQP Functions end ====
+
+
+# ================================ Helper Main Functons ============================================================================================================================================================================================================
 
 
 @app.route("/availabletickets/<id>", methods=["GET"])
@@ -81,14 +110,21 @@ async def get_available_tickets(id):
     available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
     tickets_list = []
     async for ticket in available_tickets:
-        tickets_list.append({
-            "match_id": ticket["match_id"],
-            "ticket_category": ticket["ticket_category"],
-            "seat_number": ticket["seat_number"],
-            "user_id": ticket["user_id"] if ticket["user_id"] else "None",
-            "ticket_id": str(ticket["_id"])
-        })
+        tickets_list.append(
+            {
+                # add serial number as auto increment ID for the ticket - mongoDB
+                "serial_no": ticket["serial_no"],
+                "match_id": ticket["match_id"],
+                "ticket_category": ticket["ticket_category"],
+                "seat_number": ticket["seat_number"],
+                "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+                "ticket_id": str(ticket["_id"]),
+            }
+        )
     return jsonify(tickets_list), 200
+
+
+# ================================ Seat Main Functons ============================================================================================================================================================================================================
 
 
 @app.route("/reserve", methods=["POST"])
@@ -120,7 +156,7 @@ def reserve_seat():
     )
 
     if ticket:
-        if redis_client.set(
+        if redis_client.set(  # ticket_id has to change to serial_no
             f"ticket_hold:{match_id}:{ticket_category}:{ticket['_id']}",
             user_id,
             ex=300,
@@ -156,6 +192,7 @@ def release_seat():
     redis_client.delete(f"ticket_hold:{serial_no}")
     tickets_collection.update_one({"serial_no": serial_no}, {"$unset": {"user_id": ""}})
     return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
+
 
 @app.route("/validate_reservation/", methods=["POST"])
 def validate_reservation():
@@ -193,6 +230,9 @@ def validate_reservation():
         )
     else:
         return jsonify({"error": "Seat not found"}), 404
+
+
+# ================================ Seat Main END ============================================================================================================================================================================================================
 
 
 # Health Check

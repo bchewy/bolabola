@@ -31,6 +31,8 @@ var MatchOverviewSchema = new mongoose.Schema({
   away_score: Number,
   date: Date,
   seats: Number,
+  categories: [{ category: String, quantity: Number }],
+
 });
 
 var MatchDetailsSchema = new mongoose.Schema({
@@ -46,8 +48,17 @@ var MatchDetailsSchema = new mongoose.Schema({
   seats: Number,
 });
 
+var TicketSchema = new mongoose.Schema({
+  match_id: { type: mongoose.Schema.Types.ObjectId, ref: 'MatchOverview' },
+  seat_number: Number,
+  user_id: mongoose.Schema.Types.ObjectId, // This can be null initially, to signify that the user
+  category: String, // Added category field
+
+});
+
 const MatchOverviewModel = mongoose.model("MatchOverview", MatchOverviewSchema, "matches");
 const MatchDetailsModel = mongoose.model("MatchDetails", MatchDetailsSchema, "matches");
+const Ticket = mongoose.model("Ticket", TicketSchema, "tickets");
 
 var schema = buildSchema(`
   type MatchOverview {
@@ -59,6 +70,7 @@ var schema = buildSchema(`
     away_score: Int
     date: String
     seats: Int
+    categories: [Category]
   }
 
   type MatchDetails {
@@ -72,13 +84,29 @@ var schema = buildSchema(`
     away_score: Int
     date: String
     seats: Int
+    categories: [Category]
+  }
+
+  type Category {
+    category: String
+    quantity: Int
+  }
+
+  input CategoryInput {
+    category: String!
+    quantity: Int!
   }
   
   type Query {
     matches_overview: [MatchOverview]
     match_details(_id: String): MatchDetails
-  }  
+  }
+  type Mutation {
+    createMatch(name: String!, home_team: String!, away_team: String!, date: String!, seats: Int!, categories: [CategoryInput]!): MatchOverview
+  }
+  
 `)
+
 
 // Logging midddleware - just to view logs in the console
 function logGraphQLRequests(req, res, next) {
@@ -105,7 +133,46 @@ const root = {
     } catch (error) {
       throw error;
     }
-  }
+  },
+  createMatch: async ({ name, home_team, away_team, date, seats, categories }) => {
+    try {
+      // Create a new match
+      const newMatch = new MatchOverviewModel({
+        _id: new mongoose.Types.ObjectId(),
+        name,
+        home_team,
+        away_team,
+        date,
+        seats,
+        categories
+      });
+      await newMatch.save();
+
+      // Log the creation details
+      console.log(`Match created: ${name} between ${home_team} and ${away_team} on ${date}. Total seats: ${seats}.`);
+
+      // Optionally, log the categories if needed
+      console.log('Categories:', categories);
+
+      // Generate tickets for the match based on categories
+      for (const category of categories) {
+        for (let i = 1; i <= category.quantity; i++) {
+          const newTicket = new Ticket({
+            match_id: newMatch._id,
+            seat_number: i,
+            user_id: null, // Initially, tickets are not assigned to any user
+            category: category.category, // Assuming you have a category field in your Ticket schema
+          });
+          await newTicket.save();
+        }
+      }
+
+      // Return the created match
+      return newMatch;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // Express server
@@ -122,6 +189,8 @@ app.all(
     rootValue: root,
   })
 );
+
+
 
 // Serve the GraphiQL IDE.
 app.get("/", (_req, res) => {
@@ -140,37 +209,41 @@ app.get("/", (_req, res) => {
 
 // function to handle incoming json
 const handleIncomingMessage = async (data) => {
-  // change data to json
   const message = JSON.parse(data.content.toString());
   console.log("Received message:", message);
 
-  // remove the number of seats from the match based on quantity in message
   const match = await MatchOverviewModel.findById(message.match_id);
+
+  if (!match) {
+    console.error(`Match with id ${message.match_id} not found`);
+    return;
+  }
+
   console.log(`Match ${match._id} at first had ${match.seats} seats available`);
   match.seats -= message.quantity;
   await match.save();
   console.log(`Match ${match._id} now has ${match.seats} seats available`);
-}
+};
 
 // function to set up RabbitMQ consumer
 const setupRabbitMQConsumer = async () => {
   try {
-     const connection = await amqp.connect('amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/');
-     const channel = await connection.createChannel();
-     const exchange = 'match-booking-exchange';
-     await channel.assertExchange(exchange, 'topic', { durable: true });
-     const queue = await channel.assertQueue("match", { durable: true });
+    const connection = await amqp.connect('amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/');
+    const channel = await connection.createChannel();
+    const exchange = 'match-booking-exchange';
+    await channel.assertExchange(exchange, 'topic', { durable: true });
+    const queue = await channel.assertQueue("match", { durable: true });
 
-     await channel.bindQueue(queue.queue, exchange, "match.#");
- 
-     console.log("Waiting for messages in %s. To exit press CTRL+C", queue.queue);
- 
-     // Use the promise-based consume method
-     await channel.consume(queue.queue, handleIncomingMessage, { noAck: false });
+    await channel.bindQueue(queue.queue, exchange, "match.#");
+
+    console.log("Waiting for messages in %s. To exit press CTRL+C", queue.queue);
+
+    // Use the promise-based consume method
+    await channel.consume(queue.queue, handleIncomingMessage, { noAck: false });
   } catch (error) {
-     console.error("Error setting up RabbitMQ consumer:", error);
+    console.error("Error setting up RabbitMQ consumer:", error);
   }
- };
- 
+};
+
 app.listen(9001)
 setupRabbitMQConsumer();

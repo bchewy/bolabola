@@ -10,7 +10,21 @@
         "away_score": 1,
         "seats": 10,
         "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
+        "updated_at": "2024-03-09T00:00:00Z",
+        "categories": [
+            {
+                "category": "A",
+                "quantity": 3
+            },
+            {
+                "category": "B",
+                "quantity": 4
+            },
+            {
+                "category": "C",
+                "quantity": 3
+            }
+        ]
     },
     {
         "name": "Super Bowl",
@@ -21,112 +35,22 @@
         "away_team": "New York Giants",
         "home_score": 24,
         "away_score": 21,
-        "seats": 123,
+        "seats": 10,
         "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Champions League Final",
-        "description": "The annual football competition between Europe's top clubs.",
-        "date": "2024-06-01T19:00:00Z",
-        "venue": "Wembley Stadium, London",
-        "home_team": "Chelsea",
-        "away_team": "Manchester City",
-        "home_score": 2,
-        "away_score": 1,
-        "seats": 5,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Super Bowl LIX",
-        "description": "The 59th Super Bowl American football championship game.",
-        "date": "2024-02-11T23:30:00Z",
-        "venue": "MetLife Stadium, New Jersey",
-        "home_team": "New York Jets",
-        "away_team": "Los Angeles Rams",
-        "home_score": 28,
-        "away_score": 24,
-        "seats": 41,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "NBA Finals Game 7",
-        "description": "The deciding game of the NBA championship.",
-        "date": "2024-06-19T01:00:00Z",
-        "venue": "Madison Square Garden, New York",
-        "home_team": "New York Knicks",
-        "away_team": "Los Angeles Lakers",
-        "home_score": 112,
-        "away_score": 110,
-        "seats": 13,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "FIFA World Cup Final",
-        "description": "The final match of the 2024 FIFA World Cup.",
-        "date": "2024-12-18T18:00:00Z",
-        "venue": "Lusail Iconic Stadium, Lusail",
-        "home_team": "France",
-        "away_team": "Brazil",
-        "home_score": 3,
-        "away_score": 2,
-        "seats": 4,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Olympics Opening Ceremony",
-        "description": "The opening ceremony of the 2024 Summer Olympics.",
-        "date": "2024-07-26T20:00:00Z",
-        "venue": "Stade de France, Paris",
-        "home_team": "France",
-        "away_team": "Brazil",
-        "home_score": 0,
-        "away_score": 0,
-        "seats": 0,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Indian Premier League Final",
-        "description": "The final match of the 2024 Indian Premier League.",
-        "date": "2024-05-28T14:30:00Z",
-        "venue": "Wankhede Stadium, Mumbai",
-        "home_team": "Mumbai Indians",
-        "away_team": "Chennai Super Kings",
-        "home_score": 180,
-        "away_score": 175,
-        "seats": 1,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "Tour de France Finish",
-        "description": "The final stage of the 2024 Tour de France.",
-        "date": "2024-07-21T10:00:00Z",
-        "venue": "Champs-Élysées, Paris",
-        "home_team": "France",
-        "away_team": "Brazil",
-        "home_score": 0,
-        "away_score": 0,
-        "seats": 31,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
-    },
-    {
-        "name": "The Masters Golf Tournament",
-        "description": "One of the four major championships in professional golf.",
-        "date": "2024-04-11T12:00:00Z",
-        "venue": "Augusta National Golf Club, Augusta",
-        "home_team": "USA",
-        "away_team": "Europe",
-        "home_score": 0,
-        "away_score": 0,
-        "seats": 4,
-        "created_at": "2024-03-09T00:00:00Z",
-        "updated_at": "2024-03-09T00:00:00Z"
+        "updated_at": "2024-03-09T00:00:00Z",
+        "categories": [
+            {
+                "category": "A",
+                "quantity": 3
+            },
+            {
+                "category": "B",
+                "quantity": 4
+            },
+            {
+                "category": "C",
+                "quantity": 3
+            }
+        ]
     }
 ]
