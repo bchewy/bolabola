@@ -7,12 +7,26 @@
     <div class="progress-container">
       <div class="progress-bar" :style="{ width: progress + '%' }"></div>
     </div>
-    <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p>
+    <!-- <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p> -->
     <p>Match ID: {{ matchID }}</p>
   </div>
 </template>
 
 <script>
+const socket = new WebSocket('ws://localhost:8000/api/v1/queue')
+
+socket.onopen = function() {
+  console.log('Connected to the WebSocket server');
+  var message = {
+    user_id: 3
+  }
+  socket.send(JSON.stringify(message));
+};
+
+socket.onmessage = function(event) {
+  console.log('Received message:', event.data);
+};
+
 export default {
   name: 'Queue',
   data() {
@@ -24,15 +38,15 @@ export default {
   mounted() {
     this.matchID = this.$route.params.id; 
     // Simulate progress increase over time
-    const interval = setInterval(() => {
-      if (this.progress < 100) {
-        this.progress += 10; // Increase progress by 10% (adjust as needed)
-      } else {
-        clearInterval(interval); // Stop the interval when progress reaches 100%
-        // Navigate to the next page when progress reaches 100%
-        this.$router.push({ name: 'seats', params: { id: this.matchID} });
-      }
-    }, 1000); // Adjust interval as needed
+    // const interval = setInterval(() => {
+    //   if (this.progress < 100) {
+    //     this.progress += 10; // Increase progress by 10% (adjust as needed)
+    //   } else {
+    //     clearInterval(interval); // Stop the interval when progress reaches 100%
+    //     // Navigate to the next page when progress reaches 100%
+    //     this.$router.push({ name: 'seats', params: { id: this.matchID} });
+    //   }
+    // }, 1000); // Adjust interval as needed
   },
 };
 </script>
