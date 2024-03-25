@@ -28,6 +28,9 @@ services:
       - name: queue-route
         paths:
           - "/api/v1/queue"
+        protocols:
+          - ws
+          - wss
 
   - name: billing
     url: http://billing:9003
