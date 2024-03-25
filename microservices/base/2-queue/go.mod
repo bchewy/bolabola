@@ -10,5 +10,6 @@ require (
 require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 )

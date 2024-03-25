@@ -1,15 +1,16 @@
-package websocket
+package sender
 
 import (
 	"encoding/json"
 	// "fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"queue/common/connection"
-	"queue/common/awsutil"
 	"strconv"
+	"github.com/gorilla/websocket"
+	"golang.org/x/net/context"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var upgrader = websocket.Upgrader{
@@ -19,7 +20,9 @@ var upgrader = websocket.Upgrader{
 
 var manager *connection.ConnectionManager
 
-var sess *session.Session
+var ch *amqp.Channel
+
+var q amqp.Queue
 
 type RequestBody struct {
 	UserID int `json:"user_id"`
@@ -91,21 +94,28 @@ func WSHandler(conn *websocket.Conn) {
 
 		// Send the received user ID to SQS
 
-		const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo"
+		// const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/442029411374/bolabola_queue.fifo"
 
 		messageBody := strconv.Itoa(userId)
 
 		manager.AddConnection(strconv.Itoa(userId), conn)
 
-		if err := awsutil.SendToSQS(sess, queueUrl, messageBody); err != nil {
-			log.Printf("Error trying to send message to queue: %v", err)
-			return
-		}
+		// Send message to RabbitMQ
+		ctx, cancel := context.WithTimeout(context.Background(), 5)
+		defer cancel()
 
-		log.Println("Sent message to queue")
-
-		if err := conn.WriteMessage(messageType, []byte(messageBody)); err != nil {
-			log.Println(err)
+		err = ch.PublishWithContext(ctx,
+			"",     // exchange
+			q.Name, // routing key
+			false,  // mandatory
+			false,  // immediate
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(messageBody),
+			})
+		
+		if err != nil {
+			log.Printf("Error trying to publish message: %v", err)
 			return
 		}
 	}
@@ -114,6 +124,36 @@ func WSHandler(conn *websocket.Conn) {
 func SetupRoutes() {
 	http.HandleFunc("/ws", WSEndpoint)
 	http.HandleFunc("/test", ConnectionManagerTestEndpoint)
+}
+
+func SetupRabbitMQ() {
+	amqpConn, err := amqp.Dial("amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/")
+
+	if err != nil {
+		log.Printf("Error trying to connect to RabbitMQ: %v", err)
+		return
+	}
+
+	ch, err = amqpConn.Channel()
+
+	if err != nil {
+		log.Printf("Error trying to open a channel: %v", err)
+		return
+	}
+
+	q, err = ch.QueueDeclare(
+		"virtual_queue", // name
+		true,             // durable
+		false,            // delete when unused
+		false,            // exclusive
+		false,            // no-wait
+		nil,              // arguments
+	)
+
+	if err != nil {
+		log.Printf("Error trying to declare a queue: %v", err)
+		return
+	}
 }
 
 func NewServer(connection_manager *connection.ConnectionManager) *Server {
@@ -126,6 +166,6 @@ func NewServer(connection_manager *connection.ConnectionManager) *Server {
 
 func (s *Server) Start() {
 	SetupRoutes()
-	sess = awsutil.SetupAWSSession()
+	SetupRabbitMQ()
 	log.Fatal(http.ListenAndServe(":9002", nil))
 }

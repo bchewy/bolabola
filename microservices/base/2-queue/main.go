@@ -1,16 +1,16 @@
 package main
 
 import (
-	"queue/websocket"
-	"queue/sqs_consume"
+	"queue/sender"
+	"queue/consumer"
 	"queue/common/connection"
 	"sync"
 )
 
 func main() {
 	manager := connection.NewConnectionManager()
-	ws_server := websocket.NewServer(manager)
-	consume_server := sqs_consume.NewServer(manager)
+	ws_server := sender.NewServer(manager)
+	consume_server := consumer.NewServer(manager)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
