@@ -1,12 +1,16 @@
 package consumer
 
 import (
-	"github.com/gorilla/websocket"
+	"encoding/json"
 	"log"
 	"queue/common/connection"
-    "queue/common/util"
-    "strconv"
-    amqp "github.com/rabbitmq/amqp091-go"
+	"queue/common/rabbitmq"
+	"queue/common/util"
+	"strconv"
+	"time"
+
+	"github.com/gorilla/websocket"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 type Server struct {
@@ -17,92 +21,97 @@ var manager *connection.ConnectionManager
 
 var ch *amqp.Channel
 
-var q amqp.Queue
+var q *amqp.Queue
 
-func consumeMessages(manager *connection.ConnectionManager) {
-    msgs, err := ch.Consume(
-        q.Name, // queue
-        "",     // consumer
-        true,   // auto-ack
-        false,  // exclusive
-        false,  // no-local
-        false,  // no-wait
-        nil,    // args
-    )
-
-    if err != nil {
-        log.Printf("Error trying to consume messages: %v", err)
-        return
-    }
-
-    for msg := range msgs {
-        userIdStr := string(msg.Body)
-
-        // Parse user ID
-        userId, err := strconv.Atoi(userIdStr)
-        if err != nil {
-            log.Printf("Error parsing user ID: %v", err)
-            continue
-        }
-
-        // Retrieve the connection
-        conn, ok := manager.GetConnection(userIdStr)
-        if !ok {
-            log.Printf("No connection found for user ID %d", userId)
-            continue
-        }
-
-        log.Println("Connection found for user ID ", userId)
-
-        // Generate a JWT token
-        token, err := util.GenerateJWT(userIdStr, 10)
-        if err != nil {
-            log.Println("Error generating JWT:", err)
-            continue
-        }
-
-        log.Println("Token is ", token)
-
-        // Send a message back to the client
-        if err := conn.WriteMessage(websocket.TextMessage, []byte(token)); err != nil {
-            log.Println("Error sending message to client:", err)
-        }
-
-        // Close the WebSocket connection
-        if err := conn.Close(); err != nil {
-            log.Println("Error closing WebSocket connection:", err)
-        }
-    }
+type Response struct {
+    Token string `json:"token"`
+    SecretKey string `json:"secret_key"`
 }
 
-func SetupRabbitMQ() {
-	amqpConn, err := amqp.Dial("amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/")
+func consumeMessages(manager *connection.ConnectionManager) {
 
-	if err != nil {
-		log.Printf("Error trying to connect to RabbitMQ: %v", err)
-		return
-	}
+    // Limit the rate of consumption of messages (mainly for demo purposes)
+    ticker := time.NewTicker(2 * time.Second)
 
-	ch, err = amqpConn.Channel()
+    // msgs, err := ch.Consume(
+    //     q.Name, // queue
+    //     "",     // consumer
+    //     true,   // auto-ack
+    //     false,  // exclusive
+    //     false,  // no-local
+    //     false,  // no-wait
+    //     nil,    // args
+    // )
 
-	if err != nil {
-		log.Printf("Error trying to open a channel: %v", err)
-		return
-	}
+    for range ticker.C {
+        msg, ok, err := ch.Get(q.Name, true)
 
-	q, err = ch.QueueDeclare(
-		"virtual_queue", // name
-		true,             // durable
-		false,            // delete when unused
-		false,            // exclusive
-		false,            // no-wait
-		nil,              // arguments
-	)
+        if err != nil {
+            log.Printf("Error trying to consume messages: %v", err)
+            return
+        }
 
-	if err != nil {
-		log.Printf("Error trying to declare a queue: %v", err)
-		return
-	}
+        if !ok {
+            continue
+        }
+    
+        if string(msg.Body) == "DEMO MESSAGE" {
+            continue
+        } else {
+            userIdStr := string(msg.Body)
+
+            // Parse user ID
+            userId, err := strconv.Atoi(userIdStr)
+            if err != nil {
+                log.Printf("Error parsing user ID: %v", err)
+                continue
+            }
+
+            // Retrieve the connection
+            conn, ok := manager.GetConnection(userIdStr)
+            if !ok {
+                log.Printf("No connection found for user ID %d", userId)
+                continue
+            }
+
+            log.Println("Connection found for user ID ", userId)
+
+            // Generate a JWT token
+            token, secretKey, err := util.GenerateJWT(userIdStr, 10)
+            if err != nil {
+                log.Println("Error generating JWT:", err)
+                continue
+            }
+
+            log.Println("Token is ", token)
+
+            // Send the token and secret key back to the client
+            response := Response{
+                Token: token,
+                SecretKey: secretKey,
+            }
+
+            jsonResponse, err := json.Marshal(response)
+            if err != nil {
+                log.Println("Error marshaling response to JSON:", err)
+                return
+            }
+
+            // Send a message back to the client
+            if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
+                log.Println("Error sending message to client:", err)
+            }
+
+            // Close the WebSocket connection
+            if err := conn.Close(); err != nil {
+                log.Println("Error closing WebSocket connection:", err)
+            }
+        }
+
+        if err := msg.Ack(false); err != nil {
+            log.Printf("Error acknowledging message: %v", err)
+        }
+    }
 }
 
 func NewServer(connectionManager *connection.ConnectionManager) *Server {
@@ -114,6 +123,6 @@ func NewServer(connectionManager *connection.ConnectionManager) *Server {
 }
 
 func (s *Server) Start() {
-    SetupRabbitMQ()
+    ch, q, _ = rabbitmq.SetupRabbitMQ()
     consumeMessages(manager)
 }

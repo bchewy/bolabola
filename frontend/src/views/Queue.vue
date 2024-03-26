@@ -25,6 +25,7 @@ socket.onopen = function() {
 
 socket.onmessage = function(event) {
   console.log('Received message:', event.data);
+  this.token = event.data;
 };
 
 export default {
@@ -33,6 +34,7 @@ export default {
     return {
       progress: 20, // Initial progress percentage
       matchID: null,
+      token: null
     };
   },
   mounted() {
@@ -47,6 +49,11 @@ export default {
     //     this.$router.push({ name: 'seats', params: { id: this.matchID} });
     //   }
     // }, 1000); // Adjust interval as needed
+
+    // TODO: Verify JWT before routing to checkout page
+
+    this.$router.push({ name: 'Checkout', params: { id: this.matchID } });
+
   },
 };
 </script>

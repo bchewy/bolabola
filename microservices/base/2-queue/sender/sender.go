@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"github.com/gorilla/websocket"
 	"golang.org/x/net/context"
+	"queue/common/rabbitmq"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -22,15 +23,11 @@ var manager *connection.ConnectionManager
 
 var ch *amqp.Channel
 
-var q amqp.Queue
+var q *amqp.Queue
 
 type RequestBody struct {
 	UserID int `json:"user_id"`
-}
-
-type SQSMessage struct {
-	UserID			string	`json:"user_id"`
-	ConnectionToken	string	`json:"connection_token"`
+	Demo   bool `json:"demo"`
 }
 
 type Server struct {
@@ -81,20 +78,21 @@ func WSHandler(conn *websocket.Conn) {
 
 		// Parse JSON request
 		if messageType == websocket.TextMessage {
-			var user RequestBody
-			if err := json.Unmarshal(p, &user); err != nil {
+			var wsMessage RequestBody
+			if err := json.Unmarshal(p, &wsMessage); err != nil {
 				log.Println("Error parsing JSON:", err)
 				return
 			}
 
-			log.Printf("Received JSON: %+v", user)
+			log.Printf("Received JSON: %+v", wsMessage)
 
-			userId = user.UserID
+			userId = wsMessage.UserID
+
+			if (wsMessage.Demo) {
+				// Add 10 messages to the queue for demo purpose
+				rabbitmq.CreateDemoMessages(ch, q)
+			}
 		}
-
-		// Send the received user ID to SQS
-
-		// const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/442029411374/bolabola_queue.fifo"
 
 		messageBody := strconv.Itoa(userId)
 
@@ -126,36 +124,6 @@ func SetupRoutes() {
 	http.HandleFunc("/test", ConnectionManagerTestEndpoint)
 }
 
-func SetupRabbitMQ() {
-	amqpConn, err := amqp.Dial("amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/")
-
-	if err != nil {
-		log.Printf("Error trying to connect to RabbitMQ: %v", err)
-		return
-	}
-
-	ch, err = amqpConn.Channel()
-
-	if err != nil {
-		log.Printf("Error trying to open a channel: %v", err)
-		return
-	}
-
-	q, err = ch.QueueDeclare(
-		"virtual_queue", // name
-		true,             // durable
-		false,            // delete when unused
-		false,            // exclusive
-		false,            // no-wait
-		nil,              // arguments
-	)
-
-	if err != nil {
-		log.Printf("Error trying to declare a queue: %v", err)
-		return
-	}
-}
-
 func NewServer(connection_manager *connection.ConnectionManager) *Server {
 	manager = connection_manager
 
@@ -166,6 +134,6 @@ func NewServer(connection_manager *connection.ConnectionManager) *Server {
 
 func (s *Server) Start() {
 	SetupRoutes()
-	SetupRabbitMQ()
+	ch, q, _ = rabbitmq.SetupRabbitMQ()
 	log.Fatal(http.ListenAndServe(":9002", nil))
 }
