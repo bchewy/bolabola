@@ -30,6 +30,11 @@ type RequestBody struct {
 	Demo   bool `json:"demo"`
 }
 
+type MessageBody struct {
+	UserID int `json:"user_id"`
+	MessageID int `json:"message_id"`
+}
+
 type Server struct {
 	ConnectionManager *connection.ConnectionManager
 }
@@ -47,7 +52,7 @@ func WSEndpoint(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Client connected")
 
-	err = ws.WriteMessage(1, []byte("Connected to queue_sender server"))
+	err = ws.WriteMessage(1, []byte("Connected to sender server"))
 	if err != nil {
 		log.Println(err)
 	}
@@ -94,7 +99,13 @@ func WSHandler(conn *websocket.Conn) {
 			}
 		}
 
-		messageBody := strconv.Itoa(userId)
+		// Send message to RabbitMQ
+		messageBody, err := json.Marshal(MessageBody{UserID: userId, MessageID: 1})
+
+		if err != nil {
+			log.Println("Error marshaling JSON:", err)
+			return
+		}
 
 		manager.AddConnection(strconv.Itoa(userId), conn)
 
@@ -111,6 +122,8 @@ func WSHandler(conn *websocket.Conn) {
 				ContentType: "text/plain",
 				Body:        []byte(messageBody),
 			})
+		
+		log.Printf("Sent message: %s", messageBody)
 		
 		if err != nil {
 			log.Printf("Error trying to publish message: %v", err)

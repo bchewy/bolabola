@@ -9,20 +9,20 @@ import (
 
 func main() {
 	manager := connection.NewConnectionManager()
-	ws_server := sender.NewServer(manager)
-	consume_server := consumer.NewServer(manager)
+	sender_server := sender.NewServer(manager)
+	consumer_server := consumer.NewServer(manager)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 
 	go func() {
 		defer wg.Done()
-		ws_server.Start()
+		sender_server.Start()
 	}()
 
 	go func() {
 		defer wg.Done()
-		consume_server.Start()
+		consumer_server.Start()
 	}()
 
 	wg.Wait()

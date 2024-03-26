@@ -1,12 +1,12 @@
 <template>
   <div class="queue">
-    <h1 class="text-superblue">You are now in the queue...</h1>
+    <h1 class="text-superblue">You are now 11th in the queue...</h1>
     <p class="lead text-dark">You are important to us and your place in the Queue is currently being processed. Please do not reload this page.
       <br>Thank you for your interest for this match and we seek your patience in this process.</p>
     <img src="/src/assets/background1.png" style="width:50%;" alt="Queue Image" class="queue-image">
-    <div class="progress-container">
+    <!-- <div class="progress-container">
       <div class="progress-bar" :style="{ width: progress + '%' }"></div>
-    </div>
+    </div> -->
     <!-- <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p> -->
     <p>Match ID: {{ matchID }}</p>
   </div>
@@ -18,14 +18,29 @@ const socket = new WebSocket('ws://localhost:8000/api/v1/queue')
 socket.onopen = function() {
   console.log('Connected to the WebSocket server');
   var message = {
-    user_id: 3
+    user_id: 3,
+    demo: true
   }
   socket.send(JSON.stringify(message));
 };
 
 socket.onmessage = function(event) {
   console.log('Received message:', event.data);
-  this.token = event.data;
+
+  try {
+    var data = JSON.parse(event.data);
+
+    console.log(data);
+
+    if ('token' in data) {
+      console.log('Token:', data.token);
+      this.$router.push({ name: 'checkout', params: { id: 3 } });
+    }
+
+
+  } catch (e) {
+    return;
+  }
 };
 
 export default {
@@ -49,10 +64,6 @@ export default {
     //     this.$router.push({ name: 'seats', params: { id: this.matchID} });
     //   }
     // }, 1000); // Adjust interval as needed
-
-    // TODO: Verify JWT before routing to checkout page
-
-    this.$router.push({ name: 'Checkout', params: { id: this.matchID } });
 
   },
 };
