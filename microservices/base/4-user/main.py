@@ -66,7 +66,29 @@ async def add_ticket(message: aio_pika.IncomingMessage):
                 print("Ticket added successfully")
 
 async def delete_ticket(message: aio_pika.IncomingMessage):
-    print(f"Received message: {message.body.decode()}")
+    received_msg = json.loads(message.body.decode())
+    print(received_msg)
+    id = received_msg["user_id"]
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            payment_intent = received_msg["payment_intent"]
+            tickets_deleted = False
+            user = await session.get(User, str(id))
+            if user is None:
+                return json.dumps({"code": 404, "message": "User not found"})
+            if user.tickets is None:
+                return json.dumps({"code": 404, "message": "User has no tickets"})
+            for ticket in user.tickets: # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
+                if ticket["payment_intent"] == payment_intent:
+                    user.tickets.remove(ticket)
+                    flag_modified(user, "tickets")
+                    await session.commit()
+                    tickets_deleted = True 
+            if tickets_deleted:
+                print("Ticket deleted successfully")
+                return json.dumps({"code": 200, "message": "Ticket(s) deleted successfully"})
+            print("Ticket not found")
+            return json.dumps({"code": 404, "message": "Ticket not found"})
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"

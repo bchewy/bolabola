@@ -75,7 +75,7 @@ def refund():
     # 1.2. call the user service to get the payment_intent
     user_id = data_from_frontend["user_id"]
     match_id = data_from_frontend["ticket_info"]["match_id"]
-    category = data_from_frontend["ticket_info"]["category"]
+    category = data_from_frontend["ticket_info"]["ticket_category"]
     quantity = data_from_frontend["ticket_info"]["quantity"]
     serial_no = data_from_frontend["ticket_info"]["serial_no"]
 
@@ -104,6 +104,7 @@ def refund():
     if response.json()["data"]["status"] == "succeeded":
         # 4. if success, send ticket information to RabbitMQ to update db
         publish_to_amqp(response.json()["data"])
+        print("Messages sent to refund queues")
         return jsonify({"message": "Refund initiated successfully"}), 200
     else:
         return jsonify({"message": "Failed to initiate refund"}), 500
@@ -125,8 +126,8 @@ def publish_to_amqp(data):
     # Publish to user to remove ticket from user account
     user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.user",
+        exchange="refunds",
+        routing_key="refunds.user",
         body=json.dumps(user_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -136,8 +137,8 @@ def publish_to_amqp(data):
     # Publish to match to update available tickets
     match_message = {"match_id":match_id, "quantity":quantity} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.match",
+        exchange="refunds",
+        routing_key="refunds.match",
         body=json.dumps(match_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -147,8 +148,8 @@ def publish_to_amqp(data):
     # Publish to seat to remove the seat from tickets  
     seat_message = {"serial_no": serial_no} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.seat",
+        exchange="refunds",
+        routing_key="refunds.seat",
         body=json.dumps(seat_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent

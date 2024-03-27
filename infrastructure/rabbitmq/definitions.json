@@ -80,14 +80,14 @@
             "vhost": "/",
             "destination": "user",
             "destination_type": "queue",
-            "routing_key": "user.#"
+            "routing_key": "refunds.user"
         },
         {
             "source": "refunds",
             "vhost": "/",
             "destination": "order",
             "destination_type": "queue",
-            "routing_key": "order.#"
+            "routing_key": "refunds.order"
         },
         {
             "source": "refunds",
