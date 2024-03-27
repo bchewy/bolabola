@@ -1,7 +1,7 @@
 <template>
     <div class="seat-selection">
         <h1 class="text-superblue">Select Your Seats</h1>
-        <p class="lead text-dark">Click on available seats to select them.</p>
+        <p class="lead text-dark">Click on available category to select.</p>
         <p>
             <!-- User ID: {{ this.$auth0.user.value.sub.split('|')[1] }} <br> -->
             Match ID: {{ $route.params.id }}
@@ -12,7 +12,7 @@
                 <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="selectSeat(seat)" class="seat"
                     :class="{ selected: seat.selected, unavailable: !seat.available }">
                     {{ seat.label }}: {{ seat.quantity }}
-                    reserved: {{ seat.reserved }}
+                    Reserved: {{ seat.reserved }}
                 </div>
             </div>
         </div>
@@ -182,8 +182,8 @@ export default {
 }
 
 .seat {
-    width: 55px;
-    height: 55px;
+    width: 90px;
+    height: 75px;
     border: 1px solid #ccc;
     margin: 0 5px;
     cursor: pointer;
