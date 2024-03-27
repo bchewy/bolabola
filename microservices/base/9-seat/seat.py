@@ -157,7 +157,8 @@ async def amqp():
 @app.route("/availabletickets/<id>", methods=["GET"])
 async def get_available_tickets(id):
     # match_id = request.args.get('id')
-    available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
+    available_tickets = tickets_collection.find({"match_id": ObjectId(id), "user_id": None})
+    print(available_tickets)
     tickets_list = []
     async for ticket in available_tickets:
         tickets_list.append(
@@ -165,13 +166,13 @@ async def get_available_tickets(id):
                 # "serial_no": ticket["serial_no"],
                 "ticket_id": str(ticket["_id"]),
                 "user_id": ticket["user_id"] if ticket["user_id"] else "None",
-                "match_id": ticket["match_id"],
+                "match_id": str(ticket["match_id"]),
                 "category": ticket["category"],
                 "seat_number": ticket["seat_number"],
             }
         )
     return jsonify(tickets_list), 200
-
+ 
 
 # ================================ Seat Main Functons ============================================================================================================================================================================================================
 

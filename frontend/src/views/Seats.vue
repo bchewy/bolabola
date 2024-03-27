@@ -2,16 +2,17 @@
     <div class="seat-selection">
         <h1 class="text-superblue">Select Your Seats</h1>
         <p class="lead text-dark">Click on available seats to select them.</p>
-        <!-- <p>
-            User ID: {{ this.$auth0.user.value.sub.split('|')[1] }} <br>
+        <p>
+            <!-- User ID: {{ this.$auth0.user.value.sub.split('|')[1] }} <br> -->
             Match ID: {{ $route.params.id }}
-        </p> -->
+        </p>
         <!-- Always display the seat map -->
         <div class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
                 <div v-for="(seat, seatIndex) in row" :key="seatIndex" @click="selectSeat(seat)" class="seat"
                     :class="{ selected: seat.selected, unavailable: !seat.available }">
                     {{ seat.label }}: {{ seat.quantity }}
+                    reserved: {{ seat.reserved }}
                 </div>
             </div>
         </div>
@@ -41,9 +42,9 @@ export default {
         return {
             seatMap: [
                 [
-                    { label: "A", selected: false, available: true, quantity: 0 },
-                    { label: "B", selected: false, available: true, quantity: 0 },
-                    { label: "C", selected: false, available: true, quantity: 0 },
+                    { label: "A", selected: false, available: true, quantity: 0, reserved:0 },
+                    { label: "B", selected: false, available: true, quantity: 0, reserved:0 },
+                    { label: "C", selected: false, available: true, quantity: 0, reserved:0 },
                 ],
                 [{ label: "Online", selected: false, available: true }],
             ],
@@ -66,26 +67,40 @@ export default {
     },
     mounted() {
         var ticketsurl = "http://localhost:8000/api/v1/booking/availabletickets/" + this.$route.params.id
-        axios.get(ticketsurl).then((response) => {
-
-            for (let ticket of response.data) {
-                var category = ticket.ticket_category;
-                var ticketId = ticket.ticket_id
-                for (let row of this.seatMap) {
-                    console.log(row)
-                    for (let seat of row) {
-                        console.log(seat.label, category)
-                        if (seat.label == category) {
-                            seat.quantity += 1
-                            break;
+        var reservedurl = "http://localhost:8000/api/v1/seat/tickets/count"
+        axios.get(ticketsurl).then((tickets) => {
+            console.log(tickets.data)
+            axios.post(reservedurl,{
+                "match_id":this.$route.params.id,
+                "reserved":""
+            }).then((response)=>{
+                console.log(response)
+                if(response){
+                    var reserved = response.data.ticket_ids
+                }
+                console.log(reserved)
+                    for (let ticket of tickets.data) { //counts all available tickets
+                        var category = ticket.category;
+                        var ticketId = ticket.ticket_id
+                        for (let row of this.seatMap) {
+                            console.log(row)
+                            for (let seat of row) {
+                                console.log(seat.label, category)
+                                if (seat.label == category) {
+                                    seat.quantity += 1
+                                    if(reserved.includes(ticketId)){
+                                        seat.reserved +=1
+                                    }
+                                    break;
+                                }
+                            }
                         }
                     }
-                }
-            }
         })
 
 
-    },
+        })
+},
     methods: {
         selectSeat(seat) {
             if (seat.available) {
