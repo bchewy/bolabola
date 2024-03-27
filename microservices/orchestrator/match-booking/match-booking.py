@@ -142,17 +142,22 @@ def init_match_booking(match_id):
     # we will always assume that the seats are available as long as the user has gone in here.
     # Depending on the quantity, the user can reserve 4 seats.
 
-    ####### commented out for now
-    # # Reserve the seat
-    # reserve_seat_payload = {
-    #     "user_id": user_id,
-    #     "match_id": match_id,
-    #     "category": ticket_category,
-    #     "quantity": seatUserPurchasing,  # Assuming this is the seat number, though it's named as quantity
-    # }
-    # reserve_seat_response = requests.post(
-    #     SEAT_URL + "/reserve", json=reserve_seat_payload
-    # )
+    # =====================RESERVE PORTION ========
+    # by right - all
+
+    # Reserve the seat
+    reserve_seat_payload = {
+        "user_id": user_id,
+        "match_id": match_id,
+        "category": ticket_category,
+        "quantity": seatUserPurchasing,  # Assuming this is the seat number, though it's named as quantity
+    }
+    reserve_seat_response = requests.post(
+        SEAT_URL + "/reserve", json=reserve_seat_payload
+    )
+
+    print("RESULTS OF RESERVATION")
+    print(reserve_seat_response.json())
 
     # print("Debug log for seat reservation:", reserve_seat_response.json())
     # # Check if reservation was successful
@@ -162,9 +167,9 @@ def init_match_booking(match_id):
     #         reserve_seat_response.status_code,
     #     )
 
-    # # once lock - call billing
-    ####### commented out for now
-    
+    # ============ BILLING PORTION ============
+
+    # once lock - call billing
     # Send to billing service to create a checkout session
     payload_to_billing = {
         "match_id": match_id,
