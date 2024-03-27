@@ -94,8 +94,9 @@ async def on_refund_message(message: aio_pika.IncomingMessage):
         ticket_ids = ticket_ids.split(",")
         # remove user from ticket and delete ticket from redis
         for ticket_id in ticket_ids:
-            remove_user_from_ticket(ticket_id)
+            await remove_user_from_ticket(ticket_id)
             print(f"Ticket id {ticket_id} is removed from redis ")
+        print("All tickets are removed from redis")
 
 # this code is adapted from /release endpoint
 async def on_booking_message(message: aio_pika.IncomingMessage):
@@ -118,9 +119,9 @@ async def delete_ticket(ticket_id):
         ticket_hold_exists = await redis_client.exists(f"ticket_hold:{ticket_id}")
         if ticket_hold_exists:
             await redis_client.delete(f"ticket_hold:{ticket_id}")
-        return jsonify({"message": "Seat released", "ticket_id": ticket_id}), 200
+        return json.dumps({"message": "Seat released", "ticket_id": ticket_id}), 200
     else:
-        return jsonify({"error": "Invalid ticket_id"}), 400
+        return json.dumps({"error": "Invalid ticket_id"}), 400
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
@@ -231,6 +232,7 @@ async def reserve_seat():
         print("Quantity: ", quantity)
         # Confirm the reservation in MongoDB
         for ticket_id in reserved_tickets:
+            print("ticket_id: ", ticket_id)
             await tickets_collection.update_one(
                 {"_id": ObjectId(ticket_id)}, {"$set": {"user_id": user_id}}
             )
@@ -345,15 +347,15 @@ async def remove_user_from_ticket(ticket_id):
     # Find the ticket by its ID
     ticket = await tickets_collection.find_one({"_id": ObjectId(ticket_id)})
     if not ticket:
-        return jsonify({"error": "Ticket not found"}), 404
+        return json.dumps({"error": "Ticket not found"}), 404
     # Update the ticket to remove the user_id
     result = await tickets_collection.update_one(
         {"_id": ObjectId(ticket_id)}, {"$set": {"user_id": None}}
     )
     if result.modified_count:
-        return jsonify({"message": "User removed from ticket successfully"}), 200
+        return json.dumps({"message": "User removed from ticket successfully"}), 200
     else:
-        return jsonify({"error": "Failed to remove user from ticket"}), 500
+        return json.dumps({"error": "Failed to remove user from ticket"}), 500
 
 
 # ================================ Seat Main END ============================================================================================================================================================================================================
