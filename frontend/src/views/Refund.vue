@@ -1,7 +1,13 @@
 <template>
     <div class="refund">
-      <h1 class="text-superblue">Refunded Tickets</h1>
-      <table class="table table-striped">
+      <h1 class="text-superblue">Okay</h1>
+      <p>Your refund has been processed.</p>
+
+      <div class="center mt-5">
+        <router-link to="/" class="btn btn-primary" style="background-color: #5356FF;">Back to Home</router-link>
+      </div>
+
+      <!-- <table class="table table-striped">
         <thead>
           <tr>
             <th scope="col">Match Name</th>
@@ -18,7 +24,7 @@
             <td>{{ ticket.matchPrice }}</td>
           </tr>
         </tbody>
-      </table>
+      </table> -->
     </div>
   </template>
   
