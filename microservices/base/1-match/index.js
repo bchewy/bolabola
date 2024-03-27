@@ -157,19 +157,32 @@ const root = {
       // Optionally, log the categories if needed
       console.log('Categories:', categories);
 
+      // We need to check if quantity in categories = seats
+      let total = 0
+      for (const category of categories) {
+        total += category.quantity
+      }
+
+      if (total != seats) {
+        throw new Error(`Categories do not match seats`);
+      }
+
       // Generate tickets for the match based on categories
-      for (let i = 0; i < categories.length; i++) {
-        const category = categories[i];
-        for (let j = 1; j <= category.quantity; j++) {
+      for (const category of categories) {
+
+        for (let i = 0; i < category.quantity; i++) {
+          // Assuming TicketModel exists and is the model for the tickets database
           const newTicket = new Ticket({
+            user_id: null,
             match_id: newMatch._id,
-            seat_number: j,
-            user_id: null, // Initially, tickets are not assigned to any user
-            category: category.category, // Assuming you have a category field in your Ticket schema
+            category: category.name,
+            seat_number: i + 1, // Assuming seat numbering starts from 1
+            status: 'available', // Assuming a status field to indicate if the ticket is booked or available
           });
           await newTicket.save();
         }
       }
+
       // Return the created match
       return newMatch;
     } catch (error) {
