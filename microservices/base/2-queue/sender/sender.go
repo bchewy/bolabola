@@ -1,15 +1,17 @@
-package websocket
+package sender
 
 import (
 	"encoding/json"
 	// "fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"queue/common/connection"
-	"queue/common/awsutil"
 	"strconv"
+	"github.com/gorilla/websocket"
+	"golang.org/x/net/context"
+	"queue/common/rabbitmq"
+
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 var upgrader = websocket.Upgrader{
@@ -19,15 +21,13 @@ var upgrader = websocket.Upgrader{
 
 var manager *connection.ConnectionManager
 
-var sess *session.Session
+var ch *amqp.Channel
+
+var q *amqp.Queue
 
 type RequestBody struct {
 	UserID int `json:"user_id"`
-}
-
-type SQSMessage struct {
-	UserID			string	`json:"user_id"`
-	ConnectionToken	string	`json:"connection_token"`
+	Demo   bool `json:"demo"`
 }
 
 type Server struct {
@@ -78,34 +78,42 @@ func WSHandler(conn *websocket.Conn) {
 
 		// Parse JSON request
 		if messageType == websocket.TextMessage {
-			var user RequestBody
-			if err := json.Unmarshal(p, &user); err != nil {
+			var wsMessage RequestBody
+			if err := json.Unmarshal(p, &wsMessage); err != nil {
 				log.Println("Error parsing JSON:", err)
 				return
 			}
 
-			log.Printf("Received JSON: %+v", user)
+			log.Printf("Received JSON: %+v", wsMessage)
 
-			userId = user.UserID
+			userId = wsMessage.UserID
+
+			if (wsMessage.Demo) {
+				// Add 10 messages to the queue for demo purpose
+				rabbitmq.CreateDemoMessages(ch, q)
+			}
 		}
-
-		// Send the received user ID to SQS
-
-		const queueUrl string = "https://sqs.ap-southeast-1.amazonaws.com/145339479675/TicketboostQueue.fifo"
 
 		messageBody := strconv.Itoa(userId)
 
 		manager.AddConnection(strconv.Itoa(userId), conn)
 
-		if err := awsutil.SendToSQS(sess, queueUrl, messageBody); err != nil {
-			log.Printf("Error trying to send message to queue: %v", err)
-			return
-		}
+		// Send message to RabbitMQ
+		ctx, cancel := context.WithTimeout(context.Background(), 5)
+		defer cancel()
 
-		log.Println("Sent message to queue")
-
-		if err := conn.WriteMessage(messageType, []byte(messageBody)); err != nil {
-			log.Println(err)
+		err = ch.PublishWithContext(ctx,
+			"",     // exchange
+			q.Name, // routing key
+			false,  // mandatory
+			false,  // immediate
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        []byte(messageBody),
+			})
+		
+		if err != nil {
+			log.Printf("Error trying to publish message: %v", err)
 			return
 		}
 	}
@@ -126,6 +134,6 @@ func NewServer(connection_manager *connection.ConnectionManager) *Server {
 
 func (s *Server) Start() {
 	SetupRoutes()
-	sess = awsutil.SetupAWSSession()
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	ch, q, _ = rabbitmq.SetupRabbitMQ()
+	log.Fatal(http.ListenAndServe(":9002", nil))
 }

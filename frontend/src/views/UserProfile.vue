@@ -21,7 +21,7 @@
             <td>{{ ticket.matchTime }}</td>
             <td>{{ ticket.matchLocation }}</td>
             <td>{{ ticket.quantity }}</td>
-            <td>{{ ticket.category }}</td>
+            <td>{{ ticket.ticket_category }}</td>
             <td>
               <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;"
                 @click="refundTicket(index)">Refund</button>
@@ -35,6 +35,23 @@
 
 <script>
 import NavBar from '../components/Navbar.vue';
+import axios from 'axios';
+
+const FETCH_MATCH_DETAILS = `
+  query FetchMatchDetails($_id: String!) {
+    match_details(_id: $_id) {
+      _id
+      name
+      home_team
+      away_team
+      home_score
+      away_score
+      date
+      seats
+      venue
+    }
+  }
+`;
 
 export default {
   name: "StreamingView",
@@ -55,44 +72,44 @@ export default {
     return {
       tickets: [],
       refundedTickets: [],
-      refund_success: true
+      refund_success: true,
+      tickets_with_match_info: [],
     };
   },
   methods: {
-    // Function to get the user's tickets
-    getUserTickets(userId) {
-      // Send a request to the backend to get the user's tickets using their userId
-      fetch(`http://localhost:8000/api/v1/user/${userId}/tickets`)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to fetch user tickets');
-          }
-          return response.json();
-        })
-        .then((data) => {
-          this.tickets = data;
-        })
-        .catch((error) => {
-          console.error('Error fetching user tickets:', error);
-        });
-    },
-     // Function to fetch the user's tickets
-     fetchUserTickets() {
-      this.getUserTickets(this.userId);
-    },
     // Function to get the user's information
     getUserInfo(userId) {
       // Send a request to the backend to get the user's information using their userId using get request
       fetch(`http://localhost:8000/api/v1/user/${userId}`)
         .then((response) => response.json())
         .then((data) => {
-          this.tickets = data.tickets;
+          this.tickets = data["data"].tickets;
+
+          // Get the match information for each ticket
+          this.tickets.forEach((ticket) => {
+            // Send a request to the backend to get the match information using the matchId
+            axios.post('http://localhost:8000/api/v1/match/', {
+              query: FETCH_MATCH_DETAILS,
+              variables: {
+                _id: ticket.match_id,
+              },
+            })
+              .then(response => {
+                ticket.matchName = response.data.data.match_details.name;
+                ticket.matchLocation = response.data.data.match_details.venue;
+                ticket.matchTime = new Date(Number(response.data.data.match_details.date));
+                this.tickets_with_match_info.push(ticket);
+              })
+              .catch(error => {
+                console.error('Error fetching matches:', error);
+              });
+          });
         });
     },
 
     // Function to fetch the user's information
-    fetchUserInfo() {
-      this.getUserInfo(this.userId);
+    async fetchUserInfo() {
+      await this.getUserInfo(this.userId);
     },
 
     // Function to refund check if a ticket is refundable
@@ -132,12 +149,12 @@ export default {
       } else {
         alert('Unsuccessful Refund. Please try again.');
       }
-    }
+    },
+    
   },
   mounted() {
     this.fetchUserInfo();
-    this.fetchUserTickets();
-  }
+  },
 };
 </script>
 

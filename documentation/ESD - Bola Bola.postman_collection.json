@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a90cbb41-d44d-4379-ba53-3420b18f27ac",
+		"_postman_id": "ec20c203-e7e1-44fc-a730-b78aa21a84e1",
 		"name": "ESD - Bola Bola",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "23749162"
@@ -163,6 +163,34 @@
 							"graphql": {
 								"query": "{\n    matches_overview {\n        _id,\n        name,\n        home_team,\n        away_team,\n        home_score,\n        away_score,\n        date,\n        seats\n    }\n}",
 								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/match",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"match"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Matches - Add New Match",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation Mutation (\n    $name: String!,\n    $home_team: String!,\n    $away_team: String!,\n    $date: String!,\n    $seats: Int!,\n    $categories: [CategoryInput]!\n) {\n    createMatch (\n        name: $name,\n        home_team: $home_team,\n        away_team: $away_team,\n        date: $date,\n        seats: $seats,\n        categories: $categories\n        ) {\n        name,\n        home_team,\n        away_team,\n        date,\n        seats,\n        categories {\n            category,\n            quantity\n        }\n    }\n}",
+								"variables": "{\n    \"name\": \"Asian Cup Finals\",\n    \"home_team\": \"Lion City Sailors\",\n    \"away_team\": \"Tottenham Hotspurs\",\n    \"date\": \"2024-01-01\",\n    \"seats\": 10,\n    \"categories\": [\n        { \"category\": \"A\", \"quantity\": 3 },\n        { \"category\": \"B\", \"quantity\": 7 }\n    ]\n\n}"
 							}
 						},
 						"url": {

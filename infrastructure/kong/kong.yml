@@ -23,11 +23,14 @@ services:
           - "/api/v1/match"
 
   - name: queue
-    url: http://queue:9002
+    url: ws://queue:9002/ws
     routes:
       - name: queue-route
         paths:
           - "/api/v1/queue"
+        protocols:
+          - ws
+          - wss
 
   - name: billing
     url: http://billing:9003
