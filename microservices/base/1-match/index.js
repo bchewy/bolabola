@@ -178,6 +178,7 @@ const root = {
           console.log(i + 1)
           console.log("available")
           const newTicket = new Ticket({
+            ticket_id: new mongoose.Types.ObjectId(),
             user_id: null,
             match_id: newMatch._id,
             category: category.name,
