@@ -42,37 +42,37 @@ redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 
 
 # ==== Ticket Counter MONGO Functions ====
-async def get_next_ticket_serial():
-    serial_counter = await ticket_serial_counter.find_one_and_update(
-        {"_id": "ticket_serial"},
-        {"$inc": {"seq": 1}},
-        return_document=ReturnDocument.AFTER,
-    )
-    return serial_counter["seq"]
+# async def get_next_ticket_serial():
+#     serial_counter = await ticket_serial_counter.find_one_and_update(
+#         {"_id": "ticket_serial"},
+#         {"$inc": {"seq": 1}},
+#         return_document=ReturnDocument.AFTER,
+#     )
+#     return serial_counter["seq"]
 
 
-async def create_ticket_for_user(user_id, match_id, ticket_category):
-    # Get the next serial number
-    serial_no = await get_next_ticket_serial()
+# async def create_ticket_for_user(user_id, match_id, ticket_category):
+#     # Get the next serial number
+#     serial_no = await get_next_ticket_serial()
 
-    # Create a new ticket document
-    new_ticket = {
-        "serial_no": serial_no,
-        "match_id": match_id,
-        "ticket_category": ticket_category,
-        "user_id": user_id,
-        # Add other necessary fields
-    }
+#     # Create a new ticket document
+#     new_ticket = {
+#         "serial_no": serial_no,
+#         "match_id": match_id,
+#         "ticket_category": ticket_category,
+#         "user_id": user_id,
+#         # Add other necessary fields
+#     }
 
-    # Insert the new ticket into the tickets collection
-    await tickets_collection.insert_one(new_ticket)
+#     # Insert the new ticket into the tickets collection
+#     await tickets_collection.insert_one(new_ticket)
 
-    # Update the user's document in the users collection with the new ticket's serial number
-    await mongo_db["users"].update_one(
-        {"_id": user_id}, {"$push": {"tickets": serial_no}}
-    )
+#     # Update the user's document in the users collection with the new ticket's serial number
+#     await mongo_db["users"].update_one(
+#         {"_id": user_id}, {"$push": {"tickets": serial_no}}
+#     )
 
-    return new_ticket
+#     return new_ticket
 
 
 # ==== AMQP Functions ====
@@ -112,13 +112,12 @@ async def get_available_tickets(id):
     async for ticket in available_tickets:
         tickets_list.append(
             {
-                # add serial number as auto increment ID for the ticket - mongoDB
-                "serial_no": ticket["serial_no"],
-                "match_id": ticket["match_id"],
-                "ticket_category": ticket["ticket_category"],
-                "seat_number": ticket["seat_number"],
-                "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+                # "serial_no": ticket["serial_no"],
                 "ticket_id": str(ticket["_id"]),
+                "user_id": ticket["user_id"] if ticket["user_id"] else "None",
+                "match_id": ticket["match_id"],
+                "category": ticket["category"],
+                "seat_number": ticket["seat_number"],
             }
         )
     return jsonify(tickets_list), 200
@@ -128,61 +127,99 @@ async def get_available_tickets(id):
 
 
 @app.route("/reserve", methods=["POST"])
-def reserve_seat():
+async def reserve_seat():
+    # Expects:
+    # "userid", "match_id", "category", "quantity"
     print("Reserve seat called")
-    data = request.json
+    data = await request.json
     user_id = data["user_id"]
     match_id = data["match_id"]
-    ticket_category = data["ticket_category"]
+    category = data["category"]
+    quantity = data["quantity"]
+
+    # Print out debug items, userid, match_id, ticket_category
+    print("User ID: ", user_id)
+    print("Match ID: ", match_id)
+    print("Ticket Category: ", category)
+    print("Quantity of seats: ", quantity)
+
     # Check if user_id already has a seat reserved for this match
-    existing_ticket = tickets_collection.find_one(
+    existing_ticket = await tickets_collection.find_one(
         {"match_id": match_id, "user_id": user_id}
     )
+
     if existing_ticket:
-        return (
-            jsonify({"error": "User already has a seat reserved for this match"}),
-            409,
+        print(f"Existing ticket: {existing_ticket} exists for user {user_id}")
+    else:
+        print(f"No existing ticket found for user {user_id}")
+
+        # Find an available ticket for the given match and category
+        available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
+    if quantity > 1:
+        # Reserve the seat x times, if quantity is x.
+        if len(available_tickets) >= quantity:
+            async for i in range(quantity):
+                await tickets_collection.update_one(
+                    {"_id": available_tickets[i]["_id"]}, {"$set": {"user_id": user_id}}
+                )
+        else:
+            return (
+                jsonify(
+                    {
+                        "error": "Not enough available tickets to reserve the requested quantity"
+                    }
+                ),
+                400,
+            )
+    else:
+        ticket = await tickets_collection.find_one_and_update(
+            {
+                "match_id": match_id,
+                "category": category,
+                "user_id": None,
+            },
+            {"$set": {"user_id": user_id}},
+            return_document=ReturnDocument.AFTER,
         )
 
-    # Find an available ticket for the given match and category
-    ticket = tickets_collection.find_one_and_update(
-        {
-            "match_id": match_id,
-            "ticket_category": ticket_category,
-            "user_id": None,
-        },
-        {"$set": {"user_id": user_id}},
-        return_document=ReturnDocument.AFTER,
-    )
+    # Make use of redis to lock for all tickets.
+    reserved_tickets = []
+    async for (
+        ticket
+    ) in (
+        available_tickets
+    ):  # Assuming available_tickets is the list of tickets to reserve
 
-    if ticket:
-        if redis_client.set(  # ticket_id has to change to serial_no
-            f"ticket_hold:{match_id}:{ticket_category}:{ticket['_id']}",
+        ticket_id = str(ticket["_id"])
+
+        if await redis_client.set(
+            f"ticket_hold:{ticket_id}",  # Changed from '_id' to 'serial_no' as per instruction
             user_id,
             ex=300,
             nx=True,
         ):
-            return (
-                jsonify(
-                    {
-                        "message": "Seat reserved",
-                        "match_id": match_id,
-                        "ticket_category": ticket_category,
-                        "ticket_id": str(ticket["_id"]),
-                    }
-                ),
-                200,
-            )
+            reserved_tickets.append(ticket_id)
         else:
-            tickets_collection.update_one(
-                {"_id": ticket["_id"]}, {"$unset": {"user_id": ""}}
-            )
-            return jsonify({"error": "Seat is currently on hold"}), 409
-    else:
+            # If unable to reserve even one ticket, rollback all reservations made so far
+            async for serial_no in reserved_tickets:
+                await redis_client.delete(f"ticket_hold:{serial_no}")
+                await tickets_collection.update_one(
+                    {"_id": serial_no}, {"$unset": {"user_id": ""}}
+                )
+            return jsonify({"error": "One or more seats are currently on hold"}), 409
+
+    if reserved_tickets:
         return (
-            jsonify({"error": "No available tickets for this match and category"}),
-            400,
+            jsonify(
+                {
+                    "message": "Seats reserved",
+                    "ticket_ids": reserved_tickets,
+                }
+            ),
+            200,
         )
+    else:
+        return jsonify({"error": "No seats could be reserved"}), 409
 
 
 @app.route("/release", methods=["POST"])

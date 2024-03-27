@@ -138,9 +138,28 @@ def init_match_booking(match_id):
     print("Match Details here: ", match_details)
     print("=====================================")
 
-    # Check ticket availability - from seat service # we will use frontend
+    # Check ticket availability - from seat service # we will use frontend, no logic here as
+    # we will always assume that the seats are available as long as the user has gone in here.
+    # Depending on the quantity, the user can reserve 4 seats.
 
-    # if availabe reserve # lock
+    # Reserve the seat
+    reserve_seat_payload = {
+        "user_id": user_id,
+        "match_id": match_id,
+        "category": ticket_category,
+        "quantity": seatUserPurchasing,  # Assuming this is the seat number, though it's named as quantity
+    }
+    reserve_seat_response = requests.post(
+        SEAT_URL + "/reserve", json=reserve_seat_payload
+    )
+
+    print("Debug log for seat reservation:", reserve_seat_response.json())
+    # Check if reservation was successful
+    if reserve_seat_response.status_code != 200:
+        return (
+            jsonify({"error": "Failed to reserve seat"}),
+            reserve_seat_response.status_code,
+        )
 
     # once lock - call billing
     # Send to billing service to create a checkout session

@@ -18,7 +18,8 @@
             </tbody>
         </table>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3">
-            <button class="btn btn-primary" style="background-color: #5356FF;" @click="initMatchBooking()">Proceed to Checkout</button>
+            <button class="btn btn-primary" style="background-color: #5356FF;" @click="initMatchBooking()">Proceed to
+                Checkout</button>
         </div>
     </div>
 </template>
@@ -52,21 +53,20 @@ export default {
     methods: {
         initMatchBooking() {
             let urlmatch = `http://localhost:8000/api/v1/booking/init-match-booking/${this.match_id}`;
-            console.log("URL", urlmatch);    
+            console.log("URL", urlmatch);
             console.log("User ID", this.user_id);
             console.log("Selected Tickets", this.selectedTickets);
             axios.post(urlmatch, {
-                user_id: this.user_id,
+                user_id: this.user_id, //example is such: 110206298640847248839
                 category: this.selectedTickets[0].category,
                 quantity: this.selectedTickets[0].quantity
-
             })
-            .then(response => {
-                console.log("RESPONSE", response.data);
-                console.log(response.data);
-                // redirect the user to response url
-                window.location.href = response.data
-            })
+                .then(response => {
+                    console.log("RESPONSE", response.data);
+                    console.log(response.data);
+                    // redirect the user to response url
+                    window.location.href = response.data
+                })
         },
         handleCheckout(selectedTickets) {
             this.selectedTickets = selectedTickets; // Update selectedTickets with emitted data

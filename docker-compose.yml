@@ -272,13 +272,14 @@ services:
     volumes:
       - mongodb-data:/data/db
 
-  mongo-seed:
-    build: ./infrastructure/mongo/seed/.
-    entrypoint: /app/entrypoint.sh
-    networks:
-      - kong-net
-    depends_on:
-      - mongodb
+  # Uncomment out mongoseed for now - as we'll be using MATCH GraphQL Crud to create matches + underlying tickets
+  # mongo-seed:
+  #   build: ./infrastructure/mongo/seed/.
+  #   entrypoint: /app/entrypoint.sh
+  #   networks:
+  #     - kong-net
+  #   depends_on:
+  #     - mongodb
 
   mysql:
     image: mysql/mysql-server:8.0

@@ -91,12 +91,12 @@ var schema = buildSchema(`
   }
 
   type Category {
-    category: String
+    name: String
     quantity: Int
   }
 
   input CategoryInput {
-    category: String!
+    name: String!
     quantity: Int!
   }
   
@@ -172,7 +172,13 @@ const root = {
 
         for (let i = 0; i < category.quantity; i++) {
           // Assuming TicketModel exists and is the model for the tickets database
+          console.log("GRAPH QL TICKET DETAILS:")
+          console.log(newMatch._id)
+          console.log(category.name)
+          console.log(i + 1)
+          console.log("available")
           const newTicket = new Ticket({
+            ticket_id: new mongoose.Types.ObjectId(),
             user_id: null,
             match_id: newMatch._id,
             category: category.name,
