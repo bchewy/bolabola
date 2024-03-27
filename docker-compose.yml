@@ -300,6 +300,7 @@ services:
     image: redis
     networks:
       - kong-net
+    command: redis-server --requirepass verys3ruec
     ports:
       - 6379:6379
 

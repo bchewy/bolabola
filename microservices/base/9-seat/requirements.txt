@@ -11,3 +11,4 @@ aiomysql
 cryptography
 aiohttp
 Motor
+aioredis

@@ -20,6 +20,7 @@ from threading import Thread
 from flask_cors import CORS
 import asyncio
 import aio_pika
+import aioredis
 
 
 app = Quart(__name__)
@@ -38,7 +39,16 @@ ticket_serial_counter = mongo_db["ticket_serial_counters"]
 
 # Redis setup
 app.config["REDIS_URL"] = "redis://redis:6379/0"
-redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
+# redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
+redis_client = None  # Placeholder for the aioredis pool
+
+
+async def init_redis_pool():
+    global redis_client
+    redis_client = aioredis.from_url(
+        "redis://:verys3ruec@redis:6379/0", encoding="utf-8", decode_responses=True
+    )
+    print("REDIS Listener starting")
 
 
 # ==== Ticket Counter MONGO Functions ====
@@ -130,8 +140,12 @@ async def get_available_tickets(id):
 async def reserve_seat():
     # Expects:
     # "userid", "match_id", "category", "quantity"
-    print("Reserve seat called")
     data = await request.json
+    required_fields = ["user_id", "match_id", "category", "quantity"]
+    if not all(field in data for field in required_fields):
+        return jsonify({"error": "Missing required field(s)."}), 400
+
+    print("Reserve seat called")
     user_id = data["user_id"]
     match_id = data["match_id"]
     category = data["category"]
@@ -144,129 +158,117 @@ async def reserve_seat():
     print("Quantity of seats: ", quantity)
 
     # Check if user_id already has a seat reserved for this match
-    existing_ticket = await tickets_collection.find_one(
-        {"match_id": match_id, "user_id": user_id}
-    )
+    # existing_ticket = await tickets_collection.find_one(
+    #     {"match_id": match_id, "user_id": user_id}
+    # )
 
-    if existing_ticket:
-        print(f"Existing ticket: {existing_ticket} exists for user {user_id}")
+    # Look for available tickets for this user for this match_id
+    available_tickets = await tickets_collection.find(
+        {"match_id": ObjectId(match_id), "user_id": None, "category": category}
+    ).to_list(length=quantity)
+
+    print("Printing out available tickets here: ", available_tickets)
+
+    if available_tickets:
+        print(f"Available ticket: {available_tickets} exists for user {user_id}")
     else:
-        print(f"No existing ticket found for user {user_id}")
+        print("Not available tickets found ")
 
-        # Find an available ticket for the given match and category
-        available_tickets = tickets_collection.find({"match_id": id, "user_id": None})
-    if quantity > 1:
-        # Reserve the seat x times, if quantity is x.
-        if len(available_tickets) >= quantity:
-            async for i in range(quantity):
-                await tickets_collection.update_one(
-                    {"_id": available_tickets[i]["_id"]}, {"$set": {"user_id": user_id}}
-                )
-        else:
-            return (
-                jsonify(
-                    {
-                        "error": "Not enough available tickets to reserve the requested quantity"
-                    }
-                ),
-                400,
-            )
-    else:
-        ticket = await tickets_collection.find_one_and_update(
-            {
-                "match_id": match_id,
-                "category": category,
-                "user_id": None,
-            },
-            {"$set": {"user_id": user_id}},
-            return_document=ReturnDocument.AFTER,
-        )
-
-    # Make use of redis to lock for all tickets.
+    # this list only contains reserved tickets for the user
     reserved_tickets = []
-    async for (
-        ticket
-    ) in (
-        available_tickets
-    ):  # Assuming available_tickets is the list of tickets to reserve
-
+    for ticket in available_tickets:
+        print("Ticket: ", ticket)
         ticket_id = str(ticket["_id"])
+        print(f"Attempting to reserve ticket in Redis for ticket_id: {ticket_id}")
+        if await redis_client.set(f"ticket_hold:{ticket_id}", user_id, ex=300, nx=True):
+            print(f"Successfully reserved ticket in Redis for ticket_id: {ticket_id}")
+            print("Reserved ticket: ", ticket_id)
 
-        if await redis_client.set(
-            f"ticket_hold:{ticket_id}",  # Changed from '_id' to 'serial_no' as per instruction
-            user_id,
-            ex=300,
-            nx=True,
-        ):
             reserved_tickets.append(ticket_id)
         else:
-            # If unable to reserve even one ticket, rollback all reservations made so far
-            async for serial_no in reserved_tickets:
-                await redis_client.delete(f"ticket_hold:{serial_no}")
-                await tickets_collection.update_one(
-                    {"_id": serial_no}, {"$unset": {"user_id": ""}}
-                )
-            return jsonify({"error": "One or more seats are currently on hold"}), 409
+            # Rollback logic here
+            print("Redis command did not work.")
+            break
 
-    if reserved_tickets:
+    if len(reserved_tickets) == quantity:
+        print("Reserved tickets: ", reserved_tickets)
+        print("Quantity: ", quantity)
+        # Confirm the reservation in MongoDB
+        for ticket_id in reserved_tickets:
+            await tickets_collection.update_one(
+                {"_id": ObjectId(ticket_id)}, {"$set": {"user_id": user_id}}
+            )
         return (
-            jsonify(
-                {
-                    "message": "Seats reserved",
-                    "ticket_ids": reserved_tickets,
-                }
-            ),
+            jsonify({"message": "Seats reserved", "ticket_ids": reserved_tickets}),
             200,
         )
     else:
-        return jsonify({"error": "No seats could be reserved"}), 409
+        # Rollback in Redis
+        for ticket_id in reserved_tickets:
+            await redis_client.delete(f"ticket_hold:{ticket_id}")
+        return (
+            jsonify({"error": "Error: One or more seats are currently on hold/issues"}),
+            409,
+        )
 
 
 @app.route("/release", methods=["POST"])
-def release_seat():
-    data = request.json
-    serial_no = data["serial_no"]
-    redis_client.delete(f"ticket_hold:{serial_no}")
-    tickets_collection.update_one({"serial_no": serial_no}, {"$unset": {"user_id": ""}})
-    return jsonify({"message": "Seat released", "serial_no": serial_no}), 200
-
-
-@app.route("/validate_reservation/", methods=["POST"])
-def validate_reservation():
-    data = request.json
-    serial_no = data["serial_no"]
-    ticket = tickets_collection.find_one({"serial_no": serial_no})
-    if ticket and "user_id" in ticket:
-        is_held = redis_client.exists(f"ticket_hold:{serial_no}")
-        if is_held:
-            return (
-                jsonify(
-                    {
-                        "status": "reserved",
-                        "message": "This seat is currently on hold.",
-                        "user_id": ticket["user_id"],
-                    }
-                ),
-                200,
-            )
-        else:
-            return (
-                jsonify(
-                    {
-                        "status": "confirmed",
-                        "message": "This seat has been confirmed by a user.",
-                        "user_id": ticket["user_id"],
-                    }
-                ),
-                200,
-            )
-    elif ticket:
-        return (
-            jsonify({"status": "available", "message": "This seat is available."}),
-            200,
+async def release_seat():
+    data = await request.json
+    ticket_id = data["ticket_id"]
+    # Check if ticket_id is valid
+    ticket_exists = await tickets_collection.count_documents(
+        {"_id": ObjectId(ticket_id)}
+    )
+    if ticket_exists:
+        # Only run redis_client.delete if ticket_hold exists
+        ticket_hold_exists = await redis_client.exists(f"ticket_hold:{ticket_id}")
+        if ticket_hold_exists:
+            await redis_client.delete(f"ticket_hold:{ticket_id}")
+        await tickets_collection.update_one(
+            {"_id": ObjectId(ticket_id)}, {"$unset": {"user_id": ""}}
         )
+        return jsonify({"message": "Seat released", "ticket_id": ticket_id}), 200
     else:
-        return jsonify({"error": "Seat not found"}), 404
+        return jsonify({"error": "Invalid ticket_id"}), 400
+
+
+# @app.route("/validate_reservation/", methods=["POST"])
+# def validate_reservation():
+#     data = request.json
+#     serial_no = data["serial_no"]
+#     ticket = tickets_collection.find_one({"serial_no": serial_no})
+#     if ticket and "user_id" in ticket:
+#         is_held = redis_client.exists(f"ticket_hold:{serial_no}")
+#         if is_held:
+#             return (
+#                 jsonify(
+#                     {
+#                         "status": "reserved",
+#                         "message": "This seat is currently on hold.",
+#                         "user_id": ticket["user_id"],
+#                     }
+#                 ),
+#                 200,
+#             )
+#         else:
+#             return (
+#                 jsonify(
+#                     {
+#                         "status": "confirmed",
+#                         "message": "This seat has been confirmed by a user.",
+#                         "user_id": ticket["user_id"],
+#                     }
+#                 ),
+#                 200,
+#             )
+#     elif ticket:
+#         return (
+#             jsonify({"status": "available", "message": "This seat is available."}),
+#             200,
+#         )
+#     else:
+#         return jsonify({"error": "Seat not found"}), 404
 
 
 # ================================ Seat Main END ============================================================================================================================================================================================================
@@ -281,6 +283,7 @@ def health_check():
 if __name__ == "__main__":
 
     async def main():
+        await init_redis_pool()  # Initialize Redis pool
         await asyncio.gather(
             app.run_task(port=9009, debug=True, host="0.0.0.0"),
             amqp(),  # Run AMQP here
