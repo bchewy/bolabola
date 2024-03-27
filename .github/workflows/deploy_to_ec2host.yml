@@ -1,0 +1,27 @@
+name: Deploy to EC2 Host
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /path/to/your/project
+            git pull origin main
+            docker-compose down
+            docker-compose up -d
