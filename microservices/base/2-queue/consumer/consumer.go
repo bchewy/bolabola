@@ -24,94 +24,98 @@ var ch *amqp.Channel
 var q *amqp.Queue
 
 type Response struct {
-    Token string `json:"token"`
-    SecretKey string `json:"secret_key"`
+	Token     string `json:"token"`
+	SecretKey string `json:"secret_key"`
+}
+
+type MessageBody struct {
+	UserID int `json:"user_id"`
 }
 
 func consumeMessages(manager *connection.ConnectionManager) {
 
-    for {
-        // Limit the rate of consumption of messages (mainly for demo purposes)
-        ticker := time.NewTicker(1 * time.Second)
+	for {
+		// Limit the rate of consumption of messages (mainly for demo purposes)
+		ticker := time.NewTicker(1 * time.Second)
 
-        // msgs, err := ch.Consume(
-        //     q.Name, // queue
-        //     "",     // consumer
-        //     true,   // auto-ack
-        //     false,  // exclusive
-        //     false,  // no-local
-        //     false,  // no-wait
-        //     nil,    // args
-        // )
+		// msgs, err := ch.Consume(
+		//     q.Name, // queue
+		//     "",     // consumer
+		//     true,   // auto-ack
+		//     false,  // exclusive
+		//     false,  // no-local
+		//     false,  // no-wait
+		//     nil,    // args
+		// )
 
-        for range ticker.C {
-            msg, ok, err := ch.Get(q.Name, true)
+		for range ticker.C {
+			msg, ok, err := ch.Get(q.Name, true)
 
-            if err != nil {
-                log.Printf("Error trying to consume messages: %v", err)
-                return
-            }
+			if err != nil {
+				log.Printf("Error trying to consume messages: %v", err)
+				return
+			}
 
-            if !ok {
-                continue
-            }
-        
-            if string(msg.Body) == "DEMO MESSAGE" {
-                continue
-            } else {
-                userIdStr := string(msg.Body)
+			if !ok {
+				continue
+			}
 
-                log.Printf("Received message: %s", userIdStr)
+			if string(msg.Body) == "DEMO MESSAGE" {
+				continue
+			} else {
+				var msgBody MessageBody
 
-                // Parse user ID
-                userId, err := strconv.Atoi(userIdStr)
-                if err != nil {
-                    log.Printf("Error parsing user ID: %v", err)
-                    continue
-                }
+				err := json.Unmarshal(msg.Body, &msgBody)
 
-                // Retrieve the connection
-                conn, ok := manager.GetConnection(userIdStr)
-                if !ok {
-                    log.Printf("No connection found for user ID %d", userId)
-                    continue
-                }
+				if err != nil {
+					log.Printf("Error unmarshaling message body: %v", err)
+					continue
+				}
 
-                log.Println("Connection found for user ID ", userId)
+                userId := strconv.Itoa(msgBody.UserID)
 
-                // Generate a JWT token
-                token, secretKey, err := util.GenerateJWT(userIdStr, 10)
-                if err != nil {
-                    log.Println("Error generating JWT:", err)
-                    continue
-                }
+				// Retrieve the connection
+				conn, ok := manager.GetConnection(userId)
+				if !ok {
+					log.Printf("No connection found for user ID %d", userId)
+					continue
+				}
 
-                log.Println("Token is ", token)
+				log.Println("Connection found for user ID ", userId)
 
-                // Send the token and secret key back to the client
-                response := Response{
-                    Token: token,
-                    SecretKey: secretKey,
-                }
+				// Generate a JWT token
+				token, secretKey, err := util.GenerateJWT(userId, 10)
+				if err != nil {
+					log.Println("Error generating JWT:", err)
+					continue
+				}
 
-                jsonResponse, err := json.Marshal(response)
-                if err != nil {
-                    log.Println("Error marshaling response to JSON:", err)
-                    return
-                }
+				log.Println("Token is ", token)
 
-                // Send a message back to the client
-                if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
-                    log.Println("Error sending message to client:", err)
-                }
+				// Send the token and secret key back to the client
+				response := Response{
+					Token:     token,
+					SecretKey: secretKey,
+				}
 
-                // Close the WebSocket connection
-                if err := conn.Close(); err != nil {
-                    log.Println("Error closing WebSocket connection:", err)
-                }
-            }
-        }
-    }
+				jsonResponse, err := json.Marshal(response)
+				if err != nil {
+					log.Println("Error marshaling response to JSON:", err)
+					return
+				}
+
+				// Send a message back to the client
+				if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
+					log.Println("Error sending message to client:", err)
+				}
+
+				// Close the WebSocket connection
+				if err := conn.Close(); err != nil {
+					log.Println("Error closing WebSocket connection:", err)
+				}
+			}
+		}
+	}
 }
 
 func NewServer(connectionManager *connection.ConnectionManager) *Server {
@@ -123,6 +127,6 @@ func NewServer(connectionManager *connection.ConnectionManager) *Server {
 }
 
 func (s *Server) Start() {
-    ch, q, _ = rabbitmq.SetupRabbitMQ()
-    consumeMessages(manager)
+	ch, q, _ = rabbitmq.SetupRabbitMQ()
+	consumeMessages(manager)
 }

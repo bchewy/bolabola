@@ -30,13 +30,20 @@ type RequestBody struct {
 	Demo   bool `json:"demo"`
 }
 
+type ResponseBody struct {
+	QueuePosition int `json:"queue_position"`
+}
+
 type MessageBody struct {
 	UserID int `json:"user_id"`
-	MessageID int `json:"message_id"`
 }
 
 type Server struct {
 	ConnectionManager *connection.ConnectionManager
+}
+
+type MockConn struct {
+	*websocket.Conn
 }
 
 func WSEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -95,12 +102,12 @@ func WSHandler(conn *websocket.Conn) {
 
 			if (wsMessage.Demo) {
 				// Add 10 messages to the queue for demo purpose
-				rabbitmq.CreateDemoMessages(ch, q)
+				rabbitmq.CreateDemoMessages(ch, q, manager)
 			}
 		}
 
 		// Send message to RabbitMQ
-		messageBody, err := json.Marshal(MessageBody{UserID: userId, MessageID: 1})
+		messageBody, err := json.Marshal(MessageBody{UserID: userId})
 
 		if err != nil {
 			log.Println("Error marshaling JSON:", err)
@@ -122,13 +129,15 @@ func WSHandler(conn *websocket.Conn) {
 				ContentType: "text/plain",
 				Body:        []byte(messageBody),
 			})
-		
-		log.Printf("Sent message: %s", messageBody)
-		
+
 		if err != nil {
 			log.Printf("Error trying to publish message: %v", err)
 			return
 		}
+
+		responseBody, _ := json.Marshal(ResponseBody{QueuePosition: manager.TotalConnections()})
+
+		conn.WriteMessage(websocket.TextMessage, responseBody)
 	}
 }
 
