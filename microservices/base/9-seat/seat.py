@@ -298,10 +298,22 @@ async def get_ticket_count():
     )
 
     print("TICKET VALUES", tickets)
-    ticket_ids = [str(ticket["_id"]) for ticket in tickets]
+    ticket_ids = [
+        str(ticket["_id"]) for ticket in tickets
+    ]  # this contains ALL the tickets,
 
-    if not reserved:
-        # If not reserved, directly count tickets in the database without checking Redis
+    if reserved:
+        # Use a separate list to store tickets that are confirmed to be on hold
+        confirmed_on_hold_tickets = []
+        for t in ticket_ids:
+            if await redis_client.exists(f"ticket_hold:{t}"):
+                print(
+                    "Adding ticket of ticket_id:{} into the confirmed_on_hold_tickets list".format(
+                        t
+                    )
+                )
+                confirmed_on_hold_tickets.append(t)
+        ticket_ids = confirmed_on_hold_tickets  # Replace the original list with the filtered list
         ticket_count = len(ticket_ids)
     else:
         # Count tickets that are reserved (i.e., those with a non-empty "user_id" field)
@@ -314,7 +326,7 @@ async def get_ticket_count():
             {
                 "match_id": match_id,
                 "ticket_count": ticket_count,
-                "ticket_ids": ticket_ids,
+                "ticket_ids": ticket_ids,  # will return all ticket_ids regardless
             }
         ),
         200,
@@ -328,7 +340,7 @@ async def remove_user_from_ticket(ticket_id):
         return jsonify({"error": "Ticket not found"}), 404
     # Update the ticket to remove the user_id
     result = await tickets_collection.update_one(
-        {"_id": ObjectId(ticket_id)}, {"$unset": {"user_id": ""}}
+        {"_id": ObjectId(ticket_id)}, {"$set": {"user_id": None}}
     )
     if result.modified_count:
         return jsonify({"message": "User removed from ticket successfully"}), 200
