@@ -70,7 +70,7 @@ export default {
       this.$router.push({ name: 'Streaming', params: { id: match.id } });
     },
     bookMatch(match){
-      this.$router.push({ name: 'Queue', params: { id: match.id } });
+      this.$router.push({ name: 'seats', params: { id: match.id } });
       // this.$router.push('/views/queue');
     },
     fetchMatches() {

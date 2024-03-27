@@ -65,6 +65,8 @@ export default {
     //   }
     // }, 1000); // Adjust interval as needed
 
+    this.$router.push({ name: 'checkout', params: { id: this.$route.id } });
+
   },
 };
 </script>
