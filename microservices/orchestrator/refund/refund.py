@@ -124,7 +124,7 @@ def publish_to_amqp(data):
     serial_no = data["metadata"]["serial_no"]
 
     # Publish to user to remove ticket from user account
-    user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} # doing this half awake so need to verify thanks
+    user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.user",
@@ -135,7 +135,7 @@ def publish_to_amqp(data):
     )
 
     # Publish to match to update available tickets
-    match_message = {"match_id":match_id, "quantity":quantity} # doing this half awake so need to verify thanks
+    match_message = {"match_id":match_id, "quantity":quantity} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.match",
@@ -146,7 +146,7 @@ def publish_to_amqp(data):
     )
 
     # Publish to seat to remove the seat from tickets  
-    seat_message = {"serial_no": serial_no} # doing this half awake so need to verify thanks
+    seat_message = {"serial_no": serial_no} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.seat",

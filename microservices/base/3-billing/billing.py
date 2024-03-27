@@ -64,11 +64,9 @@ def create_checkout_session():
         "match_name": "Arsenal vs Chelsea",
         "tickets": [
             {"category": "A", "quantity": 2},
-            {"category": "B", "quantity": 3},
-            {"category": "C", "quantity": 4}
         ],
         "user_id": "123",
-        "serial_no": "1"
+        "ticket_ids": ["1", "2", "3", "4", "5"]
     }
     """
     ticket_dict = {"A": 100, "B": 50, "C": 25}
@@ -105,13 +103,15 @@ def create_checkout_session():
                 )
 
             # create a new checkout session
+            ticket_ids = request.json["ticket_ids"]
+            ticket_ids = ",".join(ticket_ids)
             metadata = {
                 "match_id": request.json["match_id"],
                 "user_id": request.json["user_id"],
                 "A": A,
                 "B": B,
                 "C": C,
-                "serial_no": "1", # to get dynamically
+                "ticket_ids": ticket_ids, # to get dynamically
             }
             print("Doing stripe checkout now")
             checkout_session = stripe.checkout.Session.create(
@@ -229,7 +229,7 @@ def refund_payment():
             "category": payload["category"],
             "quantity": payload["quantity"],
             "payment_intent": payload["payment_intent"],
-            "serial_no": payload["serial_no"],
+            "ticket_ids": payload["ticket_ids"],
         }
 
         # call stripe to refund the payment

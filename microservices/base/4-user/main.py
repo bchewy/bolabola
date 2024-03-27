@@ -35,7 +35,7 @@ async def add_ticket(message: aio_pika.IncomingMessage):
         "user_id": "auth0|1234",
         "match_id": "1",
         "category": "A",
-        "serial_no": "100",
+        "ticket_ids": "1,2,3",
         "payment_intent": "pi_1J3s4aJGdJy1w4fF3"
     }
     """
@@ -46,7 +46,7 @@ async def add_ticket(message: aio_pika.IncomingMessage):
         match_id = data["match_id"]
         quantity = data["quantity"]
         category = data["category"]
-        serial_no = data["serial_no"]
+        ticket_ids = data["ticket_ids"]
         payment_intent = data["payment_intent"]
 
 
@@ -58,9 +58,9 @@ async def add_ticket(message: aio_pika.IncomingMessage):
                     print("User not found")
                     return
                 if user.tickets is None or len(user.tickets) == 0:
-                    user.tickets = [{"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent, "quantity": quantity}]
+                    user.tickets = [{"match_id": match_id, "ticket_category": category, "ticket_ids": ticket_ids, "payment_intent": payment_intent, "quantity": quantity}]
                 else:
-                    user.tickets.append({"match_id": match_id, "ticket_category": category, "serial_no": serial_no, "payment_intent": payment_intent, "quantity": quantity})
+                    user.tickets.append({"match_id": match_id, "ticket_category": category, "ticket_ids": ticket_ids, "payment_intent": payment_intent, "quantity": quantity})
                 flag_modified(user, "tickets")
                 await session.commit()
                 print("Ticket added successfully")
@@ -296,23 +296,23 @@ async def view_all_user_tickets(id):
                 return jsonify({"code": 404, "message": "User has no tickets"})
             return jsonify({"code": 200, "data": user.tickets})
 
-# view a specific ticket bought by the user by serial number
-@app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])
-async def view_ticket_by_serial_no(id, serial_no):
-    """
-    This method returns the details of a specific ticket owned by the user.
-    """
-    async with AsyncSessionLocal() as session:
-        async with session.begin():
-            user = await session.get(User, str(id))
-            if user is None:
-                return jsonify({"code": 404, "message": "User not found"})
-            if user.tickets is None:
-                return jsonify({"code": 404, "message": "User has no tickets"})
-            for ticket in user.tickets:
-                if ticket["serial_no"] == str(serial_no):
-                    return jsonify({"code": 200, "data": ticket})
-            return jsonify({"code": 404, "message": "Ticket not found"})
+# # view a specific ticket bought by the user by serial number
+# @app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])
+# async def view_ticket_by_serial_no(id, serial_no):
+#     """
+#     This method returns the details of a specific ticket owned by the user.
+#     """
+#     async with AsyncSessionLocal() as session:
+#         async with session.begin():
+#             user = await session.get(User, str(id))
+#             if user is None:
+#                 return jsonify({"code": 404, "message": "User not found"})
+#             if user.tickets is None:
+#                 return jsonify({"code": 404, "message": "User has no tickets"})
+#             for ticket in user.tickets:
+#                 if ticket["serial_no"] == str(serial_no):
+#                     return jsonify({"code": 200, "data": ticket})
+#             return jsonify({"code": 404, "message": "Ticket not found"})
 
 # view a specific ticket bought by the user by match id
 @app.route("/<int:id>/tickets/match/<string:match_id>", methods=["GET"])
@@ -340,44 +340,44 @@ async def view_ticket_by_match_id(id, match_id):
 ############################################################################################################
 ####################################    ADD A USER TICKET     ##############################################
 ############################################################################################################
-# add a ticket to the user's list of tickets
-@app.route("/<int:id>/tickets", methods=["POST"])
-async def add_ticket_to_user(id):
-    """
-    This method adds a ticket to the user's list of tickets.
-    Sample ticket:
-    {
-        "match_id": "1",
-        "ticket_category": "A",
-        "serial_no": "100"
-    }
-    """
-    data = await request.get_json()
-    if data is None:
-        return jsonify({"code": 400, "message": "Ticket info not provided"})
-    async with AsyncSessionLocal() as session:
-        async with session.begin():
-            user = await session.get(User, str(id))
-            if user is None:
-                return jsonify({"code": 404, "message": "User not found"})
+# # add a ticket to the user's list of tickets
+# @app.route("/<int:id>/tickets", methods=["POST"])
+# async def add_ticket_to_user(id):
+#     """
+#     This method adds a ticket to the user's list of tickets.
+#     Sample ticket:
+#     {
+#         "match_id": "1",
+#         "ticket_category": "A",
+#         "serial_no": "100"
+#     }
+#     """
+#     data = await request.get_json()
+#     if data is None:
+#         return jsonify({"code": 400, "message": "Ticket info not provided"})
+#     async with AsyncSessionLocal() as session:
+#         async with session.begin():
+#             user = await session.get(User, str(id))
+#             if user is None:
+#                 return jsonify({"code": 404, "message": "User not found"})
 
-            # check if the user already has the ticket
-            if user.tickets is not None:
-                for t in user.tickets:
-                    if t["serial_no"] == data["serial_no"]:
-                        return jsonify({"code": 400, "message": "User already has the ticket"})
+#             # check if the user already has the ticket
+#             if user.tickets is not None:
+#                 for t in user.tickets:
+#                     if t["serial_no"] == data["serial_no"]:
+#                         return jsonify({"code": 400, "message": "User already has the ticket"})
 
-            # add the ticket to the user's list of tickets
-            if user.tickets is None:
-                user.tickets = [data]
-            else:
-                user.tickets.append(data)
+#             # add the ticket to the user's list of tickets
+#             if user.tickets is None:
+#                 user.tickets = [data]
+#             else:
+#                 user.tickets.append(data)
 
-            # inform sqlalchemy that the tickets attribute has been modified. This MUST BE DONE because sqlalchemy got problem with JSON
-            flag_modified(user, "tickets")
+#             # inform sqlalchemy that the tickets attribute has been modified. This MUST BE DONE because sqlalchemy got problem with JSON
+#             flag_modified(user, "tickets")
 
-            await session.commit()
-            return jsonify({"code": 201, "message": "Ticket added successfully"})
+#             await session.commit()
+#             return jsonify({"code": 201, "message": "Ticket added successfully"})
 
 ############################################################################################################
 ####################################    END OF ADD A USER TICKET     #######################################

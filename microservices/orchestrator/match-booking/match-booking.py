@@ -58,7 +58,7 @@ def publish_to_amqp(data):
         "user_id": data["metadata"]["user_id"],
         "match_id": data["metadata"]["match_id"],
         "category": category,
-        "serial_no": data["metadata"]["serial_no"],
+        "ticket_ids": data["metadata"]["ticket_ids"],
         "payment_intent": data["payment_intent"],
         "quantity": quantity,
     }
@@ -85,7 +85,7 @@ def publish_to_amqp(data):
     # Publish to seat reservation to remove ticket lock - not done
     seat_message = {
         "user_id": data["metadata"]["user_id"],
-        "serial_no": data["metadata"]["serial_no"],
+        "ticket_ids": data["metadata"]["ticket_ids"],
     }
     channel.basic_publish(
         exchange="booking",
@@ -176,6 +176,7 @@ def init_match_booking(match_id):
         "match_name": match_details["name"],
         "tickets": [{"category": ticket_category, "quantity": seatUserPurchasing}],
         "user_id": user_id,
+        "ticket_ids": reserve_seat_response.json()["ticket_ids"],
     }
     response = requests.post(BILLING_URL + "/checkout", json=payload_to_billing)
 
@@ -208,7 +209,7 @@ def process_webhook():
                 'B': '0'
                 'C': '2',
                 'match_id': '65fe9fb32082209e71e8f34a',
-                'serial_no': '1',
+                'ticket_ids': '1',
             }
     }
     """
