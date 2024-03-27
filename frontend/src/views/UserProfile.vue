@@ -133,7 +133,7 @@ export default {
         body: JSON.stringify(
           {
             ticket_info: this.tickets[index],
-            userId: this.userId
+            user_id: this.userId
           }
         ),
       })

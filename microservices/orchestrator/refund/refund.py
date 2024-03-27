@@ -75,7 +75,7 @@ def refund():
     # 1.2. call the user service to get the payment_intent
     user_id = data_from_frontend["user_id"]
     match_id = data_from_frontend["ticket_info"]["match_id"]
-    category = data_from_frontend["ticket_info"]["category"]
+    category = data_from_frontend["ticket_info"]["ticket_category"]
     quantity = data_from_frontend["ticket_info"]["quantity"]
     serial_no = data_from_frontend["ticket_info"]["serial_no"]
 
@@ -104,6 +104,7 @@ def refund():
     if response.json()["data"]["status"] == "succeeded":
         # 4. if success, send ticket information to RabbitMQ to update db
         publish_to_amqp(response.json()["data"])
+        print("Messages sent to refund queues")
         return jsonify({"message": "Refund initiated successfully"}), 200
     else:
         return jsonify({"message": "Failed to initiate refund"}), 500
