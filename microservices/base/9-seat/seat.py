@@ -265,7 +265,7 @@ async def get_ticket_count():
     data = await request.json
     match_id = data["match_id"]
     # Retrieve all ticket holds related to the match_id from Redis
-    tickets = await tickets_collection.find({"match_id": match_id})
+    tickets = await tickets_collection.find({"match_id": match_id}).to_list(length=None)
     ticket_ids = [str(ticket["_id"]) for ticket in tickets]
     ticket_holds = []
     for ticket_id in ticket_ids:
