@@ -1,15 +1,18 @@
-name: Build
+name: Sonar Scan
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    permissions: read-all
     steps:
       - uses: actions/checkout@v2
         with:
