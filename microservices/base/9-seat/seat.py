@@ -233,42 +233,50 @@ async def release_seat():
         return jsonify({"error": "Invalid ticket_id"}), 400
 
 
-# @app.route("/validate_reservation/", methods=["POST"])
-# def validate_reservation():
-#     data = request.json
-#     serial_no = data["serial_no"]
-#     ticket = tickets_collection.find_one({"serial_no": serial_no})
-#     if ticket and "user_id" in ticket:
-#         is_held = redis_client.exists(f"ticket_hold:{serial_no}")
-#         if is_held:
-#             return (
-#                 jsonify(
-#                     {
-#                         "status": "reserved",
-#                         "message": "This seat is currently on hold.",
-#                         "user_id": ticket["user_id"],
-#                     }
-#                 ),
-#                 200,
-#             )
-#         else:
-#             return (
-#                 jsonify(
-#                     {
-#                         "status": "confirmed",
-#                         "message": "This seat has been confirmed by a user.",
-#                         "user_id": ticket["user_id"],
-#                     }
-#                 ),
-#                 200,
-#             )
-#     elif ticket:
-#         return (
-#             jsonify({"status": "available", "message": "This seat is available."}),
-#             200,
-#         )
-#     else:
-#         return jsonify({"error": "Seat not found"}), 404
+@app.route("/validate_reservation/", methods=["POST"])
+async def validate_reservation():
+    data = await request.json
+    ticket_id = data["ticket_id"]
+    user_id = data["user_id"]
+    ticket = await tickets_collection.find_one({"_id": ObjectId(ticket_id)})
+    if ticket and ticket.get("user_id") == user_id:
+        return (
+            jsonify(
+                {
+                    "status": "confirmed",
+                    "message": "This seat has been confirmed by the user.",
+                    "user_id": user_id,
+                }
+            ),
+            200,
+        )
+    elif ticket:
+        return (
+            jsonify({"status": "available", "message": "This seat is available."}),
+            200,
+        )
+    else:
+        return jsonify({"error": "Seat not found"}), 404
+
+
+# Counts the number of reserved tickets for a particular match id.
+@app.route("/tickets/count", methods=["POST"])
+async def get_ticket_count():
+    data = await request.json
+    match_id = data["match_id"]
+    # Retrieve all ticket holds related to the match_id from Redis
+    tickets = await tickets_collection.find({"match_id": match_id})
+    ticket_ids = [str(ticket["_id"]) for ticket in tickets]
+    ticket_holds = []
+    for ticket_id in ticket_ids:
+        if await redis_client.exists(f"ticket_hold:{ticket_id}"):
+            ticket_holds.append(f"ticket_hold:{ticket_id}")
+    ticket_ids = [ticket_hold.split(":")[1] for ticket_hold in ticket_holds]
+    # Count tickets in the database that match the ticket_ids retrieved from Redis
+    ticket_count = await tickets_collection.count_documents(
+        {"_id": {"$in": [ObjectId(ticket_id) for ticket_id in ticket_ids]}}
+    )
+    return jsonify({"match_id": match_id, "ticket_count": ticket_count}), 200
 
 
 # ================================ Seat Main END ============================================================================================================================================================================================================
