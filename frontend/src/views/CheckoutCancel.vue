@@ -1,7 +1,9 @@
 <template>
     <div class="checkout">
         <h1>Please try again</h1>
-        
+
+        <!-- back home -->
+        <router-link to="/" class="btn btn-primary" style="background-color: #5356FF;">Back to Home</router-link>
     </div>
 </template>
   
