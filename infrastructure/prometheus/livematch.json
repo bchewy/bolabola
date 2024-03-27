@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "livematch:9006"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

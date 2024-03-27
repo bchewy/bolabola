@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "user:9004"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

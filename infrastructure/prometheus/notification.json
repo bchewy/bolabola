@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "notification:9007"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

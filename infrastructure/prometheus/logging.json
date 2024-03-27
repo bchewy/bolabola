@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "logging:9008"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

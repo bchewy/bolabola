@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "videoasset:9005"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

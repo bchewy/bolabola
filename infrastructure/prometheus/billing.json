@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "billing:9003"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

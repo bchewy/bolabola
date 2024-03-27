@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "refund-orchestrator:9103"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

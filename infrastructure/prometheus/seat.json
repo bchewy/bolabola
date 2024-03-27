@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "seat:9009"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]

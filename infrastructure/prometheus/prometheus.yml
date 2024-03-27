@@ -38,3 +38,47 @@ scrape_configs:
   - job_name: "match-streaming-orchestrator"
     static_configs:
       - targets: ["match-streaming-orchestrator:9102"]
+
+  - job_name: "queue"
+    static_configs:
+      - targets: ["queue:9002/ws"] # correct?
+
+  - job_name: "billing"
+    static_configs:
+      - targets: ["billing:9003"]
+
+  - job_name: "seat"
+    static_configs:
+      - targets: ["seat:9009"]
+
+  - job_name: "user"
+    static_configs:
+      - targets: ["user:9004"]
+
+  - job_name: "videoasset"
+    static_configs:
+      - targets: ["videoasset:9005"]
+
+  - job_name: "livematch"
+    static_configs:
+      - targets: ["livematch:9006"]
+
+  - job_name: "notification"
+    static_configs:
+      - targets: ["notification:9007"]
+
+  - job_name: "logging"
+    static_configs:
+      - targets: ["logging:9008"]
+
+  - job_name: "auth"
+    static_configs:
+      - targets: ["auth:9010"]
+
+  - job_name: "match-booking-orchestrator"
+    static_configs:
+      - targets: ["match-booking-orchestrator:9101"]
+
+  - job_name: "refund-orchestrator"
+    static_configs:
+      - targets: ["refund-orchestrator:9103"]

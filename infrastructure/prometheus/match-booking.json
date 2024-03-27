@@ -1,0 +1,11 @@
+[
+    {
+        "targets": [
+            "match-booking-orchestrator:9101"
+        ],
+        "labels": {
+            "env": "dev",
+            "job": "docker"
+        }
+    }
+]
