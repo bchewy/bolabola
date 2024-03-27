@@ -42,7 +42,7 @@ def refund():
             "match_id": "5678",
             "category": "A",
             "quantity": 2,
-            "serial_no": "123456"
+            "ticket_ids": "123,456"
             }
     }
 
@@ -65,19 +65,21 @@ def refund():
             "category": "A",
             "quantity": 2,
             "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY",
-            "serial_no": "123456"
+            "ticket_ids": "123,456"
         }
     }
     """
     # 1.1. receive ticket and user information from frontend
     data_from_frontend = request.json
+    print("Data from frontend")
+    print(data_from_frontend)
 
     # 1.2. call the user service to get the payment_intent
     user_id = data_from_frontend["user_id"]
     match_id = data_from_frontend["ticket_info"]["match_id"]
     category = data_from_frontend["ticket_info"]["ticket_category"]
     quantity = data_from_frontend["ticket_info"]["quantity"]
-    serial_no = data_from_frontend["ticket_info"]["serial_no"]
+    ticket_ids = data_from_frontend["ticket_info"]["ticket_ids"]
 
     user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
 
@@ -92,7 +94,7 @@ def refund():
         "match_id": match_id,
         "category": category,
         "quantity": quantity,
-        "serial_no": serial_no, 
+        "ticket_ids": ticket_ids, 
         "payment_intent": payment_intent
     }
     response = requests.post(billing_service_refund_url, json=data_for_sending)
@@ -121,7 +123,7 @@ def publish_to_amqp(data):
     payment_intent = data["payment_intent"]
     category = data["metadata"]["category"]
     quantity = data["metadata"]["quantity"]
-    serial_no = data["metadata"]["serial_no"]
+    ticket_ids = data["metadata"]["ticket_ids"]
 
     # Publish to user to remove ticket from user account
     user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} 
@@ -146,7 +148,7 @@ def publish_to_amqp(data):
     )
 
     # Publish to seat to remove the seat from tickets  
-    seat_message = {"serial_no": serial_no} 
+    seat_message = {"ticket_ids": ticket_ids} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.seat",

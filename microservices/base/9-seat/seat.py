@@ -86,24 +86,52 @@ async def init_redis_pool():
 
 
 # ==== AMQP Functions ====
-
-
-async def on_message(message: aio_pika.IncomingMessage):
+async def on_refund_message(message: aio_pika.IncomingMessage):
     async with message.process():
         print(f"Received message: {message.body.decode()}")
-        # to insert the message into the database
+        ticket_ids = json.loads(message.body.decode())["ticket_ids"]
+        # change string to list
+        ticket_ids = ticket_ids.split(",")
+        # remove user from ticket and delete ticket from redis
+        for ticket_id in ticket_ids:
+            remove_user_from_ticket(ticket_id)
+            print(f"Ticket id {ticket_id} is removed from redis ")
 
+# this code is adapted from /release endpoint
+async def on_booking_message(message: aio_pika.IncomingMessage):
+    async with message.process():
+        # delete ticket from redis
+        print("Received message: ", message.body.decode())
+        ticket_ids = json.loads(message.body.decode())["ticket_ids"]
+        for ticket_id in ticket_ids:
+            await delete_ticket(ticket_id)
+            print(f"Ticket id {ticket_id} is removed from redis ")
+        print("All tickets are removed from redis")
+
+async def delete_ticket(ticket_id):
+    # Check if ticket_id is valid
+    ticket_exists = await tickets_collection.count_documents(
+        {"_id": ObjectId(ticket_id)}
+    )
+    if ticket_exists:
+        # Only run redis_client.delete if ticket_hold exists
+        ticket_hold_exists = await redis_client.exists(f"ticket_hold:{ticket_id}")
+        if ticket_hold_exists:
+            await redis_client.delete(f"ticket_hold:{ticket_id}")
+        return jsonify({"message": "Seat released", "ticket_id": ticket_id}), 200
+    else:
+        return jsonify({"error": "Invalid ticket_id"}), 400
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
-    exchange = await channel.declare_exchange(
+    exchangeBooking = await channel.declare_exchange(
         "booking", aio_pika.ExchangeType.DIRECT, durable=True
     )
-    queue = await channel.declare_queue("seat", durable=True)
-    await queue.bind(exchange, "booking.seat")
-    await queue.consume(on_message)
+    queueBooking = await channel.declare_queue("seat", durable=True)
+    await queueBooking.bind(exchangeBooking, "booking.seat")
+    await queueBooking.consume(on_booking_message)
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
 
@@ -212,10 +240,8 @@ async def reserve_seat():
         )
 
 
-@app.route("/release", methods=["POST"])
-async def release_seat():
-    data = await request.json
-    ticket_id = data["ticket_id"]
+# @app.route("/release", methods=["POST"])
+async def release_seat(ticket_id):
     # Check if ticket_id is valid
     ticket_exists = await tickets_collection.count_documents(
         {"_id": ObjectId(ticket_id)}
@@ -225,9 +251,6 @@ async def release_seat():
         ticket_hold_exists = await redis_client.exists(f"ticket_hold:{ticket_id}")
         if ticket_hold_exists:
             await redis_client.delete(f"ticket_hold:{ticket_id}")
-        await tickets_collection.update_one(
-            {"_id": ObjectId(ticket_id)}, {"$unset": {"user_id": ""}}
-        )
         return jsonify({"message": "Seat released", "ticket_id": ticket_id}), 200
     else:
         return jsonify({"error": "Invalid ticket_id"}), 400
@@ -298,10 +321,7 @@ async def get_ticket_count():
     )
 
 
-@app.route("/remove_user_from_ticket/", methods=["POST"])
-async def remove_user_from_ticket():
-    data = await request.json
-    ticket_id = data["ticket_id"]
+async def remove_user_from_ticket(ticket_id):
     # Find the ticket by its ID
     ticket = await tickets_collection.find_one({"_id": ObjectId(ticket_id)})
     if not ticket:
