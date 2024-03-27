@@ -1,0 +1,789 @@
+{
+	"info": {
+		"_postman_id": "cd2567ab-6437-4c73-b3de-de52b2e5f617",
+		"name": "ESD - Bola Bola",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3625507"
+	},
+	"item": [
+		{
+			"name": "Seat Reservation",
+			"item": [
+				{
+					"name": "Seat - Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/seat/health/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"health",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Reserve",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"110206298640847248839\",\r\n    \"match_id\": \"66039d1f0215a219fa68fbc6\",\r\n    \"category\": \"C\",\r\n    \"quantity\": 4\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/seat/reserve",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"seat",
+								"reserve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Remove userid",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ticket_id\":\"6603bb948008bfba12527a89\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/seat/remove_user_from_ticket/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"seat",
+								"remove_user_from_ticket",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Ticket Count",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"match_id\": \"6603bb948008bfba12527a83\",\r\n    \"reserved\":true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/seat/tickets/count",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"seat",
+								"tickets",
+								"count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - Release",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"ticket_id\": \"6603bb948008bfba12527a89\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/seat/release",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"seat",
+								"release"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Seat - validate",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serial_no\": \"12345\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/seat/validate_reservation/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"seat",
+								"validate_reservation",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "seat- check availbility",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"serial_no\": \"12345\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/seat/availabletickets/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"seat",
+								"availabletickets",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Match",
+			"item": [
+				{
+					"name": "Matches - Get All",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query { matches_overview { _id name home_team away_team home_score away_score date } }\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/api/v1/match/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"match",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Matches - Get 1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"query getMatchDetails($id: String) { match_details(_id: $id) { _id name description venue home_team away_team home_score away_score date seats } }\",\n    \"variables\": {\n        \"id\": \"65fc1914d279125683be0b37\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/api/v1/match/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"match",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Match - Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Tech Conference 2024\",\r\n  \"description\": \"An annual conference for technology enthusiasts, developers, and industry experts to share insights, trends, and innovations in technology.\",\r\n  \"date\": \"2024-08-15\",\r\n  \"venue\": \"Convention Center, Tech City\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/match/create/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"match",
+								"create",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Match - Update",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Tech Conference 2025\",\r\n  \"description\": \"An annual conference for technology enthusiasts, developers, and industry experts to share insights, trends, and innovations in technology.\",\r\n  \"date\": \"2024-08-15\",\r\n  \"venue\": \"Convention Center, Tech City\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/match/65ec846da7c69e34dda65441",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"match",
+								"65ec846da7c69e34dda65441"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Match - Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Tech Conference 2025\",\r\n  \"description\": \"An annual conference for technology enthusiasts, developers, and industry experts to share insights, trends, and innovations in technology.\",\r\n  \"date\": \"2024-08-15\",\r\n  \"venue\": \"Convention Center, Tech City\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/match/65ec846da7c69e34dda65441",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"match",
+								"65ec846da7c69e34dda65441"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Video Asset",
+			"item": [
+				{
+					"name": "Video - Request from ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/api/v1/videoasset/video?id=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"videoasset",
+								"video"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Video - HealthCheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/videoasset/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"videoasset",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Match Streaming",
+			"item": [
+				{
+					"name": "MS - Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/streaming/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"streaming",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MS - Get Match",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/streaming/retrieve/65fc1914195215285e943aaf",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"streaming",
+								"retrieve",
+								"65fc1914195215285e943aaf"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Match Booking",
+			"item": [
+				{
+					"name": "MB - Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/booking",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"booking"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MB - Init Match Booking Flow",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/booking/init-match-booking/65fc19141952s15285e943aaf?userid=2&cat=B",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"booking",
+								"init-match-booking",
+								"65fc19141952s15285e943aaf"
+							],
+							"query": [
+								{
+									"key": "userid",
+									"value": "2"
+								},
+								{
+									"key": "cat",
+									"value": "B"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "MB - Init Match Booking Flow Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"data\": {\n        \"metadata\": {\n            \"user_id\": \"12345\",\n            \"match_id\": \"67890\",\n            \"serial_no\": \"abcde\",\n            \"A\": \"2\",\n            \"B\": \"0\",\n            \"C\": \"0\"\n        },\n        \"payment_intent\": \"pi_1234567890abcdef\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/api/v1/booking/process-webhook",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"booking",
+								"process-webhook"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Users - Ping",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/user/ping",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"ping"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users - Check  allusers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/user/",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users - Check 1 user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8000/api/v1/user/1",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Users - Create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "    {\r\n        \"name\": \"John Doe\",\r\n        \"email\": \"johndoe@example.com\",\r\n        \"user_id\": \"auth0|1234\"\r\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/api/v1/user/check-create",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"user",
+								"check-create"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Billing",
+			"item": [
+				{
+					"name": "Billing Healthcheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/api/v1/billing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"api",
+								"v1",
+								"billing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Billing Healthcheck Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "    {\n        \"match_id\": \"1234\",\n        \"match_name\": \"Arsenal vs Chelsea\",\n        \"tickets\": [\n            {\"category\": \"A\", \"quantity\": 2},\n            {\"category\": \"B\", \"quantity\": 3},\n            {\"category\": \"C\", \"quantity\": 4}\n        ],\n        \"user_id\": \"123\"\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8000/api/v1/billing/checkout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"billing",
+								"checkout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Check Rabbit",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:15672",
+					"host": [
+						"localhost"
+					],
+					"port": "15672"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Kong",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8002",
+					"host": [
+						"localhost"
+					],
+					"port": "8002"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Mongo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:27017",
+					"host": [
+						"localhost"
+					],
+					"port": "27017"
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Sample - HealthCheck for Seat Microservice",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8000/api/v1/queue/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"v1",
+						"queue",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

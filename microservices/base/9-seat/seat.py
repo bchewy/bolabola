@@ -97,6 +97,7 @@ async def on_refund_message(message: aio_pika.IncomingMessage):
             remove_user_from_ticket(ticket_id)
             print(f"Ticket id {ticket_id} is removed from redis ")
 
+
 # this code is adapted from /release endpoint
 async def on_booking_message(message: aio_pika.IncomingMessage):
     async with message.process():
@@ -107,6 +108,7 @@ async def on_booking_message(message: aio_pika.IncomingMessage):
             await delete_ticket(ticket_id)
             print(f"Ticket id {ticket_id} is removed from redis ")
         print("All tickets are removed from redis")
+
 
 async def delete_ticket(ticket_id):
     # Check if ticket_id is valid
@@ -121,6 +123,7 @@ async def delete_ticket(ticket_id):
         return jsonify({"message": "Seat released", "ticket_id": ticket_id}), 200
     else:
         return jsonify({"error": "Invalid ticket_id"}), 400
+
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
