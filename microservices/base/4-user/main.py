@@ -75,9 +75,9 @@ async def delete_ticket(message: aio_pika.IncomingMessage):
             tickets_deleted = False
             user = await session.get(User, str(id))
             if user is None:
-                return jsonify({"code": 404, "message": "User not found"})
+                return json.dumps({"code": 404, "message": "User not found"})
             if user.tickets is None:
-                return jsonify({"code": 404, "message": "User has no tickets"})
+                return json.dumps({"code": 404, "message": "User has no tickets"})
             for ticket in user.tickets: # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
                 if ticket["payment_intent"] == payment_intent:
                     user.tickets.remove(ticket)
@@ -86,10 +86,9 @@ async def delete_ticket(message: aio_pika.IncomingMessage):
                     tickets_deleted = True 
             if tickets_deleted:
                 print("Ticket deleted successfully")
-                return jsonify({"code": 200, "message": "Ticket(s) deleted successfully"})
+                return json.dumps({"code": 200, "message": "Ticket(s) deleted successfully"})
             print("Ticket not found")
-            return jsonify({"code": 404, "message": "Ticket not found"})
-    print(f"Received message: {message.body.decode()}")
+            return json.dumps({"code": 404, "message": "Ticket not found"})
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
