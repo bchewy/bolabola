@@ -2,10 +2,10 @@
     <div class="seat-selection">
         <h1 class="text-superblue">Select Your Seats</h1>
         <p class="lead text-dark">Click on available seats to select them.</p>
-        <p>
+        <!-- <p>
             User ID: {{ this.$auth0.user.value.sub.split('|')[1] }} <br>
             Match ID: {{ $route.params.id }}
-        </p>
+        </p> -->
         <!-- Always display the seat map -->
         <div class="seat-map">
             <div v-for="(row, rowIndex) in seatMap" :key="rowIndex" class="seat-row">
