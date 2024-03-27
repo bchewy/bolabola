@@ -135,6 +135,14 @@ async def amqp():
     queueBooking = await channel.declare_queue("seat", durable=True)
     await queueBooking.bind(exchangeBooking, "booking.seat")
     await queueBooking.consume(on_booking_message)
+
+    exchangeRefunds = await channel.declare_exchange(
+        "refunds", aio_pika.ExchangeType.DIRECT, durable=True
+    )
+    queueRefunds = await channel.declare_queue("seat", durable=True)
+    await queueRefunds.bind(exchangeRefunds, "refunds.seat")
+    await queueRefunds.consume(on_refund_message)
+    
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
 
