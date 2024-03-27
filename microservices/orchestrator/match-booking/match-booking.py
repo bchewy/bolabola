@@ -156,8 +156,14 @@ def init_match_booking(match_id):
         SEAT_URL + "/reserve", json=reserve_seat_payload
     )
 
-    print("RESULTS OF RESERVATION")
+    print("=============== RESULTS OF RESERVATION ===============")
     print(reserve_seat_response.json())
+    print("======================================================")
+    if reserve_seat_response.status_code != 200:
+        return (
+            jsonify({"error": "Seats have already been reserved"}),
+            reserve_seat_response.status_code,
+        )
 
     # print("Debug log for seat reservation:", reserve_seat_response.json())
     # # Check if reservation was successful

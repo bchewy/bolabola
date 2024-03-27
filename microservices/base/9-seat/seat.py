@@ -187,7 +187,7 @@ async def reserve_seat():
             reserved_tickets.append(ticket_id)
         else:
             # Rollback logic here
-            print("Redis command did not work.")
+            print("ERROR: Redis command did not work.")
             break
 
     if len(reserved_tickets) == quantity:
@@ -263,20 +263,57 @@ async def validate_reservation():
 @app.route("/tickets/count", methods=["POST"])
 async def get_ticket_count():
     data = await request.json
+
+    if "match_id" not in data or "reserved" not in data:
+        return jsonify({"error": "Missing required fields"}), 400
+
     match_id = data["match_id"]
-    # Retrieve all ticket holds related to the match_id from Redis
-    tickets = await tickets_collection.find({"match_id": match_id}).to_list(length=None)
-    ticket_ids = [str(ticket["_id"]) for ticket in tickets]
-    ticket_holds = []
-    for ticket_id in ticket_ids:
-        if await redis_client.exists(f"ticket_hold:{ticket_id}"):
-            ticket_holds.append(f"ticket_hold:{ticket_id}")
-    ticket_ids = [ticket_hold.split(":")[1] for ticket_hold in ticket_holds]
-    # Count tickets in the database that match the ticket_ids retrieved from Redis
-    ticket_count = await tickets_collection.count_documents(
-        {"_id": {"$in": [ObjectId(ticket_id) for ticket_id in ticket_ids]}}
+    reserved = data["reserved"]
+    # Retrieve all tickets related to the match_id from the database
+    tickets = await tickets_collection.find({"match_id": ObjectId(match_id)}).to_list(
+        length=None
     )
-    return jsonify({"match_id": match_id, "ticket_count": ticket_count}), 200
+
+    print("TICKET VALUES", tickets)
+    ticket_ids = [str(ticket["_id"]) for ticket in tickets]
+
+    if not reserved:
+        # If not reserved, directly count tickets in the database without checking Redis
+        ticket_count = len(ticket_ids)
+    else:
+        # Count tickets that are reserved (i.e., those with a non-empty "user_id" field)
+        ticket_count = await tickets_collection.count_documents(
+            {"match_id": ObjectId(match_id), "user_id": {"$ne": None}}
+        )
+
+    return (
+        jsonify(
+            {
+                "match_id": match_id,
+                "ticket_count": ticket_count,
+                "ticket_ids": ticket_ids,
+            }
+        ),
+        200,
+    )
+
+
+@app.route("/remove_user_from_ticket/", methods=["POST"])
+async def remove_user_from_ticket():
+    data = await request.json
+    ticket_id = data["ticket_id"]
+    # Find the ticket by its ID
+    ticket = await tickets_collection.find_one({"_id": ObjectId(ticket_id)})
+    if not ticket:
+        return jsonify({"error": "Ticket not found"}), 404
+    # Update the ticket to remove the user_id
+    result = await tickets_collection.update_one(
+        {"_id": ObjectId(ticket_id)}, {"$unset": {"user_id": ""}}
+    )
+    if result.modified_count:
+        return jsonify({"message": "User removed from ticket successfully"}), 200
+    else:
+        return jsonify({"error": "Failed to remove user from ticket"}), 500
 
 
 # ================================ Seat Main END ============================================================================================================================================================================================================
