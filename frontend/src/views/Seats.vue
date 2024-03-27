@@ -46,13 +46,13 @@ export default {
                     { label: "B", selected: false, available: true, quantity: 0, reserved:0 },
                     { label: "C", selected: false, available: true, quantity: 0, reserved:0 },
                 ],
-                [{ label: "Online", selected: false, available: true }],
+                // [{ label: "Online", selected: false, available: true }],
             ],
             selectedQuantities: {
                 A: 0,
                 B: 0,
                 C: 0,
-                Online: 0,
+                // Online: 0,
             },
             maxQuantity: 4, // Maximum selectable quantity
             selectedSeats: [], // Track the currently selected seats
@@ -66,39 +66,39 @@ export default {
         },
     },
     mounted() {
-        var ticketsurl = "http://localhost:8000/api/v1/booking/availabletickets/" + this.$route.params.id
-        var reservedurl = "http://localhost:8000/api/v1/seat/tickets/count"
-        axios.get(ticketsurl).then((tickets) => {
-            console.log(tickets.data)
-            axios.post(reservedurl,{
+            axios.post("http://localhost:8000/api/v1/seat/tickets/count",{
                 "match_id":this.$route.params.id,
-                "reserved":""
             }).then((response)=>{
-                console.log(response)
                 if(response){
-                    var reserved = response.data.ticket_ids
-                }
-                console.log(reserved)
-                    for (let ticket of tickets.data) { //counts all available tickets
-                        var category = ticket.category;
-                        var ticketId = ticket.ticket_id
-                        for (let row of this.seatMap) {
-                            console.log(row)
-                            for (let seat of row) {
-                                console.log(seat.label, category)
-                                if (seat.label == category) {
-                                    seat.quantity += 1
-                                    if(reserved.includes(ticketId)){
-                                        seat.reserved +=1
-                                    }
-                                    break;
+                    console.log(response.data)
+                    let reserved_tickets = response.data.reserved_tickets
+                    let available_tickets = response.data.available_tickets
+                    for (let row of this.seatMap) {
+                        for (let seat of row) {
+                            if (seat.label == "A") {
+                                seat.quantity = available_tickets.A
+                                seat.reserved = reserved_tickets.A
+                                if (seat.reserved >= seat.quantity) {
+                                    seat.available = false
+                                }
+                            }
+                            if (seat.label == "B") {
+                                seat.quantity = available_tickets.B
+                                seat.reserved = reserved_tickets.B
+                                if (seat.reserved >= seat.quantity) {
+                                    seat.available = false
+                                }
+                            }
+                            if (seat.label == "C") {
+                                seat.quantity = available_tickets.C
+                                seat.reserved = reserved_tickets.C
+                                if (seat.reserved >= seat.quantity) {
+                                    seat.available = false
                                 }
                             }
                         }
                     }
-        })
-
-
+                }
         })
 },
     methods: {

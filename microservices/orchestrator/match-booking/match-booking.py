@@ -82,7 +82,7 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to seat reservation to remove ticket lock - not done
+    # Publish to seat reservation to remove ticket lock - DONE
     seat_message = {
         "user_id": data["metadata"]["user_id"],
         "ticket_ids": data["metadata"]["ticket_ids"],

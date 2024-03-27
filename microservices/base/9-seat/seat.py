@@ -105,7 +105,7 @@ async def on_booking_message(message: aio_pika.IncomingMessage):
         # delete ticket from redis
         print("Received message: ", message.body.decode())
         ticket_ids = json.loads(message.body.decode())["ticket_ids"]
-        for ticket_id in ticket_ids:
+        for ticket_id in ticket_ids.split(","):
             await delete_ticket(ticket_id)
             print(f"Ticket id {ticket_id} is removed from redis ")
         print("All tickets are removed from redis")
@@ -296,50 +296,80 @@ async def validate_reservation():
         return jsonify({"error": "Seat not found"}), 404
 
 
-# Counts the number of reserved tickets for a particular match id.
+# Counts the number of tickets for a particular match id.
 @app.route("/tickets/count", methods=["POST"])
 async def get_ticket_count():
+    """
+    Sample request:
+    {
+        "match_id": "5f9a6e6b3a9b1f2b8e7b4b1b"
+    }
+    """
     data = await request.json
-
-    if "match_id" not in data or "reserved" not in data:
-        return jsonify({"error": "Missing required fields"}), 400
-
     match_id = data["match_id"]
-    reserved = data["reserved"]
+
+    # return the total number of tickets that do not have user_id on them
+    total_tickets_available_A = 0
+    total_tickets_available_B = 0
+    total_tickets_available_C = 0
+    # return the number of tickets that have been reserved
+    total_tickets_reserved_A = 0
+    total_tickets_reserved_B = 0
+    total_tickets_reserved_C = 0
+
     # Retrieve all tickets related to the match_id from the database
     tickets = await tickets_collection.find({"match_id": ObjectId(match_id)}).to_list(
         length=None
     )
 
     print("TICKET VALUES", tickets)
-    ticket_ids = [
-        str(ticket["_id"]) for ticket in tickets
-    ]  # this contains ALL the tickets,
 
-    if reserved:
-        # Use a separate list to store tickets that are confirmed to be on hold
-        confirmed_on_hold_tickets = []
-        for t in ticket_ids:
-            if await redis_client.exists(f"ticket_hold:{t}"):
-                print(
-                    "Adding ticket of ticket_id:{} into the confirmed_on_hold_tickets list".format(
-                        t
-                    )
-                )
-                confirmed_on_hold_tickets.append(t)
-        ticket_ids = confirmed_on_hold_tickets  # Replace the original list with the filtered list
-        ticket_count = len(ticket_ids)
-    else:
-        # Count tickets that are reserved (i.e., those with a non-empty "user_id" field)
-        ticket_count = await tickets_collection.count_documents(
-            {"match_id": ObjectId(match_id), "user_id": {"$ne": None}}
-        )
+    # loop through all the tickets in the database and count the number of tickets that do not have a user_id
+    for ticket in tickets:
+        if ticket["user_id"] is None:
+            if str(ticket['category']) == 'A':
+                total_tickets_available_A += 1
+            elif str(ticket['category']) == 'B':
+                total_tickets_available_B += 1
+            elif str(ticket['category']) == 'C':
+                total_tickets_available_C += 1
+
+    # loop through all the tickets in the redis lock and count the number of tickets that have been reserved
+    # get all tickets in redis
+    tickets_in_redis = await redis_client.keys("ticket_hold:*")
+    print("ALL TICKETS IN REDIS", tickets_in_redis)
+    for redis_ticket in tickets_in_redis:
+        redis_ticket = redis_ticket.split(":")[1]
+        ticket = await tickets_collection.find_one({"_id": ObjectId(redis_ticket)})
+        print("ONE of the TICKET IN REDIS", ticket)
+        if str(ticket["match_id"]) == match_id:
+            if str(ticket['category']) == 'A':
+                total_tickets_reserved_A += 1
+                total_tickets_available_A += 1
+            elif str(ticket['category']) == 'B':
+                total_tickets_reserved_B += 1
+                total_tickets_available_B += 1
+            elif str(ticket['category']) == 'C':
+                total_tickets_reserved_C += 1
+                total_tickets_available_C += 1
+
+    # return the ticket_ids of all the tickets, in case someone needs it
+    ticket_ids = [str(ticket["_id"]) for ticket in tickets]
 
     return (
         jsonify(
             {
                 "match_id": match_id,
-                "ticket_count": ticket_count,
+                "reserved_tickets": {
+                    "A": total_tickets_reserved_A,
+                    "B": total_tickets_reserved_B,
+                    "C": total_tickets_reserved_C,
+                },
+                "available_tickets": {
+                    "A": total_tickets_available_A,
+                    "B": total_tickets_available_B,
+                    "C": total_tickets_available_C,
+                },
                 "ticket_ids": ticket_ids,  # will return all ticket_ids regardless
             }
         ),
