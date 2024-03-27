@@ -206,8 +206,6 @@ app.all(
   })
 );
 
-
-
 // Serve the GraphiQL IDE.
 app.get("/", (_req, res) => {
   res.type("html")
@@ -224,7 +222,7 @@ app.get("/", (_req, res) => {
 // });
 
 // function to handle incoming json
-const handleIncomingMessage = async (data) => {
+const handleBookingMessage = async (data) => {
   const message = JSON.parse(data.content.toString());
   console.log("Received message:", message);
 
@@ -241,21 +239,46 @@ const handleIncomingMessage = async (data) => {
   console.log(`Match ${match._id} now has ${match.seats} seats available`);
 };
 
+const handleRefundMessage = async (data) => {
+  console.log("Received refund message:", data.content.toString());
+  const message = JSON.parse(data.content.toString());
+
+  // add the quantity back to the match
+  const match = await MatchOverviewModel.findById(message.match_id);
+  if (!match) {
+    console.error(`Match with id ${match_id} not found`);
+    return;
+  }
+  console.log(`Match ${match._id} at first had ${match.seats} seats available`);
+  match.seats += parseInt(message.quantity, 10);
+  await match.save();
+  console.log(`Match ${match._id} now has ${match.seats} seats available`);
+}
+
 // function to set up RabbitMQ consumer
 const setupRabbitMQConsumer = async () => {
   try {
     const connection = await amqp.connect('amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/');
     const channel = await connection.createChannel();
-    const exchange = 'match-booking-exchange';
-    await channel.assertExchange(exchange, 'topic', { durable: true });
-    const queue = await channel.assertQueue("match", { durable: true });
+    const exchangeBooking = 'booking';
+    await channel.assertExchange(exchangeBooking, 'direct', { durable: true });
+    const exchangeRefunds = 'refunds';
+    await channel.assertExchange(exchangeRefunds, 'direct', { durable: true });
 
-    await channel.bindQueue(queue.queue, exchange, "match.#");
+    // Booking queue
+    const bookingQueue = await channel.assertQueue("match", { durable: true });
+    await channel.bindQueue(bookingQueue.queue, exchangeBooking, "booking.match");
+    console.log("Waiting for messages in %s. To exit press CTRL+C");
 
-    console.log("Waiting for messages in %s. To exit press CTRL+C", queue.queue);
+    // Refund queue
+    const refundQueue = await channel.assertQueue("refunds", { durable: true });
+    await channel.bindQueue(refundQueue.queue, exchangeRefunds, "refunds.match");
+    console.log("Waiting for messages in %s. To exit press CTRL+C");
 
     // Use the promise-based consume method
-    await channel.consume(queue.queue, handleIncomingMessage, { noAck: false });
+    await channel.consume(bookingQueue.queue, handleBookingMessage, { noAck: false });
+    await channel.consume(refundQueue.queue, handleRefundMessage, { noAck: false });
+
   } catch (error) {
     console.error("Error setting up RabbitMQ consumer:", error);
   }

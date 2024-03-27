@@ -126,8 +126,8 @@ def publish_to_amqp(data):
     # Publish to user to remove ticket from user account
     user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.user",
+        exchange="refunds",
+        routing_key="refunds.user",
         body=json.dumps(user_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -137,8 +137,8 @@ def publish_to_amqp(data):
     # Publish to match to update available tickets
     match_message = {"match_id":match_id, "quantity":quantity} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.match",
+        exchange="refunds",
+        routing_key="refunds.match",
         body=json.dumps(match_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
@@ -148,8 +148,8 @@ def publish_to_amqp(data):
     # Publish to seat to remove the seat from tickets  
     seat_message = {"serial_no": serial_no} # doing this half awake so need to verify thanks
     channel.basic_publish(
-        exchange="refund",
-        routing_key="refund.seat",
+        exchange="refunds",
+        routing_key="refunds.seat",
         body=json.dumps(seat_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
