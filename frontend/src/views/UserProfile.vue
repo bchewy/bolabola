@@ -117,8 +117,9 @@ export default {
       // Calculate if the ticket is more than 24 hours away from the current time
       const matchTime = new Date(ticket.matchTime);
       const currentTime = new Date();
-      const timeDifference = matchTime.getTime() - currentTime.getTime();
+      const timeDifference = Math.abs(matchTime.getTime() - currentTime.getTime());
       const hoursDifference = timeDifference / (1000 * 3600);
+      console.log(hoursDifference)
       return hoursDifference > 24;
     },
 
