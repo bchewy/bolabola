@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 
+# Copy the test data into the container
+COPY mock_stats.json .
+
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 

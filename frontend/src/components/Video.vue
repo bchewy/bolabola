@@ -19,12 +19,12 @@
     @playing="handleEvent($event)"
     @canplay="handleEvent($event)"
     @canplaythrough="handleEvent($event)"
-    @timeupdate="handleEvent(player?.currentTime())"
+    @timeupdate="handleTimestamp(player?.currentTime())"
   />
 </template>
 
 <script lang="ts">
-  import { defineComponent, shallowRef } from "vue";
+  import { defineComponent, shallowRef, onMounted, onBeforeUnmount, reactive } from "vue";
   import { VideoPlayer } from "@videojs-player/vue";
   import videojs from "video.js";
   import "video.js/dist/video-js.css";
@@ -41,8 +41,33 @@
       VideoPlayer,
     },
     props: ["src", "playNow"],
-    setup(props) {
+    data() {
+      return {
+        lastEmittedTime: 0,
+      }
+    },
+    setup(props, { emit }) {
       const player = shallowRef<VideoJsPlayer>();
+      const state = reactive({
+        lastEmittedTime: 0,
+      });
+
+      const handleTimeUpdate = () => {
+        if (player.value) {
+          // emit('video-timestamp', player.value.currentTime());
+        }
+      };
+
+      onMounted(() => {
+        player.value.on('timeupdate', handleTimeUpdate);
+      });
+
+      onBeforeUnmount(() => {
+        if (player.value) {
+          player.value.off('timeupdate', handleTimeUpdate);
+        }
+      });
+
       const handleMounted = (payload: any) => {
         player.value = payload.player;
         if (props.playNow) {
@@ -55,7 +80,16 @@
         console.log("Basic player event", log);
       };
 
-      return { player, handleMounted, handleEvent };
+      const handleTimestamp = (time: number) => {
+        const roundedTime = Math.round(time);
+        if (roundedTime === state.lastEmittedTime) {
+          return;
+        }
+        state.lastEmittedTime = roundedTime;
+        emit("video-timestamp", roundedTime);
+      };
+
+      return { player, handleMounted, handleEvent, handleTimestamp };
     },
   });
 </script>

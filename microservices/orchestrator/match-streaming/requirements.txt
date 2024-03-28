@@ -3,3 +3,4 @@ requests
 pika
 prometheus-flask-exporter==0.23.0
 graphene
+flask_socketio

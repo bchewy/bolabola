@@ -1,13 +1,25 @@
 from flask import Flask
-import pika
+# import pika
 import requests
 from prometheus_flask_exporter import PrometheusMetrics
 import graphene
+import json
+from flask_socketio import SocketIO, emit
+import asyncio
 
 app = Flask(__name__)
+socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins="*")
 
-metrics = PrometheusMetrics(app)
+with open("mock_stats.json") as f:
+    init_data = json.load(f)
+    data = {}
+    for item in init_data:
+        timestamp = item['timestamp_seconds']
+        del item['timestamp_seconds']
+        data[timestamp] = item
+    print(data)
 
+# metrics = PrometheusMetrics(app)
 
 @app.route("/")
 def index():
@@ -87,22 +99,44 @@ def retrieve_match(id):
     except requests.exceptions.RequestException as e:
         return f"Error retrieving match: {str(e)}", 500
 
+@socketio.on('connect')
+def handle_connect():
+    print("Client connected")
+    emit('connected', {'message': 'Connected to match streaming service'})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("Client disconnected")
+    emit('disconnected', {'message': 'Disconnected from match streaming service'})
+    
+@socketio.on('stream')
+def handle_stream_match(timestamp):
+    print(f"Received timestamp from client: {timestamp}")
+    if timestamp in data:
+        print("Data found in timestamp")
+        emit('stream', {'data': {
+            'timestamp': timestamp,
+            'player': data[timestamp]['player'],
+            'team': data[timestamp]['team'],
+            'event': data[timestamp]['event']
+        }})
 
 # AMQP consumer
-def consume_message(channel, method, properties, body):
-    # Process the consumed message here
-    print("Received message:", body.decode())
+# def consume_message(channel, method, properties, body):
+#     # Process the consumed message here
+#     print("Received message:", body.decode())
 
 
-def start_consuming():
-    connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
-    channel = connection.channel()
-    channel.queue_declare(queue="my_queue")
-    channel.basic_consume(
-        queue="my_queue", on_message_callback=consume_message, auto_ack=True
-    )
-    channel.start_consuming()
-
+# def start_consuming():
+#     connection = pika.BlockingConnection(pika.ConnectionParameters("localhost"))
+#     channel = connection.channel()
+#     channel.queue_declare(queue="my_queue")
+#     channel.basic_consume(
+#         queue="my_queue", on_message_callback=consume_message, auto_ack=True
+#     )
+#     channel.start_consuming()
 
 if __name__ == "__main__":
-    app.run(port=9102, debug=True, host="0.0.0.0")
+    # app.run(port=9102, debug=True, host="0.0.0.0")
+    socketio.run(app, port=9102, debug=True, host="0.0.0.0", allow_unsafe_werkzeug=True)
+    
