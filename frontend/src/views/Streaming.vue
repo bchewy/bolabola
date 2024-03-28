@@ -4,7 +4,7 @@
     <div class="streaming-view">
       <div v-if="streamUrl">
         <p> {{ match.name }} </p>
-        <VueBasicPlayer :src="streamUrl" :play="playNow"></VueBasicPlayer>
+        <VueBasicPlayer :src="streamUrl" :play="playNow" @video-timestamp="handleTimeUpdate" />
       <p> {{ match.description }}</p>
       </div>
       <div v-else-if="loading">
@@ -22,6 +22,7 @@
   import axios from "axios";
   import { defineComponent } from "vue";
   import VueBasicPlayer from "../components/Video.vue";
+  import { io } from 'socket.io-client';
 
   const FETCH_MATCHES = `
     query($_id: String!) {
@@ -53,16 +54,39 @@
         matchID: this.$route.params.id,
         streamUrl: "",
         playNow: true,
+        socket: null,
       };
     },
     mounted() {
+
+      this.socket = io('http://localhost:8000', {
+        transports: ['websocket'],
+        path: '/api/v1/streaming/socket.io',
+      });
+
+  
+      // this.socket.on('connect_error', (error) => {
+      //   console.error('Connection error:', error);
+      // });
+
+      this.socket.on('disconnect', () => {
+        console.log('Disconnected from streaming server');
+      })
+
+      this.socket.on('connect', () => {
+        console.log('Connected to streaming server');
+      });
+
+      this.socket.on('stream', (data) => {
+        console.log('Stream data:', data.data);
+      });
 
       axios
         .get("http://localhost:8000/api/v1/videoasset/video?id=1")
         .then((response) => {
           this.streamUrl = response.data;
           // Process the streaming details as needed
-          console.log("Streaming details:", streamingDetails);
+          // console.log("Streaming details:", streamingDetails);
         })
         .catch((error) => {
           console.error("Error retrieving streaming details:", error);
@@ -76,15 +100,18 @@
             }
           })
           .then((response) => {
-           console.log(response.data.data.match_details)
-           this.match = response.data.data.match_details
+            console.log(response.data.data.match_details)
+            this.match = response.data.data.match_details;
           })
           .catch((error) => {
             console.error("Error fetching matches:", error);
           });
     },
     methods: {
-
+      handleTimeUpdate(timestamp) {
+        console.log("Timestamp:", timestamp);
+        this.socket.emit('stream', timestamp);
+      }
     },
   });
 </script>
