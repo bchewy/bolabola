@@ -41,7 +41,7 @@ scrape_configs:
 
   - job_name: "queue"
     static_configs:
-      - targets: ["queue:9002/ws"] # correct?
+      - targets: ["queue:9002"] # correct?
 
   - job_name: "billing"
     static_configs:
