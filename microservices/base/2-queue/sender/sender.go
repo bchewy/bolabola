@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"queue/common/connection"
-	"strconv"
 	"github.com/gorilla/websocket"
 	"golang.org/x/net/context"
 	"queue/common/rabbitmq"
@@ -26,8 +25,9 @@ var ch *amqp.Channel
 var q *amqp.Queue
 
 type RequestBody struct {
-	UserID int `json:"user_id"`
-	Demo   bool `json:"demo"`
+	Action string `json:"action"`
+	UserID string `json:"user_id"`
+	Demo   *bool  `json:"demo"`
 }
 
 type ResponseBody struct {
@@ -35,7 +35,7 @@ type ResponseBody struct {
 }
 
 type MessageBody struct {
-	UserID int `json:"user_id"`
+	UserID string `json:"user_id"`
 }
 
 type Server struct {
@@ -86,7 +86,8 @@ func WSHandler(conn *websocket.Conn) {
 			return
 		}
 
-		var userId int
+		var userId string
+		var action string
 
 		// Parse JSON request
 		if messageType == websocket.TextMessage {
@@ -96,11 +97,15 @@ func WSHandler(conn *websocket.Conn) {
 				return
 			}
 
-			log.Printf("Received JSON: %+v", wsMessage)
+			action = wsMessage.Action
 
-			userId = wsMessage.UserID
+			if action == "disconnect" {
+				userId = wsMessage.UserID
+				manager.RemoveConnection(userId)
+				continue
+			}
 
-			if (wsMessage.Demo) {
+			if wsMessage.Demo != nil && *wsMessage.Demo {
 				// Add 10 messages to the queue for demo purpose
 				rabbitmq.CreateDemoMessages(ch, q, manager)
 			}
@@ -114,7 +119,7 @@ func WSHandler(conn *websocket.Conn) {
 			return
 		}
 
-		manager.AddConnection(strconv.Itoa(userId), conn)
+		manager.AddConnection(userId, conn)
 
 		// Send message to RabbitMQ
 		ctx, cancel := context.WithTimeout(context.Background(), 5)

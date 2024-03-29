@@ -11,8 +11,7 @@ COPY . .
 ENV AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID
 ENV AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY
 
-RUN go build -v -o /usr/local/bin/queue/common/awsutil ./common/awsutil && \
-    go build -v -o /usr/local/bin/queue/common/connection ./common/connection && \
+RUN go build -v -o /usr/local/bin/queue/common/connection ./common/connection && \
     go build -v -o /usr/local/bin/queue/common/util ./common/util && \
     go build -v -o /usr/local/bin/queue/consumer ./consumer && \
     go build -v -o /usr/local/bin/queue/sender ./sender && \

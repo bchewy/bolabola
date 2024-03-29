@@ -1,6 +1,7 @@
 package rabbitmq;
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 	"math/rand"
@@ -9,6 +10,10 @@ import (
 	"strconv"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+type MessageBody struct {
+	UserID string `json:"user_id"`
+}
 
 func connectToRabbitMQ(uri string) (*amqp.Connection, error) {
     for {
@@ -32,29 +37,47 @@ func CreateDemoMessages(ch *amqp.Channel, q *amqp.Queue, manager *connection.Con
 	ctx, cancel := context.WithTimeout(context.Background(), 5)
 	defer cancel()
 
-	for i := 0; i < 10; i++ {
+	rand.Seed(time.Now().UnixNano())
+
+	numMessages := rand.Intn(6) + 10
+
+	counter := 0
+
+	for i := 0; i < numMessages; i++ {
 		connectionId := "DEMO_" + strconv.Itoa(i)
 
 		mockConn := connection.NewMockConn()
 
-		manager.AddConnection(connectionId, mockConn)
+		if !manager.AddConnection(connectionId, mockConn) {
+			log.Printf("Connection already exists: %v", connectionId)
+			continue
+		}
 
-		err := ch.PublishWithContext(ctx,
+		messageBody, err := json.Marshal(MessageBody{UserID: connectionId})
+
+		if err != nil {
+			log.Println("Error marshaling JSON:", err)
+			return
+		}
+
+		err = ch.PublishWithContext(ctx,
 			"",     // exchange
 			q.Name, // routing key
 			false,  // mandatory
 			false,  // immediate
 			amqp.Publishing{
 				ContentType: "text/plain",
-				Body:        []byte(connectionId),
+				Body:        []byte(messageBody),
 			})
 		
 		if err != nil {
 			log.Printf("Error trying to publish message: %v", err)
 		}
+
+		counter++
 	}
 
-	log.Printf("Sent 10 demo messages to RabbitMQ")
+	log.Printf("Number of messages queued: %d", counter)
 }
 
 func SetupRabbitMQ() (*amqp.Channel, *amqp.Queue, error) {

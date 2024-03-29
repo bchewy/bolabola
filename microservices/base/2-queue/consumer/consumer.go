@@ -6,8 +6,8 @@ import (
 	"queue/common/connection"
 	"queue/common/rabbitmq"
 	"queue/common/util"
-	"strconv"
 	"time"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -23,13 +23,20 @@ var ch *amqp.Channel
 
 var q *amqp.Queue
 
+var positionUpdateFrequency = 3
+
 type Response struct {
 	Token     string `json:"token"`
 	SecretKey string `json:"secret_key"`
 }
 
 type MessageBody struct {
-	UserID int `json:"user_id"`
+	UserID string `json:"user_id"`
+}
+
+type PositionUpdateMessage struct {
+	Action string `json:"action"`
+	NumDisconnects int `json:"num_disconnects"`
 }
 
 func consumeMessages(manager *connection.ConnectionManager) {
@@ -48,6 +55,8 @@ func consumeMessages(manager *connection.ConnectionManager) {
 		//     nil,    // args
 		// )
 
+		var disconnectCounter int
+
 		for range ticker.C {
 			msg, ok, err := ch.Get(q.Name, true)
 
@@ -60,59 +69,75 @@ func consumeMessages(manager *connection.ConnectionManager) {
 				continue
 			}
 
-			if string(msg.Body) == "DEMO MESSAGE" {
+			var msgBody MessageBody
+
+			err = json.Unmarshal(msg.Body, &msgBody)
+
+			if err != nil {
+				log.Printf("Error unmarshaling message body: %v", err)
 				continue
-			} else {
-				var msgBody MessageBody
+			}
 
-				err := json.Unmarshal(msg.Body, &msgBody)
+			userId := msgBody.UserID
 
-				if err != nil {
-					log.Printf("Error unmarshaling message body: %v", err)
-					continue
-				}
+			// Retrieve the connection
+			conn, ok := manager.GetConnection(userId)
+			if !ok {
+				log.Printf("No connection found for user ID %s", userId) // Convert userId to string
+				continue
+			}
 
-                userId := strconv.Itoa(msgBody.UserID)
+			log.Println("Connection found for user ID ", userId)
 
-				// Retrieve the connection
-				conn, ok := manager.GetConnection(userId)
-				if !ok {
-					log.Printf("No connection found for user ID %d", userId)
-					continue
-				}
+			manager.RemoveConnection(userId)
 
-				log.Println("Connection found for user ID ", userId)
+			disconnectCounter++
 
-				// Generate a JWT token
-				token, secretKey, err := util.GenerateJWT(userId, 10)
-				if err != nil {
-					log.Println("Error generating JWT:", err)
-					continue
-				}
+			if disconnectCounter == positionUpdateFrequency {
 
-				log.Println("Token is ", token)
+				positionUpdate, _ := json.Marshal(PositionUpdateMessage{
+					Action: "position_update",
+					NumDisconnects: disconnectCounter,
+				})
 
-				// Send the token and secret key back to the client
-				response := Response{
-					Token:     token,
-					SecretKey: secretKey,
-				}
+				manager.BroadcastMessage(positionUpdate)
 
-				jsonResponse, err := json.Marshal(response)
-				if err != nil {
-					log.Println("Error marshaling response to JSON:", err)
-					return
-				}
+				disconnectCounter = 0
+			}
 
-				// Send a message back to the client
-				if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
-					log.Println("Error sending message to client:", err)
-				}
+			if strings.Contains(userId, "DEMO_") {
+				continue
+			}
 
-				// Close the WebSocket connection
-				if err := conn.Close(); err != nil {
-					log.Println("Error closing WebSocket connection:", err)
-				}
+			// Generate a JWT token
+			token, secretKey, err := util.GenerateJWT(userId, 10)
+			if err != nil {
+				log.Println("Error generating JWT:", err)
+				continue
+			}
+
+			log.Println("Token is ", token)
+
+			// Send the token and secret key back to the client
+			response := Response{
+				Token:     token,
+				SecretKey: secretKey,
+			}
+
+			jsonResponse, err := json.Marshal(response)
+			if err != nil {
+				log.Println("Error marshaling response to JSON:", err)
+				return
+			}
+
+			// Send a message back to the client
+			if err := conn.WriteMessage(websocket.TextMessage, jsonResponse); err != nil {
+				log.Println("Error sending message to client:", err)
+			}
+
+			// Close the WebSocket connection
+			if err := conn.Close(); err != nil {
+				log.Println("Error closing WebSocket connection:", err)
 			}
 		}
 	}

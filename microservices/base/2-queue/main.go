@@ -1,11 +1,27 @@
 package main
 
 import (
+	"net/http"
 	"queue/sender"
 	"queue/consumer"
 	"queue/common/connection"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+    "github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+var (
+    opsProcessed = prometheus.NewCounter(prometheus.CounterOpts{
+        Name: "queue_processed_ops_total",
+        Help: "The total number of processed events",
+    })
+)
+
+func init() {
+    // Metrics have to be registered to be exposed:
+    prometheus.MustRegister(opsProcessed)
+}
 
 func main() {
 	manager := connection.NewConnectionManager()
@@ -24,6 +40,9 @@ func main() {
 		defer wg.Done()
 		consumer_server.Start()
 	}()
+
+	http.Handle("/metrics", promhttp.Handler())
+	go http.ListenAndServe(":2112", nil)
 
 	wg.Wait()
 }

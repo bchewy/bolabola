@@ -2,6 +2,7 @@ package connection
 
 import (
     "sync"
+    "log"
 
     "github.com/gorilla/websocket"
 )
@@ -74,4 +75,17 @@ func (manager *ConnectionManager) TotalConnections() int {
     manager.mutex.Lock()
     defer manager.mutex.Unlock()
     return len(manager.connections)
+}
+
+func (manager *ConnectionManager) BroadcastMessage(message []byte) {
+    manager.mutex.Lock()
+    defer manager.mutex.Unlock()
+
+    for _, conn := range manager.connections {
+        // Assuming conn has a Send method to send a message
+        err := conn.WriteMessage(websocket.TextMessage, message)
+        if err != nil {
+            log.Printf("Failed to send message to connection: %v", err)
+        }
+    }
 }
