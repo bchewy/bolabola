@@ -18,7 +18,7 @@
             </tbody>
         </table>
         <div class="position-absolute bottom-0 end-0 mb-3 me-3">
-            <button class="btn btn-primary" style="background-color: #5356FF;" @click="initMatchBooking()">Proceed to
+            <button class="btn btn-primary gradient-button1" @click="initMatchBooking()">Proceed to
                 Checkout</button>
         </div>
     </div>
@@ -106,5 +106,9 @@ export default {
 
 .card p {
     margin-bottom: 0;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>

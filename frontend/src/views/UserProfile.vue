@@ -23,7 +23,7 @@
             <td>{{ ticket.quantity }}</td>
             <td>{{ ticket.ticket_category }}</td>
             <td>
-              <button v-if="isRefundable(ticket)" class="btn btn-primary" style="background-color: #5356FF;"
+              <button v-if="isRefundable(ticket)" class="btn btn-primary gradient-button1"
                 @click="refundTicket(index)">Refund</button>
             </td>
           </tr>
@@ -168,5 +168,9 @@ export default {
 
 .text-superblue {
   color: #5356FF;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>

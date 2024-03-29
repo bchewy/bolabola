@@ -3,7 +3,7 @@
         <h1>Thank you for purchasing!</h1>
         
         <!-- back home -->
-        <router-link to="/" class="btn btn-primary" style="background-color: #5356FF;">Back to Home</router-link>
+        <router-link to="/" class="btn btn-primary gradient-button1">Back to Home</router-link>
     </div>
 </template>
   
@@ -34,6 +34,10 @@
 
 .card p {
     margin-bottom: 0;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>
   
