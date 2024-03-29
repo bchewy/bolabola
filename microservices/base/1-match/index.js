@@ -106,6 +106,7 @@ var schema = buildSchema(`
   }
   type Mutation {
     createMatch(name: String!, home_team: String!, away_team: String!, date: String!, seats: Int!, categories: [CategoryInput]!): MatchOverview
+    deleteMatch(_id: ID!): String
   }
   
 `)
@@ -193,6 +194,25 @@ const root = {
       return newMatch;
     } catch (error) {
       throw error;
+    }
+  },
+  deleteMatch: async ({ _id }) => {
+    try {
+      // Convert string ID to mongoose ObjectId
+      const matchObjectId = new mongoose.Types.ObjectId(_id);
+
+      // First, delete the match
+      const deleteResult = await MatchOverviewModel.findByIdAndRemove(matchObjectId);
+      if (!deleteResult) {
+        return `Match with ID ${_id} not found.`;
+      }
+
+      // Then, delete all tickets associated with this match
+      await Ticket.deleteMany({ match_id: matchObjectId });
+
+      return `Match with ID ${_id} and all associated tickets were successfully deleted.`;
+    } catch (error) {
+      throw new Error(`Error deleting match with ID ${_id} and its tickets: ${error.message}`);
     }
   },
 };

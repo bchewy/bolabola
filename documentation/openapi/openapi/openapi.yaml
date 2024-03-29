@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: BolaBola API
+  termsOfService: https://bolabola.smuaws.com/terms/
+  contact:
+    name: Contact BolaBola Support
+    email: support@bolabola.com
+    url: http://bolabola.smuaws.com/contact
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  x-logo:
+    url: "https://bolabola.com/logo.png"
+    altText: BolaBola logo
+  description: >
+    This is the **BolaBola** API to demonstrate the functionalities of the BolaBola application.
+
+    # Introduction
+
+    The BolaBola API is designed to provide developers with a comprehensive toolset for integrating with our platform, offering access to our core features and functionalities.
+
+    It also demonstrates the use of the OpenAPI specification to document APIs in a clear and concise manner, facilitating easier integration and understanding of the available API endpoints.
+
+    # OpenAPI Specification
+
+    The OpenAPI Specification offers a wide-ranging and language-agnostic interface to RESTful APIs, enabling both humans and computers to discover and understand the capabilities of a service without direct access to the source code or extensive documentation.
+
+    By adhering to the OpenAPI Specification, we aim to provide a seamless and straightforward experience for developers looking to integrate with the BolaBola platform, ensuring that the available services are easily accessible and understandable.
+externalDocs:
+  description: "Learn more about integrating with the BolaBola API."
+  url: "https://bolabola.com/docs/api"
+tags:
+  - name: Matches
+    description: "Operations related to match scheduling and information."
+  - name: Tickets
+    description: "Ticket purchasing and management operations."
+  - name: Users
+    description: "User account management and profile operations."
+  - name: Notifications
+    description: "User notifications and alerts."
+x-tagGroups:
+  - name: Core Features
+    tags:
+      - Matches
+      - Tickets
+  - name: User Management
+    tags:
+      - Users
+      - Notifications
+servers:
+  - url: https://{tenant}.bolabola.smuaws.com/api/v1
+    variables:
+      tenant:
+        default: app
+        description: Your tenant id
+  - url: https://api.bolabola.com/v1
+paths:
+  "/users/{userId}":
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      description: This endpoint retrieves the details of a user by their unique userId.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved user details.
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: This endpoint creates a new user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "201":
+          description: User created successfully.
+    put:
+      tags:
+        - Users
+      summary: Update user details
+      description: This endpoint updates the details of an existing user.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user to update.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: User updated successfully.
+    delete:
+      tags:
+        - Users
+      summary: Delete a user
+      description: This endpoint deletes a user by their unique userId.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user to delete.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: User deleted successfully.
+  "/matches/{matchId}":
+    $ref: "paths/matches_{matchId}.yaml"
+  "/tickets":
+    $ref: "paths/tickets.yaml"
+  "/notifications":
+    $ref: "paths/notifications.yaml"
+components:
+  securitySchemes:
+    bolabola_auth:
+      description: "OAuth2 authentication for accessing BolaBola APIs."
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://bolabola.com/oauth/authorize
+          tokenUrl: https://bolabola.com/oauth/token
+          scopes:
+            "read:matches": View match information
+            "write:tickets": Purchase and manage tickets
+    api_key:
+      description: "API key authentication for accessing BolaBola APIs."
+      type: apiKey
+      in: header
+      name: X-BolaBola-API-Key

@@ -1,0 +1,92 @@
+/user/{userId}:
+  get:
+    tags:
+      - Users
+    summary: Get user details
+    description: This endpoint retrieves the details of a user by their unique userId.
+    operationId: getUserDetails
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: The unique identifier of the user.
+        schema:
+          type: string
+    responses:
+      "200":
+        description: Successfully retrieved user details.
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas/Basic.yaml"
+      "404":
+        description: User not found.
+  post:
+    tags:
+      - Users
+    summary: Create a new user
+    description: This endpoint creates a new user with basic permissions.
+    operationId: createUser
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/Basic.yaml"
+    responses:
+      "201":
+        description: User created successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas/Basic.yaml"
+      "400":
+        description: Invalid input provided.
+  put:
+    tags:
+      - Users
+    summary: Update user details
+    description: This endpoint updates the details of an existing user.
+    operationId: updateUserDetails
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: The unique identifier of the user to update.
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas/Basic.yaml"
+    responses:
+      "200":
+        description: User updated successfully.
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas/Basic.yaml"
+      "404":
+        description: User not found.
+      "400":
+        description: Invalid input provided.
+  delete:
+    tags:
+      - Users
+    summary: Delete a user
+    description: This endpoint deletes a user by their unique userId.
+    operationId: deleteUser
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: The unique identifier of the user to delete.
+        schema:
+          type: string
+    responses:
+      "204":
+        description: User deleted successfully.
+      "404":
+        description: User not found.
