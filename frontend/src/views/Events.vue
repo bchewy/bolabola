@@ -16,7 +16,7 @@
                 <!-- <p class="card-text">Home Score: {{ match.home_score }}</p>
                 <p class="card-text">Away Score: {{ match.away_score }}</p> -->
                 <p class="card-text">Date: {{ match.date }}</p>
-                <p class="card-text">Seats Left: {{ match.seats }}</p>
+                <p class="card-text">Total Seats: {{ match.seats }}</p>
               </div>
               <div class="card-footer">
                 <!-- Match ID: {{ match.id }} -->

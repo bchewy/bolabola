@@ -26,17 +26,37 @@ def consume_notifications():
         f"Attempting to connect to RabbitMQ at {rabbitmq_host} with user '{rabbitmq_user}'"
     )
 
-    # Declare the exchange
-    channel.exchange_declare(exchange="notifications", exchange_type="topic")
-
-    # Declare the queue
-    result = channel.queue_declare("", exclusive=True)
-    queue_name = result.method.queue
+    queue_email = "notification"
+    queue_telegram = "telegram"
 
     # Bind the queue to the exchange
     channel.queue_bind(
-        exchange="notifications", queue=queue_name, routing_key="notification.*"
+        exchange="booking", queue=queue_email, routing_key="booking.notification"
     )
+    channel.queue_bind(
+        exchange="booking", queue=queue_telegram, routing_key="booking.telegram"
+    )
+
+    def send_telegram_message(chat_id, message):
+        # Placeholder for sending a message via Telegram
+        # This should be replaced with actual code to send a message via Telegram API
+        print(f"Sending Telegram message to {chat_id}: {message}")
+
+    def telegram_callback(ch, method, properties, body):
+        # Parse the message
+        message = json.loads(body)
+
+        # Send the telegram message
+        send_telegram_message(message["chat_id"], message["message"])
+
+        # Log the notification
+        print(f"Sent Telegram message to {message['chat_id']}")
+
+    channel.basic_consume(
+        queue=queue_telegram, on_message_callback=telegram_callback, auto_ack=True
+    )
+
+    # SES ========================
 
     # Set up AWS SES client with explicit region
     ses = boto3.client("ses", region_name="ap-southeast-1")  # AWS SES region
@@ -71,9 +91,9 @@ def consume_notifications():
         # Log the notification
         print(f"Sent notification to {message['email']}")
 
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-
-    print("Waiting for notifications. To exit press CTRL+C")
+    channel.basic_consume(
+        queue=queue_email, on_message_callback=callback, auto_ack=True
+    )
     channel.start_consuming()
 
 
