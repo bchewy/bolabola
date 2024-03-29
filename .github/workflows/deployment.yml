@@ -1,22 +1,20 @@
-name: Docker Compose Check
+name: Deploy to EC2 Host
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
-  build:
+  deploy:
+    name: Deploy to EC2
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Docker compose pull
-        run: docker compose pull
-      # - name: Docker Compose Action
-      #   uses: isbang/compose-action@v1.5.1
-      - name: Docker Compose Action
+        uses: actions/checkout@v3
+
+      - name: Docker Compose validate
         uses: alexkainzinger/compose-action@v2 # using node20 see: https://github.com/isbang/compose-action/pull/37
         with:
           compose-file: |
@@ -27,3 +25,16 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
       - name: Validate Docker Compose file
         run: docker compose config
+
+
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/bolabola
+            git pull origin main
+            docker-compose down
+            docker-compose up -d --build
