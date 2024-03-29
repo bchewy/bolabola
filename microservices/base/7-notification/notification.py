@@ -5,6 +5,7 @@ import pika
 
 def consume_notifications():
     # Hardcoded credentials and connection details for RabbitMQ
+    print("Now consuming messages")
     rabbitmq_user = "ticketboost"
     rabbitmq_password = "veryS3ecureP@ssword"
     rabbitmq_host = "rabbitmq"  # Name of the RabbitMQ service in Docker Compose
@@ -33,29 +34,29 @@ def consume_notifications():
     channel.queue_bind(
         exchange="booking", queue=queue_email, routing_key="booking.notification"
     )
-    channel.queue_bind(
-        exchange="booking", queue=queue_telegram, routing_key="booking.telegram"
-    )
+    # channel.queue_bind(
+    #     exchange="booking", queue=queue_telegram, routing_key="booking.telegram"
+    # )
 
-    def send_telegram_message(chat_id, message):
-        # Placeholder for sending a message via Telegram
-        # This should be replaced with actual code to send a message via Telegram API
+    # def send_telegram_message(chat_id, message):
+    #     # Placeholder for sending a message via Telegram
+    #     # This should be replaced with actual code to send a message via Telegram API
 
-        print(f"Sending Telegram message to {chat_id}: {message}")
+    #     print(f"Sending Telegram message to {chat_id}: {message}")
 
-    def telegram_callback(ch, method, properties, body):
-        # Parse the message
-        message = json.loads(body)
+    # def telegram_callback(ch, method, properties, body):
+    #     # Parse the message
+    #     message = json.loads(body)
 
-        # Send the telegram message
-        send_telegram_message(message["chat_id"], message["message"])
+    #     # Send the telegram message
+    #     send_telegram_message(message["chat_id"], message["message"])
 
-        # Log the notification
-        print(f"Sent Telegram message to {message['chat_id']}")
+    #     # Log the notification
+    #     print(f"Sent Telegram message to {message['chat_id']}")
 
-    channel.basic_consume(
-        queue=queue_telegram, on_message_callback=telegram_callback, auto_ack=True
-    )
+    # channel.basic_consume(
+    #     queue=queue_telegram, on_message_callback=telegram_callback, auto_ack=True
+    # )
 
     # SES ========================
 
@@ -85,9 +86,44 @@ def consume_notifications():
     def callback(ch, method, properties, body):
         # Parse the message
         message = json.loads(body)
+        print("Received a message into the notification service: ", message)
+
+        email = message["email"]
+        subject = "Booking Confirmation!"
+        match = message["match"]
+        quantity = message["quantity"]
+        bodyme = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Booking Confirmation</title>
+            <style>
+                body {{font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;}}
+                .container {{max-width: 600px; margin: auto; background: #f7f7f7; padding: 20px; border-radius: 8px;}}
+                h2 {{color: #007BFF;}}
+                p {{line-height: 1.6;}}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>Booking Confirmation</h2>
+                <p>Dear User,</p>
+                <p>Thank you for your booking. You have successfully booked {quantity} tickets for the match:</p>
+                <ul>
+                    <li>Match: {match['name']}</li>
+                    <li>Date: {match['date']}</li>
+                    <li>Venue: {match['venue']}</li>
+                    <li>Teams: {match['home_team']} vs {match['away_team']}</li>
+                </ul>
+                <p>If you have any questions, feel free to contact our support team.</p>
+                <p>Best Regards,<br>Your Booking Team</p>
+            </div>
+        </body>
+        </html>
+        """
 
         # Send the email
-        send_email(message["email"], message["subject"], message["body"])
+        send_email(email, subject, bodyme)
 
         # Log the notification
         print(f"Sent notification to {message['email']}")

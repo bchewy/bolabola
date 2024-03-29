@@ -138,6 +138,7 @@ services:
         "python",
         "/app/notification.py",
       ]
+    restart: always
 
   # logging:
   #   build:
