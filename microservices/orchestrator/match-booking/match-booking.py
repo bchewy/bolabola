@@ -137,6 +137,7 @@ def init_match_booking(match_id):
 
     # RETRIEVE THE USER ID, TICKET CATEGORY AND QUANTITY FROM THE FRONTEND
     user_id = request.json.get("user_id")
+    email = request.json.get("email")
     ticket_category = request.json.get("category")
     seatUserPurchasing = request.json.get("quantity")
 
@@ -193,6 +194,7 @@ def init_match_booking(match_id):
         "tickets": [{"category": ticket_category, "quantity": seatUserPurchasing}],
         "user_id": user_id,
         "ticket_ids": reserve_seat_response.json()["ticket_ids"],
+        "email": email,
     }
     response = requests.post(BILLING_URL + "/checkout", json=payload_to_billing)
 
@@ -221,6 +223,7 @@ def process_webhook():
         'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU',
         'metadata': {
                 'user_id': '106225716514519006902',
+                'email': 'example@example.com',
                 'A': '0',
                 'B': '0'
                 'C': '2',

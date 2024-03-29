@@ -108,6 +108,7 @@ def create_checkout_session():
             metadata = {
                 "match_id": request.json["match_id"],
                 "user_id": request.json["user_id"],
+                "email": request.json["email"],
                 "A": A,
                 "B": B,
                 "C": C,

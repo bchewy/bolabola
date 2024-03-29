@@ -59,7 +59,8 @@ export default {
             axios.post(urlmatch, {
                 user_id: this.user_id, //example is such: 110206298640847248839
                 category: this.selectedTickets[0].category,
-                quantity: this.selectedTickets[0].quantity
+                quantity: this.selectedTickets[0].quantity,
+                email: this.$auth0.user.value.email,
             })
                 .then(response => {
                     console.log("RESPONSE", response.data);
