@@ -60,42 +60,46 @@ paths:
     get:
       tags:
         - Users
-      summary: Get user details
-      description: This endpoint retrieves the details of a user by their unique userId.
+      summary: Retrieve User Information
+      description: Fetches the details of a user given their unique userId. This includes basic user information along with associated tickets.
       parameters:
         - name: userId
           in: path
           required: true
-          description: The unique identifier of the user.
+          description: The unique identifier of the user whose information is being retrieved.
           schema:
             type: string
       responses:
         "200":
-          description: Successfully retrieved user details.
+          description: User information retrieved successfully, including any tickets associated with the user.
+        "404":
+          description: User not found.
     post:
       tags:
         - Users
-      summary: Create a new user
-      description: This endpoint creates a new user.
+      summary: Register a New User
+      description: Registers a new user in the system. This endpoint requires a JSON payload containing the new user's information.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
+              $ref: './components/schemas/newuser.yml#/NewUser'
       responses:
         "201":
-          description: User created successfully.
+          description: New user has been successfully created.
+        "400":
+          description: Invalid input provided.
     put:
       tags:
         - Users
-      summary: Update user details
-      description: This endpoint updates the details of an existing user.
+      summary: Update Existing User Information
+      description: Updates the information of an existing user identified by their userId. Requires a JSON payload with the updated user information.
       parameters:
         - name: userId
           in: path
           required: true
-          description: The unique identifier of the user to update.
+          description: The unique identifier of the user whose information is to be updated.
           schema:
             type: string
       requestBody:
@@ -103,25 +107,31 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              # $ref: "#/components/schemas/UpdateUser"
       responses:
         "200":
-          description: User updated successfully.
+          description: User information updated successfully.
+        "404":
+          description: User not found.
+        "400":
+          description: Invalid input provided.
     delete:
       tags:
         - Users
-      summary: Delete a user
-      description: This endpoint deletes a user by their unique userId.
+      summary: Remove a User
+      description: Deletes a user from the system using their unique userId. This action is irreversible.
       parameters:
         - name: userId
           in: path
           required: true
-          description: The unique identifier of the user to delete.
+          description: The unique identifier of the user to be deleted.
           schema:
             type: string
       responses:
         "204":
           description: User deleted successfully.
+        "404":
+          description: User not found.
   "/matches/{matchId}":
     $ref: "paths/matches_{matchId}.yaml"
   "/tickets":

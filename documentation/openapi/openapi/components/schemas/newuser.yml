@@ -1,0 +1,51 @@
+NewUser:
+  type: object
+  required:
+    - name
+    - email
+    - user_id
+  properties:
+    name:
+      type: string
+      description: The name of the user.
+    email:
+      type: string
+      description: The email address of the user.
+    user_id:
+      type: string
+      description: A unique identifier for the user, provided by Auth0.
+    tickets:
+      type: array
+      items:
+        type: object
+        properties:
+          match_id:
+            type: string
+            description: The unique identifier of the match for which the ticket is issued.
+          ticket_category:
+            type: string
+            description: The category of the ticket.
+          ticket_ids:
+            type: string
+            description: A comma-separated list of ticket IDs.
+          payment_intent:
+            type: string
+            description: The payment intent associated with the ticket purchase.
+          quantity:
+            type: integer
+            description: The quantity of tickets purchased.
+      description: An array of tickets associated with the user.
+    premium:
+      type: string
+      description: Indicates whether the user has premium access. "Y" for yes, "N" for no.
+  example:
+    name: John Doe
+    email: johndoe@example.com
+    user_id: auth0|1234
+    tickets:
+      - match_id: "1"
+        ticket_category: "A"
+        ticket_ids: "1,2,3"
+        payment_intent: "pi_1J3s4aJGdJy1w4fF3"
+        quantity: 3
+    premium: "N"
