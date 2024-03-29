@@ -1,4 +1,4 @@
-name: Deploy to EC2 Host
+name: Deploy to EC2
 
 on:
   workflow_dispatch:
@@ -36,5 +36,5 @@ jobs:
           script: |
             cd /home/ubuntu/bolabola
             git pull origin main
-            docker-compose down
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
