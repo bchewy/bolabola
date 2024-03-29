@@ -40,6 +40,7 @@ def consume_notifications():
     def send_telegram_message(chat_id, message):
         # Placeholder for sending a message via Telegram
         # This should be replaced with actual code to send a message via Telegram API
+
         print(f"Sending Telegram message to {chat_id}: {message}")
 
     def telegram_callback(ch, method, properties, body):

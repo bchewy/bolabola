@@ -72,6 +72,12 @@
             "vhost": "/",
             "durable": true,
             "auto_delete": false
+        },
+        {
+            "name": "telegram",
+            "vhost": "/",
+            "durable": true,
+            "auto_delete": false
         }
     ],
     "bindings": [

@@ -69,7 +69,7 @@ export default {
     mounted() {
         // Inital to get seats
         axios.post("http://localhost:8000/api/v1/seat/tickets/count", {
-            "match_id": this.$route.params.id,
+            "match_id": this.$route.params.id, // note that there is a bug here, if we visit the seats page like this. 
         }).then((response) => {
             if (response) {
                 console.log(response.data)

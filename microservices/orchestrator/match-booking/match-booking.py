@@ -97,10 +97,20 @@ def publish_to_amqp(data):
     )
 
     # Publish to notification - not done
+    notification_message = {
+        "user_id": data["metadata"]["user_id"],
+        "email": data["metadata"]["email"],  # Assuming email is part of the metadata
+        "match_id": data["metadata"]["match_id"],
+        "quantity": quantity,
+        "message": "Thank you for your booking. Your tickets for the match are confirmed.",
+    }
     channel.basic_publish(
         exchange="booking",
         routing_key="booking.notification",
-        body="SEND WHAT AH",
+        body=json.dumps(notification_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
     )
 
     connection.close()

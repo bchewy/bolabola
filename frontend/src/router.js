@@ -7,7 +7,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-			component: () => import('./views/Home.vue')
+      component: () => import('./views/Home.vue')
 
     },
     {
@@ -15,13 +15,23 @@ const router = createRouter({
       name: 'streaming',
       component: () => import('./views/Streaming.vue'),
       beforeEnter: authGuard
-    }, 
+    },
     {
       path: '/events',
       name: 'events',
       component: () => import('./views/Events.vue'),
       beforeEnter: authGuard
-    }, 
+    },
+
+
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('./views/Admin.vue'),
+      beforeEnter: authGuard
+    },
+
+
     // {
     //   path: '/views/eventItem',
     //   name: 'eventItem',
@@ -38,15 +48,15 @@ const router = createRouter({
     {
       path: '/views/seats/:id',
       name: 'seats',
-      component: () => import('./views/Seats.vue'), 
+      component: () => import('./views/Seats.vue'),
       props: true,
-    }, 
+    },
     {
       path: '/views/checkout/:id',
       name: 'checkout',
-      component: () => import('./views/Checkout.vue'), 
+      component: () => import('./views/Checkout.vue'),
       props: true,
-    }, 
+    },
     {
       path: '/views/checkoutSuccess',
       name: 'checkoutSuccess',
@@ -61,7 +71,7 @@ const router = createRouter({
       path: '/profile',
       name: 'userprofile',
       component: () => import('./views/UserProfile.vue')
-    }, 
+    },
     {
       path: '/views/refund',
       name: 'refund',
@@ -76,7 +86,7 @@ const router = createRouter({
       props: true,
     },
 
-    
+
 
 
   ]
