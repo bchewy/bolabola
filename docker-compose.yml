@@ -13,15 +13,29 @@ networks:
     driver: bridge
     name: kong-net
 services:
-  # Frontend - removing it here.. We will deploy this seperately.
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   networks:
-  #     - kong-net
-  #   ports:
-  #     - 80:80
+  ##### FRONTEND #####
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certbot/conf:/etc/letsencrypt
+    depends_on:
+      - frontend
+    networks:
+      - kong-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - kong-net
+
+  ##### BACKEND #####
 
   match:
     build:
