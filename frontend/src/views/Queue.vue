@@ -1,72 +1,108 @@
 <template>
   <div class="queue">
-    <h1 class="text-superblue">You are now 11th in the queue...</h1>
-    <p class="lead text-dark">You are important to us and your place in the Queue is currently being processed. Please do not reload this page.
+    <h1 class="text-superblue">Your queue number is : {{ queue_position }}</h1>
+    <p class="lead text-dark"><b>Please do not reload this page.</b><br>You are important to us and your place in the Queue is currently being processed.
       <br>Thank you for your interest for this match and we seek your patience in this process.</p>
     <img src="/src/assets/background1.png" style="width:50%;" alt="Queue Image" class="queue-image">
-    <!-- <div class="progress-container">
+    <div class="progress-container">
       <div class="progress-bar" :style="{ width: progress + '%' }"></div>
-    </div> -->
-    <!-- <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p> -->
+    </div>
+    <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p>
     <p>Match ID: {{ matchID }}</p>
+    <p v-show="token"><button class="btn btn-primary" @click="chooseSeats">Click here to choose your seats</button></p>
   </div>
 </template>
 
 <script>
-const socket = new WebSocket('ws://localhost:8000/api/v1/queue')
-
-socket.onopen = function() {
-  console.log('Connected to the WebSocket server');
-  var message = {
-    user_id: 3,
-    demo: true
-  }
-  socket.send(JSON.stringify(message));
-};
-
-socket.onmessage = function(event) {
-  console.log('Received message:', event.data);
-
-  try {
-    var data = JSON.parse(event.data);
-
-    console.log(data);
-
-    if ('token' in data) {
-      console.log('Token:', data.token);
-      this.$router.push({ name: 'checkout', params: { id: 3 } });
-    }
-
-
-  } catch (e) {
-    return;
-  }
-};
+import { ref, watch } from 'vue';
+import { useAuth0 } from '@auth0/auth0-vue';
 
 export default {
   name: 'Queue',
-  data() {
+  setup() {
+    const initial_position = ref(null);
+    const queue_position = ref(null);
+    const token = ref(null);
+    const progress = ref(0);
+    const { user } = useAuth0();
+    const user_id = user.value.sub.split('|')[1];
+
+    const socket = new WebSocket('ws://localhost:8000/api/v1/queue')
+
+    socket.onopen = function() {
+      console.log('Connected to the WebSocket server');
+      var message = {
+        action: "connect",
+        user_id: user_id,
+        demo: true
+      }
+      socket.send(JSON.stringify(message));
+    };
+
+    socket.onclose = function() {
+      console.log('Disconnected from the WebSocket server');
+      var message = {
+        action: "disconnect",
+        user_id: user_id
+      }
+      socket.send(JSON.stringify(message));
+    };
+
+    socket.onmessage = function(event) {
+      try {
+        var data = JSON.parse(event.data);
+
+        console.log('Received JSON data:', data);
+
+        if ('queue_position' in data) {
+          queue_position.value = data.queue_position;
+          initial_position.value = data.queue_position;
+        }
+
+        if ('num_disconnects' in data) {
+          queue_position.value -= data.num_disconnects;
+        }
+
+        if ('token' in data) {
+          console.log('Token:', data.token);
+          progress.value = 100;
+          token.value = data.token;
+        }
+
+      } catch (e) {
+        return;
+      }
+    };
+
+    watch(queue_position, (newValue, oldValue) => {
+      if (initial_position.value != null) {
+        let newProgress = (initial_position.value - newValue) / initial_position.value * 100;
+        if (newProgress < 100) {
+          progress.value = newProgress;
+        } else {
+          progress.value = 100;
+        }
+      }
+    });
+
     return {
-      progress: 20, // Initial progress percentage
-      matchID: null,
-      token: null
+      token,
+      queue_position,
+      progress
     };
   },
+  data() {
+    return {
+      matchID: null
+    };
+  },
+  methods: {
+    chooseSeats() {
+      this.$router.push({ name: 'seats', params: { id: this.matchID } });
+    }
+  },
   mounted() {
-    this.matchID = this.$route.params.id; 
-    // Simulate progress increase over time
-    // const interval = setInterval(() => {
-    //   if (this.progress < 100) {
-    //     this.progress += 10; // Increase progress by 10% (adjust as needed)
-    //   } else {
-    //     clearInterval(interval); // Stop the interval when progress reaches 100%
-    //     // Navigate to the next page when progress reaches 100%
-    //     this.$router.push({ name: 'seats', params: { id: this.matchID} });
-    //   }
-    // }, 1000); // Adjust interval as needed
-
-    this.$router.push({ name: 'checkout', params: { id: this.$route.id } });
-
+    this.matchID = this.$route.params.id;
   },
 };
 </script>
