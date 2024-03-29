@@ -4,7 +4,7 @@
       <p>Your refund has been processed.</p>
 
       <div class="center mt-5">
-        <router-link to="/" class="btn btn-primary" style="background-color: #5356FF;">Back to Home</router-link>
+        <router-link to="/" class="btn btn-primary gradient-button1">Back to Home</router-link>
       </div>
 
       <!-- <table class="table table-striped">
@@ -69,5 +69,9 @@ export default {
 
 .card p {
     margin-bottom: 0;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>

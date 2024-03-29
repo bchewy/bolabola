@@ -6,7 +6,7 @@
     <section>
       <NavBar />
       <div class="text-light text-center d-flex align-items-center justify-content-center"
-        style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh;">
+        style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh; opacity: 0.85">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
             <div class="text-center">
@@ -16,7 +16,7 @@
                 exclusive deals
                 and enjoy a seamless ticketing experience.
               </p>
-              <button class="btn btn-primary" style="background-color: #5356FF;" @click="$router.push('/events')">Get
+              <button class="btn btn-primary gradient-button1" @click="$router.push('/events')">Get
                 Started</button>
             </div>
           </div>
@@ -160,5 +160,9 @@ export default {
 
 .light-green {
   background-color: #d1f4d1
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>

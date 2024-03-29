@@ -26,13 +26,13 @@
 
         <!-- Display the proceed button if conditions are met -->
         <div v-if="proceedEnabled" class="d-flex justify-content-center mb-3 mt-2">
-            <button class="btn btn-primary" style="background-color: #5356FF;" @click="proceedToCheckout">
+            <button class="btn btn-primary gradient-button1" @click="proceedToCheckout">
                 Proceed
             </button>
         </div>
     </div>
     <!-- {{ seatMap }} -->
-    {{ seatData }}
+    <!-- {{ seatData }} -->
 </template>
 
 <script>
@@ -204,5 +204,9 @@ export default {
 
 .quantity-selector {
     margin-top: 10px;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>
