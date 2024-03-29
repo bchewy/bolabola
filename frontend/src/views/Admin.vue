@@ -1,66 +1,100 @@
 <template>
     <NavBar />
-    <div class="admin-page">
+    <div class="admin-page container-fluid">
         <h1>Admin Dashboard</h1>
 
         <div class="admin-section">
+
             <h2>Current Matches</h2>
-            <li v-for="match in matches" :key="match.id">
-                {{ match.name }} - {{ match.date }}
-            </li>
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Match Name</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="match in matches" :key="match.id">
+                        <td>{{ match.name }}</td>
+                        <td>{{ match.date }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" @click="editMatch(match.id)">Edit</button>
+                            <button class="btn btn-danger btn-sm" @click="deleteMatch(match.id)">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-
-        <div class="admin-section">
-            <h2>Add Match</h2>
+        <!-- Add Match -->
+        <div class="admin-section mt-5">
+            <h2 class="text-center mb-4">Add a New Match</h2>
             <form @submit.prevent="addMatch" class="needs-validation" novalidate>
-                <div class="form-group">
-                    <label for="match-name">Match Name</label>
-                    <input id="match-name" type="text" class="form-control" v-model="newMatch.name"
-                        placeholder="Match Name" required>
-                    <div class="invalid-feedback">
-                        Please provide a match name.
+                <div class="form-row">
+                    <div class="col-md-6 mb-3">
+                        <label for="match-name">Match Name</label>
+                        <input id="match-name" type="text" class="form-control" v-model="newMatch.name"
+                            placeholder="Enter Match Name" required>
+                        <div class="invalid-feedback">
+                            Match name is required.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="match-date">Match Date</label>
+                        <input id="match-date" type="datetime-local" class="form-control" v-model="newMatch.date"
+                            placeholder="Select Match Date" required>
+                        <div class="invalid-feedback">
+                            Please select a match date.
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="home-team">Home Team</label>
-                    <input id="home-team" type="text" class="form-control" v-model="newMatch.home_team"
-                        placeholder="Home Team" required>
-                    <div class="invalid-feedback">
-                        Please provide a home team.
+                <div class="form-row">
+                    <div class="col-md-6 mb-3">
+                        <label for="home-team">Home Team</label>
+                        <input id="home-team" type="text" class="form-control" v-model="newMatch.home_team"
+                            placeholder="Home Team Name" required>
+                        <div class="invalid-feedback">
+                            Home team is required.
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="away-team">Away Team</label>
+                        <input id="away-team" type="text" class="form-control" v-model="newMatch.away_team"
+                            placeholder="Away Team Name" required>
+                        <div class="invalid-feedback">
+                            Away team is required.
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="away-team">Away Team</label>
-                    <input id="away-team" type="text" class="form-control" v-model="newMatch.away_team"
-                        placeholder="Away Team" required>
-                    <div class="invalid-feedback">
-                        Please provide an away team.
+                <h4 class="mt-4 mb-3">Ticket Categories</h4>
+                <div v-for="(category, index) in newMatch.categories" :key="index" class="form-row align-items-end">
+                    <div class="col-md-4 mb-3">
+                        <label :for="'category-' + index">Category Name</label>
+                        <input :id="'category-' + index" type="text" class="form-control" v-model="category.name"
+                            placeholder="Category Name" required>
+                        <div class="invalid-feedback">
+                            Category name is required.
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label :for="'quantity-' + index">Seats Quantity</label>
+                        <input :id="'quantity-' + index" type="number" class="form-control" v-model="category.quantity"
+                            placeholder="Number of Seats" required>
+                        <div class="invalid-feedback">
+                            Please specify the number of seats.
+                        </div>
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="match-date">Match Date</label>
-                    <input id="match-date" type="datetime-local" class="form-control" v-model="newMatch.date"
-                        placeholder="Match Date" required>
-                    <div class="invalid-feedback">
-                        Please provide a match date.
-                    </div>
-                </div>
-
-                <div v-for="(category, index) in newMatch.categories" :key="index" class="form-group">
-                    <label :for="'category-' + index">Category {{ category.name }}</label>
-                    <input :id="'category-' + index" type="number" class="form-control" v-model="category.quantity"
-                        :placeholder="'Category ' + (index + 1) + ' Seats'" required>
-                    <div class="invalid-feedback">
-                        Please provide the number of seats for category {{ category.name }}.
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary">Add Match</button>
+                <button type="submit" class="btn btn-success btn-lg btn-block">Add Match</button>
             </form>
         </div>
+
+        <!-- Livestreams -->
         <div class="admin-section">
             <h2>Live Stream</h2>
             <form @submit.prevent="addLiveStream">
@@ -214,6 +248,7 @@ export default {
                     console.error('Error fetching matches:', error);
                 });
         },
+        
     },
     mounted() {
         // Placeholder for API call to fetch matches
