@@ -282,8 +282,8 @@ const setupRabbitMQConsumer = async () => {
     console.log("Waiting for messages in %s. To exit press CTRL+C");
 
     // Use the promise-based consume method
-    await channel.consume(bookingQueue.queue, handleBookingMessage, { noAck: false });
-    await channel.consume(refundQueue.queue, handleRefundMessage, { noAck: false });
+    await channel.consume(bookingQueue.queue, handleBookingMessage, { noAck: true });
+    await channel.consume(refundQueue.queue, handleRefundMessage, { noAck: true });
 
   } catch (error) {
     console.error("Error setting up RabbitMQ consumer:", error);
