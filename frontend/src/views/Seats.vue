@@ -20,7 +20,7 @@
         <div v-for="seat in selectedSeats" :key="seat.label" class="quantity-selector">
             <label>Select Quantity for {{ seat.label }}:</label>
             <select v-model="selectedQuantities[seat.label]">
-                <option v-for="n in maxQuantity" :value="n">{{ n }}</option>
+                <option v-for="n in seat.quantity" :value="n">{{ n }}</option>
             </select>
         </div>
         <!-- Display the proceed button if conditions are met -->
@@ -42,9 +42,9 @@ export default {
         return {
             seatMap: [
                 [
-                    { label: "A", selected: false, available: true, quantity: 0, reserved:0 },
-                    { label: "B", selected: false, available: true, quantity: 0, reserved:0 },
-                    { label: "C", selected: false, available: true, quantity: 0, reserved:0 },
+                    { label: "A", selected: false, available: true, quantity: 0, reserved: 0 },
+                    { label: "B", selected: false, available: true, quantity: 0, reserved: 0 },
+                    { label: "C", selected: false, available: true, quantity: 0, reserved: 0 },
                 ],
                 // [{ label: "Online", selected: false, available: true }],
             ],
@@ -54,7 +54,7 @@ export default {
                 C: 0,
                 // Online: 0,
             },
-            maxQuantity: 4, // Maximum selectable quantity
+            maxQuantity: 4,
             selectedSeats: [], // Track the currently selected seats
         };
     },
@@ -66,41 +66,42 @@ export default {
         },
     },
     mounted() {
-            axios.post("http://localhost:8000/api/v1/seat/tickets/count",{
-                "match_id":this.$route.params.id,
-            }).then((response)=>{
-                if(response){
-                    console.log(response.data)
-                    let reserved_tickets = response.data.reserved_tickets
-                    let available_tickets = response.data.available_tickets
-                    for (let row of this.seatMap) {
-                        for (let seat of row) {
-                            if (seat.label == "A") {
-                                seat.quantity = available_tickets.A
-                                seat.reserved = reserved_tickets.A
-                                if (seat.reserved >= seat.quantity) {
-                                    seat.available = false
-                                }
+        axios.post("http://localhost:8000/api/v1/seat/tickets/count", {
+            "match_id": this.$route.params.id,
+        }).then((response) => {
+            if (response) {
+                console.log(response.data)
+                let reserved_tickets = response.data.reserved_tickets
+                let available_tickets = response.data.available_tickets
+                for (let row of this.seatMap) {
+                    for (let seat of row) {
+                        if (seat.label == "A") {
+                            seat.quantity = available_tickets.A
+                            seat.reserved = reserved_tickets.A
+                            if (seat.reserved >= seat.quantity) {
+                                seat.available = false
                             }
-                            if (seat.label == "B") {
-                                seat.quantity = available_tickets.B
-                                seat.reserved = reserved_tickets.B
-                                if (seat.reserved >= seat.quantity) {
-                                    seat.available = false
-                                }
+                        }
+                        if (seat.label == "B") {
+                            seat.quantity = available_tickets.B
+                            seat.reserved = reserved_tickets.B
+                            if (seat.reserved >= seat.quantity) {
+                                seat.available = false
                             }
-                            if (seat.label == "C") {
-                                seat.quantity = available_tickets.C
-                                seat.reserved = reserved_tickets.C
-                                if (seat.reserved >= seat.quantity) {
-                                    seat.available = false
-                                }
+                        }
+                        if (seat.label == "C") {
+                            seat.quantity = available_tickets.C
+                            seat.reserved = reserved_tickets.C
+                            seat.seatCMax = seat.quantity
+                            if (seat.reserved >= seat.quantity) {
+                                seat.available = false
                             }
                         }
                     }
                 }
+            }
         })
-},
+    },
     methods: {
         selectSeat(seat) {
             if (seat.available) {
