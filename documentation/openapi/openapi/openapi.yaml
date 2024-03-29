@@ -84,7 +84,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: './components/schemas/newuser.yml#/NewUser'
+              $ref: "./components/schemas/newuser.yml#/NewUser"
       responses:
         "201":
           description: New user has been successfully created.
@@ -107,7 +107,7 @@ paths:
         content:
           application/json:
             schema:
-              # $ref: "#/components/schemas/UpdateUser"
+              $ref: "./components/schemas/updateuser.yml#/UpdateUser"
       responses:
         "200":
           description: User information updated successfully.
