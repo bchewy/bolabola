@@ -1,18 +1,12 @@
-# from flask import Flask, request, jsonify
 import redis
 from flask import Response
 from pymongo import MongoClient, ReturnDocument
 from bson.objectid import ObjectId
 import logging
 import json
-
 import quart_flask_patch
 from quart import Quart, jsonify, request
-
-# from quart_motor import Motor
 from motor.motor_asyncio import AsyncIOMotorClient
-
-# Others
 import pika
 import os
 import json
@@ -26,20 +20,13 @@ import aioredis
 app = Quart(__name__)
 logging.basicConfig(level=logging.INFO)
 app.logger.setLevel(logging.INFO)
-
-# MongoDB setup
 mongo_client = MongoClient("mongodb://mongodb:27017/")
 app.config["MONGO_URI"] = "mongodb://mongodb:27017/"
 engine = AsyncIOMotorClient(app.config["MONGO_URI"])  # using AsyncIOMotorClient
 mongo_db = engine["tickets"]
 tickets_collection = mongo_db["tickets"]
-
-# Ticket Serial Counter Collection
 ticket_serial_counter = mongo_db["ticket_serial_counters"]
-
-# Redis setup
 app.config["REDIS_URL"] = "redis://redis:6379/0"
-# redis_client = redis.StrictRedis.from_url(app.config["REDIS_URL"])
 redis_client = None  # Placeholder for the aioredis pool
 
 
@@ -49,40 +36,6 @@ async def init_redis_pool():
         "redis://:verys3ruec@redis:6379/0", encoding="utf-8", decode_responses=True
     )
     print("REDIS Listener starting")
-
-
-# ==== Ticket Counter MONGO Functions ====
-# async def get_next_ticket_serial():
-#     serial_counter = await ticket_serial_counter.find_one_and_update(
-#         {"_id": "ticket_serial"},
-#         {"$inc": {"seq": 1}},
-#         return_document=ReturnDocument.AFTER,
-#     )
-#     return serial_counter["seq"]
-
-
-# async def create_ticket_for_user(user_id, match_id, ticket_category):
-#     # Get the next serial number
-#     serial_no = await get_next_ticket_serial()
-
-#     # Create a new ticket document
-#     new_ticket = {
-#         "serial_no": serial_no,
-#         "match_id": match_id,
-#         "ticket_category": ticket_category,
-#         "user_id": user_id,
-#         # Add other necessary fields
-#     }
-
-#     # Insert the new ticket into the tickets collection
-#     await tickets_collection.insert_one(new_ticket)
-
-#     # Update the user's document in the users collection with the new ticket's serial number
-#     await mongo_db["users"].update_one(
-#         {"_id": user_id}, {"$push": {"tickets": serial_no}}
-#     )
-
-#     return new_ticket
 
 
 # ==== AMQP Functions ====
@@ -143,7 +96,7 @@ async def amqp():
     queueRefunds = await channel.declare_queue("seat", durable=True)
     await queueRefunds.bind(exchangeRefunds, "refunds.seat")
     await queueRefunds.consume(on_refund_message)
-    
+
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
 
@@ -157,7 +110,9 @@ async def amqp():
 @app.route("/availabletickets/<id>", methods=["GET"])
 async def get_available_tickets(id):
     # match_id = request.args.get('id')
-    available_tickets = tickets_collection.find({"match_id": ObjectId(id), "user_id": None})
+    available_tickets = tickets_collection.find(
+        {"match_id": ObjectId(id), "user_id": None}
+    )
     print(available_tickets)
     tickets_list = []
     async for ticket in available_tickets:
@@ -172,7 +127,7 @@ async def get_available_tickets(id):
             }
         )
     return jsonify(tickets_list), 200
- 
+
 
 # ================================ Seat Main Functons ============================================================================================================================================================================================================
 
@@ -327,11 +282,11 @@ async def get_ticket_count():
     # loop through all the tickets in the database and count the number of tickets that do not have a user_id
     for ticket in tickets:
         if ticket["user_id"] is None:
-            if str(ticket['category']) == 'A':
+            if str(ticket["category"]) == "A":
                 total_tickets_available_A += 1
-            elif str(ticket['category']) == 'B':
+            elif str(ticket["category"]) == "B":
                 total_tickets_available_B += 1
-            elif str(ticket['category']) == 'C':
+            elif str(ticket["category"]) == "C":
                 total_tickets_available_C += 1
 
     # loop through all the tickets in the redis lock and count the number of tickets that have been reserved
@@ -343,13 +298,13 @@ async def get_ticket_count():
         ticket = await tickets_collection.find_one({"_id": ObjectId(redis_ticket)})
         print("ONE of the TICKET IN REDIS", ticket)
         if str(ticket["match_id"]) == match_id:
-            if str(ticket['category']) == 'A':
+            if str(ticket["category"]) == "A":
                 total_tickets_reserved_A += 1
                 total_tickets_available_A += 1
-            elif str(ticket['category']) == 'B':
+            elif str(ticket["category"]) == "B":
                 total_tickets_reserved_B += 1
                 total_tickets_available_B += 1
-            elif str(ticket['category']) == 'C':
+            elif str(ticket["category"]) == "C":
                 total_tickets_reserved_C += 1
                 total_tickets_available_C += 1
 
