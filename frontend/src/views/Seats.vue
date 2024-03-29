@@ -20,11 +20,12 @@
         <div v-for="seat in selectedSeats" :key="seat.label" class="quantity-selector">
             <label>Select Quantity for {{ seat.label }}:</label>
             <select v-model="selectedQuantities[seat.label]">
-                <option v-for="n in seat.quantity" :value="n">{{ n }}</option>
+                <option v-for="n in seat.left" :value="n">{{ n }}</option>
             </select>
         </div>
+
         <!-- Display the proceed button if conditions are met -->
-        <div v-if="proceedEnabled" class="position-absolute bottom-0 end-0 mb-3 me-3">
+        <div v-if="proceedEnabled" class="d-flex justify-content-center mb-3 mt-2">
             <button class="btn btn-primary gradient-button1" @click="proceedToCheckout">
                 Proceed
             </button>
@@ -79,6 +80,7 @@ export default {
                         if (seat.label == "A") {
                             seat.quantity = available_tickets.A
                             seat.reserved = reserved_tickets.A
+                            seat.left = seat.quantity - seat.reserved
                             if (seat.reserved >= seat.quantity) {
                                 seat.available = false
                             }
@@ -86,6 +88,7 @@ export default {
                         if (seat.label == "B") {
                             seat.quantity = available_tickets.B
                             seat.reserved = reserved_tickets.B
+                            seat.left = seat.quantity - seat.reserved
                             if (seat.reserved >= seat.quantity) {
                                 seat.available = false
                             }
@@ -93,7 +96,7 @@ export default {
                         if (seat.label == "C") {
                             seat.quantity = available_tickets.C
                             seat.reserved = reserved_tickets.C
-                            seat.seatCMax = seat.quantity
+                            seat.left = seat.quantity - seat.reserved
                             if (seat.reserved >= seat.quantity) {
                                 seat.available = false
                             }

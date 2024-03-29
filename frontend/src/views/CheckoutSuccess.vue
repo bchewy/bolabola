@@ -1,7 +1,6 @@
 <template>
     <div class="checkout">
         <h1>Thank you for purchasing!</h1>
-        
         <!-- back home -->
         <router-link to="/" class="btn btn-primary gradient-button1">Back to Home</router-link>
     </div>
