@@ -100,11 +100,11 @@
                     <li class="nav-item">
                         <router-link class="nav-link text-evenlighter" to="/events">Matches</router-link>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <router-link class="nav-link text-evenlighter" to="/streaming">
                             Live Stream
                         </router-link>
-                    </li>
+                    </li> -->
                 </ul>
 
                 <ul class="navbar-nav">
