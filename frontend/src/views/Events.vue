@@ -20,8 +20,10 @@
               </div>
               <div class="card-footer">
                 <!-- Match ID: {{ match.id }} -->
-                <button class="btn btn-success" style="background-color: #67C6E3;" @click="bookMatch(match)">Book Now</button> &nbsp;
-                <button class="btn btn-primary" style="background-color: #378CE7;" @click="watchMatch(match)">Watch Live</button>
+                <button class="btn btn-success" style="background-color: #67C6E3;" @click="bookMatch(match)">Book
+                  Now</button> &nbsp;
+                <button class="btn btn-primary" style="background-color: #378CE7;" @click="watchMatch(match)">Watch
+                  Live</button>
               </div>
             </div>
           </div>
@@ -69,7 +71,7 @@ export default {
     watchMatch(match) {
       this.$router.push({ name: 'Streaming', params: { id: match.id } });
     },
-    bookMatch(match){
+    bookMatch(match) {
       this.$router.push({ name: 'seats', params: { id: match.id } });
       // this.$router.push({ name: 'Queue', params: { id: match.id } });
       // this.$router.push('/views/queue');
@@ -85,6 +87,7 @@ export default {
             console.log(match);
             return {
               id: match._id, // Adjust based on your data structure
+              name: match.name,
               title: `${match.home_team} vs ${match.away_team}`,
               home_team: match.home_team,
               away_team: match.away_team,

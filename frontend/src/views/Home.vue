@@ -5,16 +5,19 @@
   <div class="container-fluid p-0 scroll-container bg-image pb-5">
     <section>
       <NavBar />
-      <div class="text-light text-center d-flex align-items-center justify-content-center" style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh;">
+      <div class="text-light text-center d-flex align-items-center justify-content-center"
+        style="background-image: url('/src/assets/background2.png'); background-size: cover; background-position: center; height: 100vh;">
         <div class="container">
           <div class="d-sm-flex align-items-center justify-content-center"> <!-- Center vertically and horizontally -->
             <div class="text-center">
               <h1><span class="text-superblue element">TicketBoost</span></h1>
               <p class="lead text-dark">
-                Discover and book tickets for your favorite football events with TicketBoost. <br>Get access to exclusive deals
+                Discover and book tickets for your favorite football events with TicketBoost. <br>Get access to
+                exclusive deals
                 and enjoy a seamless ticketing experience.
               </p>
-              <button class="btn btn-primary" style="background-color: #5356FF;" @click="$router.push('/events')">Get Started</button>
+              <button class="btn btn-primary" style="background-color: #5356FF;" @click="$router.push('/events')">Get
+                Started</button>
             </div>
           </div>
         </div>
