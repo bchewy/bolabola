@@ -650,10 +650,55 @@ paths:
                     description: IDs of all tickets for the match.
         '404':
           description: Match not found.
+  "/consume-notifications":
+    post:
+      tags:
+       - Notifications
+      summary: Consume notifications from RabbitMQ
+      description: |
+        Endpoint to start consuming notifications from RabbitMQ. This function listens to RabbitMQ queues for incoming messages, processes them, and sends notifications accordingly.
+      responses:
+        200:
+          description: Successfully started consuming notifications.
+        500:
+          description: Internal server error.
 
-  
-  "/notifications":
-    $ref: "paths/notifications.yaml"
+  "/send-email":
+    post:
+      tags:
+       - Notifications
+      summary: Send email notification
+      description: |
+        Endpoint to send email notifications to users using AWS SES (Simple Email Service). This endpoint expects a JSON payload containing recipient email, subject, and message body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Email address of the recipient.
+                subject:
+                  type: string
+                  description: Subject of the email.
+                body:
+                  type: string
+                  description: Body content of the email.
+              required:
+                - email
+                - subject
+                - body
+      responses:
+        200:
+          description: Email notification sent successfully.
+        400:
+          description: Bad request. Missing required fields or invalid data provided.
+        500:
+          description: Internal server error. Failed to send email notification.
+
+
 components:
   securitySchemes:
     bolabola_auth:
