@@ -133,9 +133,171 @@ paths:
         "404":
           description: User not found.
   "/matches/{matchId}":
-    $ref: "paths/matches_{matchId}.yaml"
-  "/tickets":
-    $ref: "paths/tickets.yaml"
+    get:
+      tags:
+        - Matches
+      summary: Get match details
+      description: Retrieves the details of a match by its unique matchId.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved match details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  home_team:
+                    type: string
+                  away_team:
+                    type: string
+                  home_score:
+                    type: integer
+                  away_score:
+                    type: integer
+                  date:
+                    type: string
+                    format: date-time
+                  seats:
+                    type: integer
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category:
+                          type: string
+                        quantity:
+                          type: integer
+    post:
+      tags:
+        - Matches
+      summary: Create a new match
+      description: Creates a new match with the provided details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - home_team
+                - away_team
+                - date
+                - seats
+                - categories
+              properties:
+                name:
+                  type: string
+                home_team:
+                  type: string
+                away_team:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+                seats:
+                  type: integer
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        "201":
+          description: Match created successfully.
+    put:
+      tags:
+        - Matches
+      summary: Update match details
+      description: Updates the details of an existing match identified by its matchId.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match to update.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                home_team:
+                  type: string
+                away_team:
+                  type: string
+                home_score:
+                  type: integer
+                away_score:
+                  type: integer
+                date:
+                  type: string
+                  format: date-time
+                seats:
+                  type: integer
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        "200":
+          description: Match updated successfully.
+    delete:
+      tags:
+        - Matches
+      summary: Delete a match
+      description: Deletes a match from the system using its unique matchId. This action is irreversible.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match to be deleted.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Match deleted successfully.
+  "/seat":
+    get:
+      tags:
+        - Tickets
+      summary: Get seat information
+      description: Retrieves information about available seats for a match.
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          description: The unique identifier of the match to retrieve seat information for.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Seat information retrieved successfully.
   "/notifications":
     $ref: "paths/notifications.yaml"
 components:
