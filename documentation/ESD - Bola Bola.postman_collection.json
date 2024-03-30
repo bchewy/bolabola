@@ -208,6 +208,33 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Matches - INIT DATA",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateMatch {\n  createMatch(\n    name: \"Champions League Final\",\n    home_team: \"Team A\",\n    away_team: \"Team B\",\n    date: \"2023-05-28\",\n    seats: 10,\n    categories: [\n      { name: \"A\", quantity: 0 },\n      { name: \"B\", quantity: 2 },\n      { name: \"C\", quantity: 8 }\n    ]\n  ) {\n    _id\n    name\n    home_team\n    away_team\n    date\n    seats\n  }\n}",
+								"variables": ""
+							}
+						},
+						"url": {
+							"raw": "localhost:8000/api/v1/match",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"api",
+								"v1",
+								"match"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
