@@ -65,6 +65,21 @@ async def on_booking_message(message: aio_pika.IncomingMessage):
             print(f"Ticket id {ticket_id} is removed from redis ")
         print("All tickets are removed from redis")
 
+# on booking fail, remove user from ticket and delete ticket from redis
+async def on_bookingFail_message(message: aio_pika.IncomingMessage):
+    async with message.process():
+        print(f"Received message: {message.body.decode()}")
+        ticket_ids = json.loads(message.body.decode())["ticket_ids"]
+        # change string to list
+        ticket_ids = ticket_ids.split(",")
+        # remove user from ticket and delete ticket from redis
+        for ticket_id in ticket_ids:
+            await remove_user_from_ticket(ticket_id)
+            print(f"User is removed from ticket {ticket_id}")
+            await delete_ticket(ticket_id)
+            print(f"Ticket id {ticket_id} is removed from redis ")
+        print("All userids are removed from tickets")
+
 async def delete_ticket(ticket_id):
     # Check if ticket_id is valid
     ticket_exists = await tickets_collection.count_documents(
@@ -91,12 +106,17 @@ async def amqp():
     await queueBooking.bind(exchangeBooking, "booking.seat")
     await queueBooking.consume(on_booking_message)
 
+    queueBookingFail = await channel.declare_queue("seat_fail", durable=True)
+    await queueBookingFail.bind(exchangeBooking, "booking.seat_fail")
+    await queueBookingFail.consume(on_bookingFail_message)
+
     exchangeRefunds = await channel.declare_exchange(
         "refunds", aio_pika.ExchangeType.DIRECT, durable=True
     )
     queueRefunds = await channel.declare_queue("seat", durable=True)
     await queueRefunds.bind(exchangeRefunds, "refunds.seat")
     await queueRefunds.consume(on_refund_message)
+
 
     print("RabbitMQ consumer started")
     await asyncio.Future()  # Run forever
