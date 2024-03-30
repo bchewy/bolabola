@@ -845,6 +845,45 @@ paths:
           description: Bad request. Missing required fields or invalid data provided.
         500:
           description: Internal server error. Failed to process the refund.
+  "/process-webhook":
+    post:
+      tags:
+        - Billing
+      summary: Process Webhook from Billing Service
+      description: |
+        Receive a POST request from the billing service to handle transaction status updates.
+        If the status is "complete", publish match and user data to the RabbitMQ queue.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: The status of the transaction (e.g., "complete", "expired", "cancelled").
+                payment_intent:
+                  type: string
+                  description: The ID of the payment intent associated with the transaction.
+                metadata:
+                  type: object
+                  description: Additional metadata about the transaction, including user ID, email, ticket categories, match ID, and ticket IDs.
+      responses:
+        '200':
+          description: Transaction status processed successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+        '400':
+          description: Bad request. Missing required fields or invalid data provided.
+        '500':
+          description: Internal server error. Failed to process the transaction status.
   "/video":
       post:
         tags:
@@ -901,7 +940,101 @@ paths:
             description: Bad request. Missing video ID.
           '404':
             description: Video not found.
-    
+  "/availabletickets/{match_id}":
+    get:
+      tags:
+        - Tickets
+      summary: Get Available Tickets
+      description: Retrieve available tickets for a specific match.
+      parameters:
+        - in: path
+          name: match_id
+          description: The ID of the match for which available tickets are being retrieved.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully retrieved available tickets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ticket_id:
+                      type: string
+                      description: The ID of the ticket.
+                    user_id:
+                      type: string
+                      description: The ID of the user who owns the ticket.
+                    match_id:
+                      type: string
+                      description: The ID of the match associated with the ticket.
+                    category:
+                      type: string
+                      description: The category of the ticket.
+                    seat_number:
+                      type: string
+                      description: The seat number of the ticket.
+        '404':
+          description: Match not found.
+  "/init-match-booking/{match_id}":
+    post:
+      tags:
+        - Billing
+        - Seats
+      summary: Initialize Match Booking
+      description: |
+        Handles the flow for selecting seats and quantity during the checkout process.
+        This endpoint should only be called from the views/checkout page.
+      parameters:
+        - in: path
+          name: match_id
+          required: true
+          description: The ID of the match for which booking is being initialized.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  description: The ID of the user initiating the booking.
+                email:
+                  type: string
+                  format: email
+                  description: The email address of the user initiating the booking.
+                category:
+                  type: string
+                  description: The category of the ticket being booked.
+                quantity:
+                  type: integer
+                  description: The quantity of tickets being booked.
+      responses:
+        '200':
+          description: Checkout URL generated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkout_url:
+                    type: string
+                    description: The URL for the checkout session.
+        '400':
+          description: Bad request. Missing required fields or invalid data provided.
+        '404':
+          description: Match details not found.
+        '409':
+          description: Seats have already been reserved.
+        '500':
+          description: Internal server error. Failed to initialize match booking.
 
 components:
   securitySchemes:
