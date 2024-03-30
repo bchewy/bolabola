@@ -1,6 +1,7 @@
 <template>
   <div class="queue">
-    <h1 class="text-superblue">Your queue number is : {{ queue_position }}</h1>
+    <h1 class="text-superblue" v-if="queue_position > 0">Your queue number is : {{ queue_position }}</h1>
+    <h1 class="text-superblue" v-else>Please proceed to booking!</h1>
     <p class="lead text-dark"><b>Please do not reload this page.</b><br>You are important to us and your place in the Queue is currently being processed.
       <br>Thank you for your interest for this match and we seek your patience in this process.</p>
     <img src="/src/assets/background1.png" style="width:50%;" alt="Queue Image" class="queue-image">
@@ -9,7 +10,7 @@
     </div>
     <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p>
     <p>Match ID: {{ matchID }}</p>
-    <p v-show="token"><button class="btn btn-primary gradient-button1" @click="chooseSeats">Click here to choose your seats</button></p>
+    <p v-show="token"><button class="btn btn-primary gradient-button1" @click="chooseSeats">Choose seats</button></p>
   </div>
 </template>
 
@@ -77,11 +78,18 @@ export default {
     watch(queue_position, (newValue, oldValue) => {
       if (initial_position.value != null) {
         let newProgress = (initial_position.value - newValue) / initial_position.value * 100;
+        console.log("New progress", newProgress)
         if (newProgress < 100) {
           progress.value = newProgress;
         } else {
           progress.value = 100;
         }
+      }
+    });
+
+    watch(progress, (newValue, oldValue) => {
+      if (newValue == 100) {
+        queue_position.value = 0;
       }
     });
 
