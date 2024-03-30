@@ -23,10 +23,10 @@
               </div>
               <div class="card-footer">
                 <!-- Match ID: {{ match.id }} -->
-                <button class="btn btn-primary gradient-button1" @click.stop="bookMatch(match)">Book
-                  Now</button> &nbsp;
-                <button class="btn btn-primary gradient-button2" @click.stop="watchMatch(match)">Watch
-                  Live</button>
+                <button v-if="isWithinBookingWindow(match.date)" class="btn btn-primary gradient-button1" @click="bookMatch(match)">Book Now</button>
+                <button v-else class="btn btn-primary gradient-button1" disabled>Book Now</button>
+                <button v-if="!isDuringLiveWindow(match.date)" class="btn btn-primary gradient-button2" @click="watchMatch(match)" disabled>Watch Live</button>
+                <button v-else class="btn btn-primary gradient-button2">Watch Live</button>
               </div>
             </div>
           </div>
@@ -117,7 +117,43 @@ export default {
     },
     displayMatchDetails(match) {
       this.selectedMatch = match;
-    }
+    },
+    isWithinBookingWindow(matchDate) {
+      // can book up to 90 minutes before match starts
+      // Convert the matchDate string to a Date object
+      // Assuming matchDate is in the format "DD/MM/YYYY, HH:MM:SS"
+      const [datePart, timePart] = matchDate.split(', ');
+      const [day, month, year] = datePart.split('/');
+      const [hours, minutes, seconds] = timePart.split(':');
+      const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      const matchDateTime = new Date(formattedDate);
+
+      // Calculate the booking window
+      const now = new Date();
+      const ninetyMinutesBefore = new Date(matchDateTime.getTime() - 90 * 60000);
+
+      // Check if the current time is within the booking window
+      console.log('Now:', now, '90 minutes before:', ninetyMinutesBefore, "bool:", now <= ninetyMinutesBefore);
+      return now <= ninetyMinutesBefore;
+    },
+    isDuringLiveWindow(matchDate) {
+      // Convert the matchDate string to a Date object
+      // Assuming matchDate is in the format "DD/MM/YYYY, HH:MM:SS"
+      const [datePart, timePart] = matchDate.split(', ');
+      const [day, month, year] = datePart.split('/');
+      const [hours, minutes, seconds] = timePart.split(':');
+      const formattedDate = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+      const matchDateTime = new Date(formattedDate);
+
+      // Calculate the booking window
+      const now = new Date();
+      const ninetyMinutesBefore = new Date(matchDateTime.getTime() - 90 * 60000);
+      const twoHundredMinutesAfter = new Date(matchDateTime.getTime() + 200 * 60000);
+
+      // Check if the current time is within the live window
+      console.log('Now:', now, '90 minutes before:', ninetyMinutesBefore, '200 minutes after:', twoHundredMinutesAfter, "bool:", now >= ninetyMinutesBefore && now <= twoHundredMinutesAfter);
+      return now >= ninetyMinutesBefore && now <= twoHundredMinutesAfter;
+    },
   }
 
 };
