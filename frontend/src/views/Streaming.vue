@@ -2,6 +2,7 @@
   <div>
     <NavBar />
     <div class="streaming-view">
+      {{ streamUrl }}
       <div v-if="streamUrl" class="flex-container">
         <h3> {{ match.name }} </h3>
         <p class><span class="teamName">{{ match.home_team }}</span> {{ score[match.home_team] }}:{{
@@ -139,6 +140,7 @@ export default defineComponent({
     axios
       .get("http://localhost:8000/api/v1/videoasset/video?id=1")
       .then((response) => {
+        console.log("response",response.data)
         this.streamUrl = response.data;
         // Process the streaming details as needed
         // console.log("Streaming details:", streamingDetails);
