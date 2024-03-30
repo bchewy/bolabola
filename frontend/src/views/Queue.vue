@@ -34,7 +34,7 @@ export default {
       var message = {
         action: "connect",
         user_id: user_id,
-        demo: true
+        demo: true // generated for presentation
       }
       socket.send(JSON.stringify(message));
     };
