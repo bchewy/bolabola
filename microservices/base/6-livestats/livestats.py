@@ -51,7 +51,9 @@ def handle_stream_match(timestamp):
                 'timestamp': timestamp,
                 'player': data['player'],
                 'team': data['team'],
-                'event': data['event']
+                'event': data['event'],
+                'description':data['description'],
+                'broadcast':data['broadcast'],
             }})
     except Exception as e:
         print(e)
