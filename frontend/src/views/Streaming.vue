@@ -12,31 +12,18 @@
           <div class="videoPlayer">
             <VueBasicPlayer :match="match" :src="streamUrl" :play="playNow" @video-timestamp="handleTimeUpdate" />
           </div>
-          <!-- <div class="ticker">
-            <p v-for="(highlight, key) in matchInfo " :id="key">
-            <div :style="{ float: match.home_team == highlight.team ? 'left' : 'right', clear: 'both', width: '50%' }">
-              <div class="event">
-                <p v-if="highlight.team == match.away_team">{{ highlight.timestamp }}'</p>
-                <div class="eventDetails">
-                  <h6 class="eventHeader">{{ highlight.player }}({{ highlight.team }})</h6>
-                  <p class="eventInfo">{{ highlight.event }}</p>
-                </div>
-                <p v-if="highlight.team == match.home_team">{{ highlight.timestamp }}'</p>
-              </div>
-            </div>
-            </p>
-          </div> -->
           <div class="ticker">
             <p v-for="(highlight, key) in matchInfo" :key="key">
             <div :style="{ float: match.home_team == highlight.team ? 'left' : 'right', clear: 'both', width: '50%' }">
               <div class="event"
                 :class="{ 'home-team': highlight.team === match.home_team, 'away-team': highlight.team === match.away_team }">
-                <p v-if="highlight.team == match.away_team">{{ highlight.timestamp }}'</p>
+                <!-- <p v-if="highlight.team == match.away_team">{{ highlight.timestamp }}'</p> -->
                 <div class="eventDetails">
-                  <h6 class="eventHeader">{{ highlight.player }}({{ highlight.team }})</h6>
-                  <p class="eventInfo">{{ highlight.event }}</p>
+                  <h6 class="eventTeam">{{ highlight.team }}</h6>
+                  <h6 class="eventPlayer">{{ highlight.player }}</h6>
+                  <p class="eventInfo">{{ highlight.description }}</p>
                 </div>
-                <p v-if="highlight.team == match.home_team">{{ highlight.timestamp }}'</p>
+                <!-- <p v-if="highlight.team == match.home_team">{{ highlight.timestamp }}'</p> -->
               </div>
             </div>
             </p>
@@ -197,6 +184,10 @@ export default defineComponent({
   margin-top: 20px;
 }
 
+.eventPlayer{
+  font-weight: 300;
+}
+
 .videoplayer {
   align-items: center;
   /* width: fit-content; */
@@ -231,8 +222,8 @@ export default defineComponent({
   background-color: #5356FF;
   /* background-color: inherit; */
   color: white;
-  display: flex;
-  justify-content: space-between;
+  /* display: flex; */
+  /* justify-content: space-between; */
   transition: transform 1s ease-out;
 }
 
