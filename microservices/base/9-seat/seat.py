@@ -16,8 +16,6 @@ import asyncio
 import aio_pika
 import aioredis
 import datetime
-import aiocron
-
 
 app = Quart(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -376,30 +374,6 @@ async def remove_user_from_ticket(ticket_id):
         return json.dumps({"error": "Failed to remove user from ticket"}), 500
 
 
-async def cleanup_expired_reservations():
-    # Define the expiration time (e.g., 5 minutes)
-    print("Running cleanup_expired_reservations")
-    expiration_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=3)
-    # Find tickets with an old reservation timestamp and no confirmed user_id
-    expired_tickets = await tickets_collection.find(
-        {
-            "reservation_timestamp": {"$lt": expiration_time},
-            "user_id": {"$exists": True},
-        }
-    ).to_list(None)
-    # For each expired ticket, remove the reservation timestamp and release any Redis hold
-    print("Expired tickets: ", expired_tickets)
-    for ticket in expired_tickets:
-        ticket_id = str(ticket["_id"])
-        await tickets_collection.update_one(
-            {"_id": ObjectId(ticket_id)},
-            {"$unset": {"reservation_timestamp": "", "user_id": ""}},
-        )
-        # Attempt to release the Redis hold, if it still exists
-        await redis_client.delete(f"ticket_hold:{ticket_id}")
-        print("Completed cleanup")
-
-
 # ================================ Seat Main END ============================================================================================================================================================================================================
 
 
@@ -409,16 +383,10 @@ def health_check():
     return jsonify({"status": "alive"}), 200
 
 
-@aiocron.crontab("*/3 * * * *")
-async def scheduled_cleanup():
-    await cleanup_expired_reservations()
-
-
 if __name__ == "__main__":
 
     async def main():
         await init_redis_pool()  # Initialize Redis pool
-        scheduled_cleanup.start()
         await asyncio.gather(
             app.run_task(port=9009, debug=True, host="0.0.0.0"),
             amqp(),  # Run AMQP here

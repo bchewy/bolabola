@@ -45,15 +45,23 @@ def get_video_path(video_id):
 
 
 # Create video asset with video_id
-@app.route("/video", methods=["POST"])
+@app.route("/ ", methods=["POST"])
 def create_video_asset():
     video_id = request.json.get("id")
-    video_url = "https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/videos/franklampard-video.mp4"  # set as default
-    # video_url = request.json.get("url")
+    video_url = request.json.get("url")
+
     if not video_id or not video_url:
+        return jsonify({"error": "Missing fields, video id and url are required"}), 400
+    video_urlink = video_url  # Use the provided video_url
+
+    # Setting a default URL for all matches - can comment the one below ocne this works!
+    video_urlink = "https://bchewy.s3.ap-southeast-1.amazonaws.com/Old+Trafford+Thriller+Manchester+United+vs+Liverpool.mp4"  # set as default
+
+    # video_url = request.json.get("url")
+    if not video_id or not video_urlink:
         return jsonify({"error": "Missing video id or url"}), 400
     try:
-        table.put_item(Item={"video_id": video_id, "video_url": video_url})
+        table.put_item(Item={"video_id": video_id, "video_url": video_urlink})
     except ClientError as e:
         print(e.response["Error"]["Message"])
         return jsonify({"error": "Failed to create video asset"}), 500

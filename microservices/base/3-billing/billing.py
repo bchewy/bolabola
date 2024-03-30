@@ -139,14 +139,17 @@ def create_checkout_session():
                     "metadata": metadata,
                 }
             )
-            
+
         except Exception as e:
             print("Error: ", str(e))
             return jsonify(error=str(e)), 403
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
+
 # Stripe calls this webhook
-@app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
+@app.route(
+    "/webhook/stripe", methods=["POST"]
+)  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
     endpoint_secret = (
         "whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df"
@@ -162,7 +165,7 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
-    
+
     # send payment information to orchestrator
     ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
 
@@ -221,6 +224,8 @@ def stripe_webhook():
 #####################################    CHECK IF USER BOUGHT TICKET     ###################################
 ############################################################################################################
 tickets_reserved_not_bought = []
+
+
 # check the tickets in the list. If the ticket is not bought after 5minutes, send a cancel request to the match booking orhca
 def check_tickets():
     print("tickets in the list: ", tickets_reserved_not_bought)
@@ -327,7 +332,7 @@ def refund_payment():
 if __name__ == "__main__":
     # Initialize scheduler
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=check_tickets, trigger="interval", seconds=10)
+    scheduler.add_job(func=check_tickets, trigger="interval", seconds=60)
     scheduler.start()
     app.run(port=9003, debug=True, host="0.0.0.0")
     atexit.register(lambda: scheduler.shutdown())

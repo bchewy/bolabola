@@ -94,12 +94,3 @@
   });
 </script>
 
-<!-- <style lang="scss" scoped>
-    @import '@/styles/variables.scss';
-    @import '@/styles/mixins.scss'; -->
-<!--   
-    .video-player {
-      background-color: $black;
-      width: 100%;
-    } -->
-<!-- </style> -->
