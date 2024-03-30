@@ -255,7 +255,7 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_ADMIN_GUI_URL: http://localhost:8002
+      KONG_ADMIN_GUI_URL: http://bolabola.smuaws.com:8002 # Changing this to test deploy, please change back to http://localhost:8002 if you need to test locally.
     depends_on:
       - kong-migration
     ports:
