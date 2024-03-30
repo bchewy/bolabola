@@ -128,15 +128,13 @@ def create_checkout_session():
                 metadata=metadata,  # pass the metadata to the webhook
             )
             checkout_session_id = checkout_session["id"]
-            checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
-            payment_intent_id = checkout_session["payment_intent"]
 
             # add the payment intent to the tickets_reserved_not_bought and the time it was created
             tickets_reserved_not_bought.append(
                 {
-                    "payment_intent": payment_intent_id,
                     "time": datetime.now(),
                     "metadata": metadata,
+                    "checkout_session_id": checkout_session_id,
                 }
             )
 
@@ -169,11 +167,11 @@ def stripe_webhook():
     # send payment information to orchestrator
     ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
 
-    # remove the ticket from the list
-    for ticket in tickets_reserved_not_bought:
-        if ticket["payment_intent"] == event["data"]["object"]["payment_intent"]:
-            tickets_reserved_not_bought.remove(ticket)
-            break
+    # # remove the ticket from the list
+    # for ticket in tickets_reserved_not_bought:
+    #     if ticket["payment_intent"] == event["data"]["object"]["payment_intent"]:
+    #         tickets_reserved_not_bought.remove(ticket)
+    #         break
 
     session = event["data"]["object"]
     # Handle the checkout.session.completed event
@@ -233,8 +231,12 @@ def check_tickets():
         if datetime.now() - ticket["time"] > timedelta(minutes=1):
             print("Ticket not bought after 5 minutes")
             # send a cancel request to the match booking orchestrator
+            # get payment_intent from ticket session id
+            checkout_session_id = ticket["checkout_session_id"]
+            checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
+            payment_intent = checkout_session["payment_intent"]
             payload = {
-                "payment_intent": ticket["payment_intent"],
+                "payment_intent": payment_intent,
                 "status": "cancelled",
                 "metadata": {
                     "user_id": ticket["metadata"]["user_id"],
@@ -252,7 +254,9 @@ def check_tickets():
             else:
                 print("Cannot notify orchestrator")
             # cancel in stripe as well
-            # stripe.PaymentIntent.cancel(ticket["payment_intent"])
+            stripe.PaymentIntent.cancel(
+                payment_intent, cancellation_reason="abandoned"
+            ) 
             
             # remove ticket from list
             tickets_reserved_not_bought.remove(ticket)
