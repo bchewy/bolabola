@@ -23,18 +23,163 @@ def consume_notifications():
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
+    # declare and find queues for 'booking'
+    exchangeBooking = channel.exchange_declare(
+        exchange="booking", exchange_type="direct", durable=True
+    )
+    queueBooking = channel.queue_declare(queue="booking_notification", durable=True)
+    channel.queue_bind(
+        exchange="booking", queue="booking_notification", routing_key="booking.notification"
+    )
+
+    # declare and find queues for 'refunds'
+    exchangeRefunds = channel.exchange_declare(
+        exchange="refunds", exchange_type="direct", durable=True
+    )
+    queueRefunds = channel.queue_declare(queue="refunds_notification", durable=True)
+    channel.queue_bind(
+        exchange="refunds", queue="refunds_notification", routing_key="refunds.notification"
+    )
+
     print(
         f"Attempting to connect to RabbitMQ at {rabbitmq_host} with user '{rabbitmq_user}'"
     )
 
-    queue_email = "notification"
-    queue_telegram = "telegram"
+    def callbackRefund(ch, method, properties, body):
+        # Parse the message
+        message = json.loads(body)
+        print("Received a message into the notification service: ", message)
+        email = message["email"]
+        subject = "Refund Confirmation!"
+        match = message["match"]
+        bodyme = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Refund Confirmation</title>
+            <style>
+                body {{font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;}}
+                .container {{max-width: 600px; margin: auto; background: #f7f7f7; padding: 20px; border-radius: 8px;}}
+                h2 {{color: #007BFF;}}
+                p {{line-height: 1.6;}}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h2>Refund Confirmation</h2>
+                <p>Dear User,</p>
+                <p>Your refund has been successfully processed. You have been refunded for the following match:</p>
+                <ul>
+                    <li>Match: {match['name']}</li>
+                    <li>Date: {match['date']}</li>
+                    <li>Teams: {match['home_team']} vs {match['away_team']}</li>
+                </ul>
+                <p>If you have any questions, feel free to contact our support team.</p>
+                <p>Best Regards,<br>Bolabola Team</p>
+            </div>
+        </body>
+        </html>
+        """
 
-    # Bind the queue to the exchange
-    channel.queue_bind(
-        exchange="booking", queue=queue_email, routing_key="booking.notification"
-    )
+        # Send the email
+        send_email(email, subject, bodyme)
+
+        # Log the notification
+        print(f"Sent notification to {message['email']}")
+
+    def callbackBooking(ch, method, properties, body):
+        # Parse the message
+        message = json.loads(body)
+        print("Received a message into the notification service: ", message)
+        try:
+            email = message["email"]
+            subject = "Booking Confirmation!"
+            match = message["match"]
+            quantity = message["quantity"]
+            bodyme = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Booking Confirmation</title>
+                <style>
+                    body {{font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;}}
+                    .container {{max-width: 600px; margin: auto; background: #f7f7f7; padding: 20px; border-radius: 8px;}}
+                    h2 {{color: #007BFF;}}
+                    p {{line-height: 1.6;}}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Booking Confirmation</h2>
+                    <p>Dear User,</p>
+                    <p>Thank you for your booking. You have successfully booked {quantity} tickets for the match:</p>
+                    <ul>
+                        <li>Match: {match['name']}</li>
+                        <li>Date: {match['date']}</li>
+                        <li>Teams: {match['home_team']} vs {match['away_team']}</li>
+                    </ul>
+                    <p>If you have any questions, feel free to contact our support team.</p>
+                    <p>Best Regards,<br>Bolabola Team</p>
+                </div>
+            </body>
+            </html>
+            """
+        except KeyError:
+            email = message["email"]
+            subject= "Booking Failed!"
+            bodyme = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Booking Failed</title>
+                <style>
+                    body {{font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;}}
+                    .container {{max-width: 600px; margin: auto; background: #f7f7f7; padding: 20px; border-radius: 8px;}}
+                    h2 {{color: #007BFF;}}
+                    p {{line-height: 1.6;}}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h2>Booking Failed</h2>
+                    <p>Dear User,</p>
+                    <p>Unfortunately, your booking has failed. Please try again later.</p>
+                    <p>If you have any questions, feel free to contact our support team.</p>
+                    <p>Best Regards,<br>Bolabola Team</p>
+                </div>
+            </body>
+            </html>
+            """
+
+        # Send the email
+        send_email(email, subject, bodyme)
+
+        # Log the notification
+        print(f"Sent notification to {message['email']}")
     
+    channel.basic_consume(
+        queue=queueRefunds.method.queue, on_message_callback=callbackRefund, auto_ack=True
+    )
+    channel.basic_consume(
+        queue=queueBooking.method.queue, on_message_callback=callbackBooking, auto_ack=True
+    )
+
+
+    # queue_email = "notification"
+    # queue_telegram = "telegram"
+
+    # # Bind the queue to the exchange
+    # channel.queue_bind(
+    #     exchange="booking", queue=queue_email, routing_key="booking.notification",
+    # )
+
+    # channel.queue_bind(
+    #     exchange="refunds", queue=queue_email, routing_key="refunds.notification",
+    # )
+
+    # channel.basic_consume(
+    #     queue=queue_email, on_message_callback=callbackRefund, auto_ack=True
+    # )
 
     # channel.queue_bind(
     #     exchange="booking", queue=queue_telegram, routing_key="booking.telegram"
@@ -78,61 +223,16 @@ def consume_notifications():
                     "Data": subject,
                 },
                 "Body": {
-                    "Text": {
+                    "Html": {
                         "Data": body,
                     },
                 },
             },
         )
 
-    def callback(ch, method, properties, body):
-        # Parse the message
-        message = json.loads(body)
-        print("Received a message into the notification service: ", message)
-
-        email = message["email"]
-        subject = "Booking Confirmation!"
-        match = message["match"]
-        quantity = message["quantity"]
-        bodyme = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Booking Confirmation</title>
-            <style>
-                body {{font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333;}}
-                .container {{max-width: 600px; margin: auto; background: #f7f7f7; padding: 20px; border-radius: 8px;}}
-                h2 {{color: #007BFF;}}
-                p {{line-height: 1.6;}}
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h2>Booking Confirmation</h2>
-                <p>Dear User,</p>
-                <p>Thank you for your booking. You have successfully booked {quantity} tickets for the match:</p>
-                <ul>
-                    <li>Match: {match['name']}</li>
-                    <li>Date: {match['date']}</li>
-                    <li>Venue: {match['venue']}</li>
-                    <li>Teams: {match['home_team']} vs {match['away_team']}</li>
-                </ul>
-                <p>If you have any questions, feel free to contact our support team.</p>
-                <p>Best Regards,<br>Your Booking Team</p>
-            </div>
-        </body>
-        </html>
-        """
-
-        # Send the email
-        send_email(email, subject, bodyme)
-
-        # Log the notification
-        print(f"Sent notification to {message['email']}")
-
-    channel.basic_consume(
-        queue=queue_email, on_message_callback=callback, auto_ack=True
-    )
+    # channel.basic_consume(
+    #     queue=queue_email, on_message_callback=callbackBooking, auto_ack=True
+    # )
     channel.start_consuming()
 
 

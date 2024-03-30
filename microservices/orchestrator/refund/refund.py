@@ -7,6 +7,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
+MATCH_URL = "http://kong:8000/api/v1/match"
+
 # Hardcoded credentials and connection details for RabbitMQ
 rabbitmq_user = "ticketboost"
 rabbitmq_password = "veryS3ecureP@ssword"
@@ -43,7 +45,8 @@ def refund():
             "category": "A",
             "quantity": 2,
             "ticket_ids": "123,456"
-            }
+            },
+        "email": "example@example.com"
     }
 
     Sends the following JSON payload to the billing service:
@@ -52,7 +55,8 @@ def refund():
         "match_id": "5678",
         "category": "A",
         "quantity": 2,
-        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY"
+        "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY",
+        "email": "example@example.com"
     }
 
     Receives the following JSON payload from the billing service:
@@ -65,8 +69,9 @@ def refund():
             "category": "A",
             "quantity": 2,
             "payment_intent": "pi_1NirD82eZvKYlo2CIvbtLWuY",
-            "ticket_ids": "123,456"
-        }
+            "ticket_ids": "123,456",
+            "email": "example@example.com"
+        },
     }
     """
     # 1.1. receive ticket and user information from frontend
@@ -80,6 +85,7 @@ def refund():
     category = data_from_frontend["ticket_info"]["ticket_category"]
     quantity = data_from_frontend["ticket_info"]["quantity"]
     ticket_ids = data_from_frontend["ticket_info"]["ticket_ids"]
+    email = data_from_frontend["email"]
 
     user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
 
@@ -95,7 +101,8 @@ def refund():
         "category": category,
         "quantity": quantity,
         "ticket_ids": ticket_ids, 
-        "payment_intent": payment_intent
+        "payment_intent": payment_intent,
+        "email": email,
     }
     response = requests.post(billing_service_refund_url, json=data_for_sending)
     print(response.json()["data"])
@@ -111,6 +118,39 @@ def refund():
     else:
         return jsonify({"message": "Failed to initiate refund"}), 500
 
+def retrive_match_from_match_service(match_id):
+    query = """
+    query GetMatchDetails($id: String) {
+        match_details(_id: $id) {
+            _id
+            name
+            description
+            venue
+            home_team
+            away_team
+            home_score
+            away_score
+            date
+            seats
+        }
+    }
+    """
+
+    variables = {"id": match_id}
+    headers = {"Content-Type": "application/json"}
+    payload = {"query": query, "variables": variables}
+    response = requests.post(MATCH_URL, headers=headers, json=payload)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        response_json = response.json()
+        match_details = response_json.get("data", {}).get("match_details")
+        return match_details
+    else:
+        raise Exception(
+            f"Query failed to run with a status code {response.status_code}. {response.text}"
+        )
+
 def publish_to_amqp(data):
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     parameters = pika.URLParameters(rabbitmq_url)
@@ -123,6 +163,8 @@ def publish_to_amqp(data):
     category = data["metadata"]["category"]
     quantity = data["metadata"]["quantity"]
     ticket_ids = data["metadata"]["ticket_ids"]
+    email = data["metadata"]["email"]
+
 
     # Publish to user to remove ticket from user account
     user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} 
@@ -160,10 +202,11 @@ def publish_to_amqp(data):
     # Publish to notification to send email to user
     notification_message = {
                                 "user_id": user_id, 
-                                "match_id": match_id, 
+                                "match": retrive_match_from_match_service(match_id), 
                                 "category": category, 
                                 "quantity": quantity, 
-                                "payment_intent": payment_intent
+                                "payment_intent": payment_intent,
+                                "email": email
                             }
     channel.basic_publish(
         exchange="refunds",

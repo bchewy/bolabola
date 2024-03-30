@@ -9,7 +9,7 @@
           <tr>
             <th scope="col">Match Name</th>
             <th scope="col">Match Time</th>
-            <th scope="col">Match Location</th>
+            <!-- <th scope="col">Match Location</th> -->
             <th scope="col">Quantity</th>
             <th scope="col">Category</th>
             <th scope="col">Refund</th>
@@ -19,7 +19,7 @@
           <tr v-for="(ticket, index) in tickets" :key="index">
             <td>{{ ticket.matchName }}</td> 
             <td>{{ ticket.matchTime }}</td>
-            <td>{{ ticket.matchLocation }}</td>
+            <!-- <td>{{ ticket.matchLocation }}</td> -->
             <td>{{ ticket.quantity }}</td>
             <td>{{ ticket.ticket_category }}</td>
             <td>
@@ -134,7 +134,8 @@ export default {
         body: JSON.stringify(
           {
             ticket_info: this.tickets[index],
-            user_id: this.userId
+            user_id: this.userId,
+            email: this.$auth0.user.value.email
           }
         ),
       })
