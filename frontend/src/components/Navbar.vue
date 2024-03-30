@@ -85,7 +85,7 @@
                 <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png"
                     class="img-fluid" style="max-height: 40px;">
                 <router-link class="nav-link text-evenlighter" to="/"
-                    style="margin-left: 5px;">TicketBoost</router-link>
+                    style="margin-left: 5px;">Bola Bola</router-link>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

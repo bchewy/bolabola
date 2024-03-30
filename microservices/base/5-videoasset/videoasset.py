@@ -48,7 +48,15 @@ def get_video_path(video_id):
 @app.route("/ ", methods=["POST"])
 def create_video_asset():
     video_id = request.json.get("id")
+    video_url = request.json.get("url")
+
+    if not video_id or not video_url:
+        return jsonify({"error": "Missing fields, video id and url are required"}), 400
+    video_urlink = video_url  # Use the provided video_url
+
+    # Setting a default URL for all matches - can comment the one below ocne this works!
     video_urlink = "https://bchewy.s3.ap-southeast-1.amazonaws.com/Old+Trafford+Thriller+Manchester+United+vs+Liverpool.mp4"  # set as default
+
     # video_url = request.json.get("url")
     if not video_id or not video_urlink:
         return jsonify({"error": "Missing video id or url"}), 400
@@ -59,7 +67,8 @@ def create_video_asset():
         return jsonify({"error": "Failed to create video asset"}), 500
     else:
         return jsonify({"message": "Video asset created successfully"}), 201
-    
+
+
 @app.route("/video", methods=["GET"])
 def get_video():
     video_id = request.args.get("id")
@@ -73,6 +82,7 @@ def get_video():
         return jsonify(video_path)
     else:
         return jsonify({"error": "Video not found"}), 404
+
 
 if __name__ == "__main__":
     app.run(port=9005, debug=True, host="0.0.0.0")
