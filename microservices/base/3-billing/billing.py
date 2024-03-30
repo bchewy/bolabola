@@ -15,6 +15,9 @@ import os
 import sys
 import json
 from datetime import datetime, timedelta
+import time
+import atexit
+from apscheduler.schedulers.background import BackgroundScheduler
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -124,17 +127,21 @@ def create_checkout_session():
                 cancel_url="http://localhost:5173/views/checkoutCancel",
                 metadata=metadata,  # pass the metadata to the webhook
             )
-            # send over the link to match-booking orchestrator
+            # add the payment intent to the tickets_reserved_not_bought and the time it was created
+            tickets_reserved_not_bought.append(
+                {
+                    "payment_intent": checkout_session["payment_intent"],
+                    "time": datetime.now(),
+                }
+            )
+            
         except Exception as e:
             print("Error: ", str(e))
             return jsonify(error=str(e)), 403
     return jsonify({"code": 200, "checkout_session": checkout_session})
 
-
 # Stripe calls this webhook
-@app.route(
-    "/webhook/stripe", methods=["POST"]
-)  # if you change this endpoint, pls let yiji know so he can change in Stripe
+@app.route("/webhook/stripe", methods=["POST"])  # if you change this endpoint, pls let yiji know so he can change in Stripe
 def stripe_webhook():
     endpoint_secret = (
         "whsec_d0d59a6c1c4e0d297659d18b66aa3785034db493bb5092a993fd29df21bb18df"
@@ -150,9 +157,15 @@ def stripe_webhook():
     except stripe.error.SignatureVerificationError as e:
         # Invalid signature
         return "Invalid signature", 400
-
+    
     # send payment information to orchestrator
     ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
+
+    # remove the ticket from the list
+    for ticket in tickets_reserved_not_bought:
+        if ticket["payment_intent"] == event["data"]["object"]["payment_intent"]:
+            tickets_reserved_not_bought.remove(ticket)
+            break
 
     session = event["data"]["object"]
     # Handle the checkout.session.completed event
@@ -198,6 +211,37 @@ def stripe_webhook():
 ############################################################################################################
 #####################################    END OF CHECKOUT SESSION     #######################################
 ############################################################################################################
+
+############################################################################################################
+#####################################    CHECK IF USER BOUGHT TICKET     ###################################
+############################################################################################################
+tickets_reserved_not_bought = []
+# check the tickets in the list. If the ticket is not bought after 5minutes, send a cancel request to the match booking orhca
+def check_tickets():
+    while True:
+        print("tickets in the list: ", tickets_reserved_not_bought)
+        for ticket in tickets_reserved_not_bought:
+            if datetime.now() - ticket["time"] > timedelta(minutes=1):
+                print("Ticket not bought after 5 minutes")
+                # send a cancel request to the match booking orchestrator
+                payload = {
+                    "payment_intent": ticket["payment_intent"],
+                    "status": "cancelled",
+                }
+                response = requests.post(
+                    "http://kong:8000/api/v1/booking/process-webhook", json=payload
+                )
+                print("The response from orchestrator is: ", response)
+                if response.ok:
+                    print("Payment cancelled and orchestrator notified.")
+                else:
+                    print("Cannot notify orchestrator")
+                # cancel in stripe as well
+                
+                # remove ticket from list
+                tickets_reserved_not_bought.remove(ticket)
+        # sleep for 5 minutes
+        time.sleep(10) # 10s for testing purposes
 
 
 ############################################################################################################
@@ -272,4 +316,9 @@ def refund_payment():
 ############################################################################################################
 
 if __name__ == "__main__":
+    # Initialize scheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=check_tickets, trigger="interval", seconds=10)
+    scheduler.start()
     app.run(port=9003, debug=True, host="0.0.0.0")
+    atexit.register(lambda: scheduler.shutdown())
