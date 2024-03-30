@@ -105,6 +105,13 @@
         {
             "source": "refunds",
             "vhost": "/",
+            "destination": "notification",
+            "destination_type": "queue",
+            "routing_key": "refunds.notification"
+        },
+        {
+            "source": "refunds",
+            "vhost": "/",
             "destination": "payment",
             "destination_type": "queue",
             "routing_key": "payment.#"

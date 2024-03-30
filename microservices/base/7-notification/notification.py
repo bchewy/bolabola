@@ -34,6 +34,8 @@ def consume_notifications():
     channel.queue_bind(
         exchange="booking", queue=queue_email, routing_key="booking.notification"
     )
+    
+
     # channel.queue_bind(
     #     exchange="booking", queue=queue_telegram, routing_key="booking.telegram"
     # )

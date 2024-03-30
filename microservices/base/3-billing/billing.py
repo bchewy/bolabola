@@ -233,10 +233,7 @@ def check_tickets():
             # send a cancel request to the match booking orchestrator
             # get payment_intent from ticket session id
             checkout_session_id = ticket["checkout_session_id"]
-            checkout_session = stripe.checkout.Session.retrieve(checkout_session_id)
-            payment_intent = checkout_session["payment_intent"]
             payload = {
-                "payment_intent": payment_intent,
                 "status": "cancelled",
                 "metadata": {
                     "user_id": ticket["metadata"]["user_id"],
@@ -254,9 +251,11 @@ def check_tickets():
             else:
                 print("Cannot notify orchestrator")
             # cancel in stripe as well
-            stripe.PaymentIntent.cancel(
-                payment_intent, cancellation_reason="abandoned"
-            ) 
+            try:
+                stripe.checkout.Session.expire(checkout_session_id)
+                print("Session expired in stripe")
+            except Exception as e:
+                print("Error: ", str(e))
             
             # remove ticket from list
             tickets_reserved_not_bought.remove(ticket)

@@ -272,7 +272,6 @@ def failed_booking():
     Sample payload received from billing microservice:
     {
         'status': 'cancelled',
-        'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU',
         'metadata': {
                 'user_id': '106225716514519006902',
                 'email': 'example@example.com',

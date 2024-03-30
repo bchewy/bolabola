@@ -117,7 +117,6 @@ def publish_to_amqp(data):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()  
 
-    # NOT TESTED: Extract the necessary data from the response
     user_id = data["metadata"]["user_id"]
     match_id = data["metadata"]["match_id"]
     payment_intent = data["payment_intent"]
@@ -153,6 +152,23 @@ def publish_to_amqp(data):
         exchange="refunds",
         routing_key="refunds.seat",
         body=json.dumps(seat_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+    # Publish to notification to send email to user
+    notification_message = {
+                                "user_id": user_id, 
+                                "match_id": match_id, 
+                                "category": category, 
+                                "quantity": quantity, 
+                                "payment_intent": payment_intent
+                            }
+    channel.basic_publish(
+        exchange="refunds",
+        routing_key="refunds.notification",
+        body=json.dumps(notification_message),
         properties=pika.BasicProperties(
             delivery_mode=2,  # make the message persistent
         ),
