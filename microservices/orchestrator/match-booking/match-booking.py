@@ -96,7 +96,7 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to notification - not done
+    # Publish to notification - DONE
     notification_message = {
         "user_id": data["metadata"]["user_id"],
         "email": data["metadata"]["email"],  # Assuming email is part of the metadata
@@ -115,6 +115,29 @@ def publish_to_amqp(data):
 
     connection.close()
 
+def publish_fail_msg(data):
+    rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
+    parameters = pika.URLParameters(rabbitmq_url)
+    connection = pika.BlockingConnection(parameters)
+    channel = connection.channel()
+
+    # Publish to notification
+    notification_message = {
+        "user_id": data["metadata"]["user_id"],
+        "email": data["metadata"]["email"],  # Assuming email is part of the metadata
+        "match_id": data["metadata"]["match_id"],
+        "message": "Your ticket has been unreserved. Please try to book a new ticket again",
+    }
+    channel.basic_publish(
+        exchange="booking",
+        routing_key="booking.notification",
+        body=json.dumps(notification_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+    connection.close()
 
 # RETURNS AVAILABLE TICKETS
 @app.route("/availabletickets/<match_id>", methods=["GET"])
@@ -246,13 +269,16 @@ def process_webhook():
 
     elif data["status"] == "expired":
         # send a message to the frontend to inform the user that the payment link has expired
+        publish_fail_msg(data)
         return jsonify({"message": "Payment link expired!"})
 
     elif data["status"] == "cancelled":
         # send a message to the frontend to inform the user that the payment link has been cancelled
+        publish_fail_msg(data)
         return jsonify({"message": "Payment link cancelled!"})
 
     else:
+        publish_fail_msg(data)
         return jsonify({"error": "Unexpected status received."})
 
 

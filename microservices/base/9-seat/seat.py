@@ -50,8 +50,8 @@ async def on_refund_message(message: aio_pika.IncomingMessage):
         # remove user from ticket and delete ticket from redis
         for ticket_id in ticket_ids:
             await remove_user_from_ticket(ticket_id)
-            print(f"Ticket id {ticket_id} is removed from redis ")
-        print("All tickets are removed from redis")
+            print(f"User is removed from ticket {ticket_id}")
+        print("All userids are removed from tickets")
 
 
 # this code is adapted from /release endpoint
@@ -64,7 +64,6 @@ async def on_booking_message(message: aio_pika.IncomingMessage):
             await delete_ticket(ticket_id)
             print(f"Ticket id {ticket_id} is removed from redis ")
         print("All tickets are removed from redis")
-
 
 async def delete_ticket(ticket_id):
     # Check if ticket_id is valid
