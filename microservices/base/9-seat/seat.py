@@ -360,17 +360,21 @@ async def remove_user_from_ticket(ticket_id):
 async def cleanup_expired_reservations():
     # Define the expiration time (e.g., 5 minutes)
     print("Running cleanup_expired_reservations")
-    expiration_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
+    expiration_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=3)
     # Find tickets with an old reservation timestamp and no confirmed user_id
     expired_tickets = await tickets_collection.find(
-        {"reservation_timestamp": {"$lt": expiration_time}, "user_id": None}
+        {
+            "reservation_timestamp": {"$lt": expiration_time},
+            "user_id": {"$exists": True},
+        }
     ).to_list(None)
     # For each expired ticket, remove the reservation timestamp and release any Redis hold
     print("Expired tickets: ", expired_tickets)
     for ticket in expired_tickets:
         ticket_id = str(ticket["_id"])
         await tickets_collection.update_one(
-            {"_id": ObjectId(ticket_id)}, {"$unset": {"reservation_timestamp": ""}}
+            {"_id": ObjectId(ticket_id)},
+            {"$unset": {"reservation_timestamp": "", "user_id": ""}},
         )
         # Attempt to release the Redis hold, if it still exists
         await redis_client.delete(f"ticket_hold:{ticket_id}")
