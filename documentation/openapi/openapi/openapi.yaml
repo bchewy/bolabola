@@ -43,6 +43,8 @@ tags:
     description: "Handle payments and refunds using Stripe integration."
   - name: Seats
     description: "Handle seat reservations and ticket counts."
+  - name: Video Asset
+    description: "Manages video assets; interacts with AWS DynamoDB to store and retrieve video metadata, including video URLs."
 x-tagGroups:
   - name: Core Features
     tags:
@@ -54,6 +56,7 @@ x-tagGroups:
       - Notifications
       - Billing
       - Seats
+      - Video Asset
 servers:
   - url: https://{tenant}.bolabola.smuaws.com/api/v1
     variables:
@@ -697,7 +700,208 @@ paths:
           description: Bad request. Missing required fields or invalid data provided.
         500:
           description: Internal server error. Failed to send email notification.
+  "/ping":
+    get:
+      tags:
+       - Billing
+      summary: Ping endpoint
+      description: Endpoint for testing the availability of the billing service.
+      responses:
+        200:
+          description: Service is available and responsive.
 
+  "/public-key":
+    get:
+      tags:
+       - Billing
+      summary: Get Stripe public key
+      description: Endpoint to retrieve the public key for the frontend integration with Stripe.
+      responses:
+        200:
+          description: Successfully retrieved the public key.
+        500:
+          description: Internal server error.
+
+  "/checkout":
+    post:
+      tags:
+       - Billing
+      summary: Create checkout session
+      description: |
+        Endpoint to create a new checkout session for purchasing tickets. This endpoint expects a JSON payload containing details about the tickets to be purchased, match information, and user details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                match_id:
+                  type: string
+                  description: The ID of the match.
+                match_name:
+                  type: string
+                  description: The name of the match.
+                tickets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                        description: The category of the ticket (e.g., A, B, C).
+                      quantity:
+                        type: integer
+                        description: The quantity of tickets to be purchased for this category.
+                  description: Details about the tickets to be purchased.
+                user_id:
+                  type: string
+                  description: The ID of the user making the purchase.
+                ticket_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of ticket IDs.
+              required:
+                - match_id
+                - match_name
+                - tickets
+                - user_id
+                - ticket_ids
+      responses:
+        200:
+          description: Checkout session created successfully.
+        403:
+          description: Error creating the checkout session.
+        500:
+          description: Internal server error.
+
+  "/webhook/stripe":
+    post:
+      tags:
+       - Billing
+      summary: Stripe webhook endpoint
+      description: Endpoint to handle webhook events from Stripe, such as payment confirmation, cancellation, or expiration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Payload from the Stripe webhook event.
+      responses:
+        200:
+          description: Payment confirmed and orchestrator notified.
+        400:
+          description: Invalid payload or signature.
+        500:
+          description: Failed to notify the orchestrator.
+
+  "/refund":
+    post:
+      tags:
+       - Billing
+      summary: Refund payment
+      description: |
+        Endpoint to refund a user's payment. This endpoint expects a JSON payload containing the payment intent ID and other details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_intent:
+                  type: string
+                  description: The ID of the payment intent to be refunded.
+                user_id:
+                  type: string
+                  description: The ID of the user whose payment is being refunded.
+                match_id:
+                  type: string
+                  description: The ID of the match associated with the payment.
+                category:
+                  type: string
+                  description: The category of the ticket for which the refund is being processed.
+                quantity:
+                  type: integer
+                  description: The quantity of tickets for which the refund is being processed.
+                ticket_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of ticket IDs associated with the payment.
+              required:
+                - payment_intent
+                - user_id
+                - match_id
+                - category
+                - quantity
+                - ticket_ids
+      responses:
+        200:
+          description: Refund successful.
+        400:
+          description: Bad request. Missing required fields or invalid data provided.
+        500:
+          description: Internal server error. Failed to process the refund.
+  "/video":
+      post:
+        tags:
+          - Video Asset
+        summary: Create video asset
+        description: Create a new video asset with a given video ID and URL.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the video asset (equivalent to match ID).
+                  url:
+                    type: string
+                    description: The URL of the video asset.
+                required:
+                  - id
+                  - url
+        responses:
+          '201':
+            description: Video asset created successfully.
+          '400':
+            description: Bad request. Missing video ID or URL.
+          '500':
+            description: Internal server error. Failed to create video asset.
+      get:
+        tags:
+          - Video Asset
+        summary: Get video asset
+        description: Retrieve the URL of a video asset by its video ID (equivalent to match ID).
+        parameters:
+          - in: query
+            name: id
+            schema:
+              type: string
+            required: true
+            description: The ID of the video asset to retrieve.
+        responses:
+          '200':
+            description: Video asset retrieved successfully.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    video_url:
+                      type: string
+                      description: The URL of the video asset.
+          '400':
+            description: Bad request. Missing video ID.
+          '404':
+            description: Video not found.
+    
 
 components:
   securitySchemes:
