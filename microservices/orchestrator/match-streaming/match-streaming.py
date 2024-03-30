@@ -3,21 +3,11 @@ from flask import Flask
 import requests
 from prometheus_flask_exporter import PrometheusMetrics
 import graphene
-import json
 from flask_socketio import SocketIO, emit
 import asyncio
 
 app = Flask(__name__)
 socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins="*")
-
-with open("mock_stats.json") as f:
-    init_data = json.load(f)
-    data = {}
-    for item in init_data:
-        timestamp = item['timestamp_seconds']
-        del item['timestamp_seconds']
-        data[timestamp] = item
-    print(data)
 
 # metrics = PrometheusMetrics(app)
 
@@ -98,6 +88,10 @@ def retrieve_match(id):
             return f"Error retrieving match: {response.status_code}", 500
     except requests.exceptions.RequestException as e:
         return f"Error retrieving match: {str(e)}", 500
+    
+def retrieve_stats():
+    return
+    
 
 @socketio.on('connect')
 def handle_connect():

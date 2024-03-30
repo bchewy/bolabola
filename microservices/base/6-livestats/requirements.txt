@@ -1,0 +1,8 @@
+flask
+requests
+flask_cors
+flask_pymongo
+redis
+flask_socketio
+prometheus-flask-exporter==0.23.0
+graphene

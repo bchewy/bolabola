@@ -6,11 +6,15 @@ WORKDIR /app
 
 # Copy the requirements file into the container
 COPY requirements.txt .
-COPY livematch.py .
+
+# Copy the test data into the container
+COPY mock_stats.json .
+
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the events.py file into the container
+# Copy the livestats.py file into the container
+COPY livestats.py .
 
 # Set the command to run when the container starts
-CMD ["python", "livematch.py"]
+CMD ["python", "livestats.py"]

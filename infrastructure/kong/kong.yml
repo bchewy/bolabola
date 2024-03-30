@@ -60,12 +60,12 @@ services:
         paths:
           - "/api/v1/videoasset"
 
-  - name: livematch
-    url: http://livematch:9006
+  - name: livestats
+    url: http://livestats:9006
     routes:
-      - name: livematch-route
+      - name: livestats-route
         paths:
-          - "/api/v1/livematch"
+          - "/api/v1/livestats"
 
   - name: notification
     url: http://notification:9007

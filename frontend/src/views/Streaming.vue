@@ -97,10 +97,10 @@ export default defineComponent({
   },
   mounted() {
 
-    this.socket = io('http://localhost:8000', {
-      transports: ['websocket'],
-      path: '/api/v1/streaming/socket.io',
-    });
+      this.socket = io('http://localhost:8000', {
+        transports: ['websocket'],
+        path: '/api/v1/livestats/socket.io',
+      });
 
     this.socket.on('disconnect', () => {
       console.log('Disconnected from streaming server');
