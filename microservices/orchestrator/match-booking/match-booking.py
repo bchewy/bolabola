@@ -116,6 +116,21 @@ def publish_fail_msg(data):
         ),
     )
 
+    # Publish to seat reservation to remove ticket lock and remove userid from the seat
+    seat_message = {
+        "user_id": data["metadata"]["user_id"],
+        "ticket_ids": data["metadata"]["ticket_ids"],
+    }
+    channel.basic_publish(
+        exchange="booking",
+        routing_key="booking.seat_fail",
+        body=json.dumps(seat_message),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # make the message persistent
+        ),
+    )
+
+
     connection.close()
 
 
@@ -247,7 +262,31 @@ def process_webhook():
 
         return jsonify({"message": "Match booking info sent to AMQP"})
 
-    elif data["status"] == "expired":
+    
+# User does not pay in time
+@app.route("/fail-booking", methods=["POST"])
+def failed_booking():
+    """
+    This method receives a POST request from the billing service in the event the user fails to pay in 5 minutes.
+
+    Sample payload received from billing microservice:
+    {
+        'status': 'cancelled',
+        'payment_intent': 'pi_3OxQrhF4chEmCmGg0DaRyjoU',
+        'metadata': {
+                'user_id': '106225716514519006902',
+                'email': 'example@example.com',
+                'match_id': '65fe9fb32082209e71e8f34a',
+                'ticket_ids': '1'
+            }
+    }
+    """
+    data = request.json
+    print("The Match Booking orcha FAIL BILLING received the following from billing service: ")
+    print(data)
+
+    # Publish to RabbitMQ
+    if data["status"] == "expired":
         # send a message to the frontend to inform the user that the payment link has expired
         publish_fail_msg(data)
         return jsonify({"message": "Payment link expired!"})
