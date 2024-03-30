@@ -2,7 +2,7 @@
   <div>
     <NavBar />
     <div class="streaming-view">
-      {{ streamUrl }}
+      <!-- {{ streamUrl }} -->
       <div v-if="streamUrl" class="flex-container">
         <h3> {{ match.name }} </h3>
         <p class><span class="teamName">{{ match.home_team }}</span> {{ score[match.home_team] }}:{{
@@ -237,11 +237,11 @@ export default defineComponent({
 }
 
 .home-team {
-  background-color: lightblue;
+  background-color: #67C6E3;
 }
 
 .away-team {
-  background-color: lightgreen;
+  background-color: #5356ff;
 }
 
 .event.animate {
