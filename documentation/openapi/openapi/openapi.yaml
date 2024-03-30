@@ -653,18 +653,6 @@ paths:
                     description: IDs of all tickets for the match.
         '404':
           description: Match not found.
-  "/consume-notifications":
-    post:
-      tags:
-       - Notifications
-      summary: Consume notifications from RabbitMQ
-      description: |
-        Endpoint to start consuming notifications from RabbitMQ. This function listens to RabbitMQ queues for incoming messages, processes them, and sends notifications accordingly.
-      responses:
-        200:
-          description: Successfully started consuming notifications.
-        500:
-          description: Internal server error.
 
   "/send-email":
     post:
