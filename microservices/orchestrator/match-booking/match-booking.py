@@ -100,9 +100,8 @@ def publish_to_amqp(data):
     notification_message = {
         "user_id": data["metadata"]["user_id"],
         "email": data["metadata"]["email"],  # Assuming email is part of the metadata
-        "match_id": data["metadata"]["match_id"],
+        "match": retrieve_match_from_match_service(data["metadata"]["match_id"]),
         "quantity": quantity,
-        "message": "Thank you for your booking. Your tickets for the match are confirmed.",
     }
     channel.basic_publish(
         exchange="booking",

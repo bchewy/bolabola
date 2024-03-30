@@ -9,7 +9,7 @@
     </div>
     <p>User ID: {{this.$auth0.user.value.sub.split('|')[1]}}</p>
     <p>Match ID: {{ matchID }}</p>
-    <p v-show="token"><button class="btn btn-primary" @click="chooseSeats">Click here to choose your seats</button></p>
+    <p v-show="token"><button class="btn btn-primary gradient-button1" @click="chooseSeats">Click here to choose your seats</button></p>
   </div>
 </template>
 
@@ -34,7 +34,7 @@ export default {
       var message = {
         action: "connect",
         user_id: user_id,
-        demo: true
+        demo: true // generated for presentation
       }
       socket.send(JSON.stringify(message));
     };
@@ -150,6 +150,10 @@ export default {
 
 .card p {
   margin-bottom: 0;
+}
+
+.gradient-button1 {
+    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
 }
 </style>
 

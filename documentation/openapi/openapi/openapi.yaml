@@ -1,0 +1,924 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: BolaBola API
+  termsOfService: https://bolabola.smuaws.com/terms/
+  contact:
+    name: Contact BolaBola Support
+    email: support@bolabola.com
+    url: http://bolabola.smuaws.com/contact
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  x-logo:
+    url: "https://bolabola.com/logo.png"
+    altText: BolaBola logo
+  description: >
+    This is the **BolaBola** API to demonstrate the functionalities of the BolaBola application.
+
+    # Introduction
+
+    The BolaBola API is designed to provide developers with a comprehensive toolset for integrating with our platform, offering access to our core features and functionalities.
+
+    It also demonstrates the use of the OpenAPI specification to document APIs in a clear and concise manner, facilitating easier integration and understanding of the available API endpoints.
+
+    # OpenAPI Specification
+
+    The OpenAPI Specification offers a wide-ranging and language-agnostic interface to RESTful APIs, enabling both humans and computers to discover and understand the capabilities of a service without direct access to the source code or extensive documentation.
+
+    By adhering to the OpenAPI Specification, we aim to provide a seamless and straightforward experience for developers looking to integrate with the BolaBola platform, ensuring that the available services are easily accessible and understandable.
+externalDocs:
+  description: "Learn more about integrating with the BolaBola API."
+  url: "https://bolabola.com/docs/api"
+tags:
+  - name: Matches
+    description: "Operations related to match scheduling and information."
+  - name: Tickets
+    description: "Ticket purchasing and management operations."
+  - name: Users
+    description: "User account management and profile operations."
+  - name: Notifications
+    description: "User notifications and alerts."
+  - name: Billing
+    description: "Handle payments and refunds using Stripe integration."
+  - name: Seats
+    description: "Handle seat reservations and ticket counts."
+  - name: Video Asset
+    description: "Manages video assets; interacts with AWS DynamoDB to store and retrieve video metadata, including video URLs."
+x-tagGroups:
+  - name: Core Features
+    tags:
+      - Matches
+      - Tickets
+  - name: User Management
+    tags:
+      - Users
+      - Notifications
+      - Billing
+      - Seats
+      - Video Asset
+servers:
+  - url: https://{tenant}.bolabola.smuaws.com/api/v1
+    variables:
+      tenant:
+        default: app
+        description: Your tenant id
+  - url: https://api.bolabola.com/v1
+paths:
+  "/users/{userId}":
+    get:
+      tags:
+        - Users
+      summary: Retrieve User Information
+      description: Fetches the details of a user given their unique userId. This includes basic user information along with associated tickets.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user whose information is being retrieved.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User information retrieved successfully, including any tickets associated with the user.
+        "404":
+          description: User not found.
+    post:
+      tags:
+        - Users
+      summary: Register a New User
+      description: Registers a new user in the system. This endpoint requires a JSON payload containing the new user's information.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./components/schemas/newuser.yml#/NewUser"
+      responses:
+        "201":
+          description: New user has been successfully created.
+        "400":
+          description: Invalid input provided.
+    put:
+      tags:
+        - Users
+      summary: Update Existing User Information
+      description: Updates the information of an existing user identified by their userId. Requires a JSON payload with the updated user information.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user whose information is to be updated.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./components/schemas/updateuser.yml#/UpdateUser"
+      responses:
+        "200":
+          description: User information updated successfully.
+        "404":
+          description: User not found.
+        "400":
+          description: Invalid input provided.
+    delete:
+      tags:
+        - Users
+      summary: Remove a User
+      description: Deletes a user from the system using their unique userId. This action is irreversible.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user to be deleted.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: User deleted successfully.
+        "404":
+          description: User not found.  
+  "/availabletickets/{id}":
+    get:
+      summary: Get Available Tickets
+      description: Retrieve available tickets for a specific match.
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the match.
+          required: true
+          schema:
+            type: string
+            format: ObjectId
+      responses:
+        '200':
+          description: Successfully retrieved available tickets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ticket_id:
+                      type: string
+                    user_id:
+                      type: string
+                    match_id:
+                      type: string
+                    category:
+                      type: string
+                    seat_number:
+                      type: string
+        '404':
+          description: Match not found.
+  "/reserve":
+    post:
+      summary: Reserve Seats
+      description: Reserve seats for a user in a specific match.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                match_id:
+                  type: string
+                category:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '200':
+          description: Seats successfully reserved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                  ticket_ids:
+                    type: array
+                    items:
+                      type: string
+                    description: IDs of reserved tickets.
+        '400':
+          description: Invalid request payload.
+        '409':
+          description: One or more seats are currently on hold or have issues.
+  "/validate_reservation/":
+    post:
+      summary: Validate Reservation
+      description: Validate if a seat reservation belongs to a specific user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket_id:
+                  type: string
+                user_id:
+                  type: string
+      responses:
+        '200':
+          description: Validation successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [confirmed, available]
+                    description: Status of the reservation.
+                  message:
+                    type: string
+                    description: Confirmation message.
+        '404':
+          description: Seat not found.
+  "/tickets/count":
+    post:
+      summary: Get Ticket Count
+      description: Get the count of tickets for a specific match, including reserved and available tickets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                match_id:
+                  type: string
+      responses:
+        '200':
+          description: Ticket count successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                    description: ID of the match.
+                  reserved_tickets:
+                    type: object
+                    properties:
+                      A:
+                        type: integer
+                        description: Number of reserved tickets in category A.
+                      B:
+                        type: integer
+                        description: Number of reserved tickets in category B.
+                      C:
+                        type: integer
+                        description: Number of reserved tickets in category C.
+                  available_tickets:
+                    type: object
+                    properties:
+                      A:
+                        type: integer
+                        description: Number of available tickets in category A.
+                      B:
+                        type: integer
+                        description: Number of available tickets in category B.
+                      C:
+                        type: integer
+                        description: Number of available tickets in category C.
+                  ticket_ids:
+                    type: array
+                    items:
+                      type: string
+                    description: IDs of all tickets for the match.
+        '404':
+          description: Match not found.
+  "/":
+    get:
+      summary: Health Check
+      description: Check the health status of the API.
+      responses:
+        '200':
+          description: API is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    description: Status of the API.
+                    example: alive
+
+
+  "/matches/{matchId}":
+    get:
+      tags:
+        - Matches
+      summary: Get match details
+      description: Retrieves the details of a match by its unique matchId.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully retrieved match details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  home_team:
+                    type: string
+                  away_team:
+                    type: string
+                  home_score:
+                    type: integer
+                  away_score:
+                    type: integer
+                  date:
+                    type: string
+                    format: date-time
+                  seats:
+                    type: integer
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category:
+                          type: string
+                        quantity:
+                          type: integer
+    post:
+      tags:
+        - Matches
+      summary: Create a new match
+      description: Creates a new match with the provided details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - home_team
+                - away_team
+                - date
+                - seats
+                - categories
+              properties:
+                name:
+                  type: string
+                home_team:
+                  type: string
+                away_team:
+                  type: string
+                date:
+                  type: string
+                  format: date-time
+                seats:
+                  type: integer
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        "201":
+          description: Match created successfully.
+    put:
+      tags:
+        - Matches
+      summary: Update match details
+      description: Updates the details of an existing match identified by its matchId.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match to update.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                home_team:
+                  type: string
+                away_team:
+                  type: string
+                home_score:
+                  type: integer
+                away_score:
+                  type: integer
+                date:
+                  type: string
+                  format: date-time
+                seats:
+                  type: integer
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                      quantity:
+                        type: integer
+      responses:
+        "200":
+          description: Match updated successfully.
+    delete:
+      tags:
+        - Matches
+      summary: Delete a match
+      description: Deletes a match from the system using its unique matchId. This action is irreversible.
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: The unique identifier of the match to be deleted.
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Match deleted successfully.
+  "/seat":
+    get:
+      tags:
+        - Tickets
+      summary: Get seat information
+      description: Retrieves information about available seats for a match.
+      parameters:
+        - name: matchId
+          in: query
+          required: true
+          description: The unique identifier of the match to retrieve seat information for.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Seat information retrieved successfully.
+  "/seat/availabletickets/{id}":
+    get:
+      tags:
+       - Seats
+      summary: Get Available Tickets
+      description: Retrieve available tickets for a specific match.
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the match.
+          required: true
+          schema:
+            type: string
+            format: ObjectId
+      responses:
+        '200':
+          description: Successfully retrieved available tickets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ticket_id:
+                      type: string
+                    user_id:
+                      type: string
+                    match_id:
+                      type: string
+                    category:
+                      type: string
+                    seat_number:
+                      type: string
+        '404':
+          description: Match not found.
+  "/seat/reserve":
+    post:
+      tags:
+       - Seats
+      summary: Reserve Seats
+      description: Reserve seats for a user in a specific match.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                match_id:
+                  type: string
+                category:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '200':
+          description: Seats successfully reserved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                  ticket_ids:
+                    type: array
+                    items:
+                      type: string
+                    description: IDs of reserved tickets.
+        '400':
+          description: Invalid request payload.
+        '409':
+          description: One or more seats are currently on hold or have issues.
+  "/seat/validate_reservation/":
+    post:
+      tags:
+       - Seats
+      summary: Validate Reservation
+      description: Validate if a seat reservation belongs to a specific user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ticket_id:
+                  type: string
+                user_id:
+                  type: string
+      responses:
+        '200':
+          description: Validation successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [confirmed, available]
+                    description: Status of the reservation.
+                  message:
+                    type: string
+                    description: Confirmation message.
+        '404':
+          description: Seat not found.
+  "/seat/tickets/count":
+    post:
+      tags:
+       - Seats
+      summary: Get Ticket Count
+      description: Get the count of tickets for a specific match, including reserved and available tickets.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                match_id:
+                  type: string
+      responses:
+        '200':
+          description: Ticket count successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                    description: ID of the match.
+                  reserved_tickets:
+                    type: object
+                    properties:
+                      A:
+                        type: integer
+                        description: Number of reserved tickets in category A.
+                      B:
+                        type: integer
+                        description: Number of reserved tickets in category B.
+                      C:
+                        type: integer
+                        description: Number of reserved tickets in category C.
+                  available_tickets:
+                    type: object
+                    properties:
+                      A:
+                        type: integer
+                        description: Number of available tickets in category A.
+                      B:
+                        type: integer
+                        description: Number of available tickets in category B.
+                      C:
+                        type: integer
+                        description: Number of available tickets in category C.
+                  ticket_ids:
+                    type: array
+                    items:
+                      type: string
+                    description: IDs of all tickets for the match.
+        '404':
+          description: Match not found.
+  "/consume-notifications":
+    post:
+      tags:
+       - Notifications
+      summary: Consume notifications from RabbitMQ
+      description: |
+        Endpoint to start consuming notifications from RabbitMQ. This function listens to RabbitMQ queues for incoming messages, processes them, and sends notifications accordingly.
+      responses:
+        200:
+          description: Successfully started consuming notifications.
+        500:
+          description: Internal server error.
+
+  "/send-email":
+    post:
+      tags:
+       - Notifications
+      summary: Send email notification
+      description: |
+        Endpoint to send email notifications to users using AWS SES (Simple Email Service). This endpoint expects a JSON payload containing recipient email, subject, and message body.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Email address of the recipient.
+                subject:
+                  type: string
+                  description: Subject of the email.
+                body:
+                  type: string
+                  description: Body content of the email.
+              required:
+                - email
+                - subject
+                - body
+      responses:
+        200:
+          description: Email notification sent successfully.
+        400:
+          description: Bad request. Missing required fields or invalid data provided.
+        500:
+          description: Internal server error. Failed to send email notification.
+  "/ping":
+    get:
+      tags:
+       - Billing
+      summary: Ping endpoint
+      description: Endpoint for testing the availability of the billing service.
+      responses:
+        200:
+          description: Service is available and responsive.
+
+  "/public-key":
+    get:
+      tags:
+       - Billing
+      summary: Get Stripe public key
+      description: Endpoint to retrieve the public key for the frontend integration with Stripe.
+      responses:
+        200:
+          description: Successfully retrieved the public key.
+        500:
+          description: Internal server error.
+
+  "/checkout":
+    post:
+      tags:
+       - Billing
+      summary: Create checkout session
+      description: |
+        Endpoint to create a new checkout session for purchasing tickets. This endpoint expects a JSON payload containing details about the tickets to be purchased, match information, and user details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                match_id:
+                  type: string
+                  description: The ID of the match.
+                match_name:
+                  type: string
+                  description: The name of the match.
+                tickets:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                        description: The category of the ticket (e.g., A, B, C).
+                      quantity:
+                        type: integer
+                        description: The quantity of tickets to be purchased for this category.
+                  description: Details about the tickets to be purchased.
+                user_id:
+                  type: string
+                  description: The ID of the user making the purchase.
+                ticket_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of ticket IDs.
+              required:
+                - match_id
+                - match_name
+                - tickets
+                - user_id
+                - ticket_ids
+      responses:
+        200:
+          description: Checkout session created successfully.
+        403:
+          description: Error creating the checkout session.
+        500:
+          description: Internal server error.
+
+  "/webhook/stripe":
+    post:
+      tags:
+       - Billing
+      summary: Stripe webhook endpoint
+      description: Endpoint to handle webhook events from Stripe, such as payment confirmation, cancellation, or expiration.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Payload from the Stripe webhook event.
+      responses:
+        200:
+          description: Payment confirmed and orchestrator notified.
+        400:
+          description: Invalid payload or signature.
+        500:
+          description: Failed to notify the orchestrator.
+
+  "/refund":
+    post:
+      tags:
+       - Billing
+      summary: Refund payment
+      description: |
+        Endpoint to refund a user's payment. This endpoint expects a JSON payload containing the payment intent ID and other details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_intent:
+                  type: string
+                  description: The ID of the payment intent to be refunded.
+                user_id:
+                  type: string
+                  description: The ID of the user whose payment is being refunded.
+                match_id:
+                  type: string
+                  description: The ID of the match associated with the payment.
+                category:
+                  type: string
+                  description: The category of the ticket for which the refund is being processed.
+                quantity:
+                  type: integer
+                  description: The quantity of tickets for which the refund is being processed.
+                ticket_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of ticket IDs associated with the payment.
+              required:
+                - payment_intent
+                - user_id
+                - match_id
+                - category
+                - quantity
+                - ticket_ids
+      responses:
+        200:
+          description: Refund successful.
+        400:
+          description: Bad request. Missing required fields or invalid data provided.
+        500:
+          description: Internal server error. Failed to process the refund.
+  "/video":
+      post:
+        tags:
+          - Video Asset
+        summary: Create video asset
+        description: Create a new video asset with a given video ID and URL.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the video asset (equivalent to match ID).
+                  url:
+                    type: string
+                    description: The URL of the video asset.
+                required:
+                  - id
+                  - url
+        responses:
+          '201':
+            description: Video asset created successfully.
+          '400':
+            description: Bad request. Missing video ID or URL.
+          '500':
+            description: Internal server error. Failed to create video asset.
+      get:
+        tags:
+          - Video Asset
+        summary: Get video asset
+        description: Retrieve the URL of a video asset by its video ID (equivalent to match ID).
+        parameters:
+          - in: query
+            name: id
+            schema:
+              type: string
+            required: true
+            description: The ID of the video asset to retrieve.
+        responses:
+          '200':
+            description: Video asset retrieved successfully.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    video_url:
+                      type: string
+                      description: The URL of the video asset.
+          '400':
+            description: Bad request. Missing video ID.
+          '404':
+            description: Video not found.
+    
+
+components:
+  securitySchemes:
+    bolabola_auth:
+      description: "OAuth2 authentication for accessing BolaBola APIs."
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://bolabola.com/oauth/authorize
+          tokenUrl: https://bolabola.com/oauth/token
+          scopes:
+            "read:matches": View match information
+            "write:tickets": Purchase and manage tickets
+    api_key:
+      description: "API key authentication for accessing BolaBola APIs."
+      type: apiKey
+      in: header
+      name: X-BolaBola-API-Key
+
+

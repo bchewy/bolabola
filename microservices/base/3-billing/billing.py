@@ -113,7 +113,7 @@ def create_checkout_session():
                 "A": A,
                 "B": B,
                 "C": C,
-                "ticket_ids": ticket_ids, # to get dynamically
+                "ticket_ids": ticket_ids,  # to get dynamically
             }
             print("Doing stripe checkout now")
             checkout_session = stripe.checkout.Session.create(
@@ -225,6 +225,18 @@ def refund_payment():
         if "payment_intent" not in payload:
             return jsonify({"error": "payment_intent not found"}), 400
 
+        # Retrieving the user's email to be placed int othe metadata.
+        print("Retriving user email in billing")
+        user_id = payload["user_id"]
+        user_email_response = requests.get(
+            f"http://kong:8000/api/v1/user/email/{user_id}"
+        )
+        if user_email_response.status_code == 200:
+            user_email = user_email_response.json().get("email")
+            print("User email retrieved! ", user_email)
+        else:
+            print(f"Failed to retrieve user email for user_id: {user_id}")
+
         metadata = {
             "user_id": payload["user_id"],
             "match_id": payload["match_id"],
@@ -232,8 +244,8 @@ def refund_payment():
             "quantity": payload["quantity"],
             "payment_intent": payload["payment_intent"],
             "ticket_ids": payload["ticket_ids"],
+            "email": user_email,
         }
-
         # call stripe to refund the payment
         refund = stripe.Refund.create(
             payment_intent=payload["payment_intent"],

@@ -1,13 +1,16 @@
 <template>
   <div>
     <NavBar />
-    <div class="events-view">
+    <div class="events-view container-fluid">
       <h1 class="text-superblue">Matches</h1>
       <p class="lead text-dark">Find the latest games here!</p>
-
+      <div class="input-group mb-3">
+        <input type="text" v-model="searchTerm" class="form-control" placeholder="Search by name..."
+          aria-label="Search by name">
+      </div>
       <div class="container-fluid mt-3">
         <div class="row gx-3 gy-3">
-          <div v-for="match in matches" :key="match._id" class="col col-xs-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
+          <div v-for="match in filteredMatches" :key="match._id" class="col-12 col-sm-12 col-md-6 col-lg-4 col-xl-3">
             <div class="card" @click="displayMatchDetails(match)">
               <div class="card-body">
                 <h5 class="card-title">{{ match.name }}</h5>
@@ -60,8 +63,16 @@ export default {
   data() {
     return {
       matches: [],
-      selectedMatch: null
+      selectedMatch: null,
+      searchTerm: ''
     };
+  },
+  computed: {
+    filteredMatches() {
+      return this.matches.filter(match =>
+        match.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
+    }
   },
   created() {
     this.fetchMatches();
@@ -182,11 +193,11 @@ export default {
 }
 
 .gradient-button1 {
-    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
+  background-image: linear-gradient(to right, #67C6E3, #5356FF);
 }
 
 .gradient-button2 {
-  background-image: linear-gradient(to right, #DFF5FF, #67C6E3); 
+  background-image: linear-gradient(to right, #DFF5FF, #67C6E3);
   color: black
 }
 </style>

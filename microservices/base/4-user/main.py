@@ -49,7 +49,6 @@ async def add_ticket(message: aio_pika.IncomingMessage):
         ticket_ids = data["ticket_ids"]
         payment_intent = data["payment_intent"]
 
-
         # Add the ticket into the user's database
         async with AsyncSessionLocal() as session:
             async with session.begin():
@@ -58,12 +57,29 @@ async def add_ticket(message: aio_pika.IncomingMessage):
                     print("User not found")
                     return
                 if user.tickets is None or len(user.tickets) == 0:
-                    user.tickets = [{"match_id": match_id, "ticket_category": category, "ticket_ids": ticket_ids, "payment_intent": payment_intent, "quantity": quantity}]
+                    user.tickets = [
+                        {
+                            "match_id": match_id,
+                            "ticket_category": category,
+                            "ticket_ids": ticket_ids,
+                            "payment_intent": payment_intent,
+                            "quantity": quantity,
+                        }
+                    ]
                 else:
-                    user.tickets.append({"match_id": match_id, "ticket_category": category, "ticket_ids": ticket_ids, "payment_intent": payment_intent, "quantity": quantity})
+                    user.tickets.append(
+                        {
+                            "match_id": match_id,
+                            "ticket_category": category,
+                            "ticket_ids": ticket_ids,
+                            "payment_intent": payment_intent,
+                            "quantity": quantity,
+                        }
+                    )
                 flag_modified(user, "tickets")
                 await session.commit()
                 print("Ticket added successfully")
+
 
 async def delete_ticket(message: aio_pika.IncomingMessage):
     received_msg = json.loads(message.body.decode())
@@ -78,31 +94,42 @@ async def delete_ticket(message: aio_pika.IncomingMessage):
                 return json.dumps({"code": 404, "message": "User not found"})
             if user.tickets is None:
                 return json.dumps({"code": 404, "message": "User has no tickets"})
-            for ticket in user.tickets: # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
+            for (
+                ticket
+            ) in (
+                user.tickets
+            ):  # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
                 if ticket["payment_intent"] == payment_intent:
                     user.tickets.remove(ticket)
                     flag_modified(user, "tickets")
                     await session.commit()
-                    tickets_deleted = True 
+                    tickets_deleted = True
             if tickets_deleted:
                 print("Ticket deleted successfully")
-                return json.dumps({"code": 200, "message": "Ticket(s) deleted successfully"})
+                return json.dumps(
+                    {"code": 200, "message": "Ticket(s) deleted successfully"}
+                )
             print("Ticket not found")
             return json.dumps({"code": 404, "message": "Ticket not found"})
+
 
 async def amqp():
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     connection = await aio_pika.connect_robust(rabbitmq_url)
     channel = await connection.channel()
 
-    exchangeBooking = await channel.declare_exchange("booking", aio_pika.ExchangeType.DIRECT, durable=True)
+    exchangeBooking = await channel.declare_exchange(
+        "booking", aio_pika.ExchangeType.DIRECT, durable=True
+    )
     queueBooking = await channel.declare_queue("user", durable=True)
     # Bind the queue to the exchange
     await queueBooking.bind(exchangeBooking, "booking.user")
     await queueBooking.consume(add_ticket)
     print("RabbitMQ for booking started")
 
-    exchangeRefund = await channel.declare_exchange("refund", aio_pika.ExchangeType.DIRECT, durable=True)
+    exchangeRefund = await channel.declare_exchange(
+        "refund", aio_pika.ExchangeType.DIRECT, durable=True
+    )
     queueRefund = await channel.declare_queue("user", durable=True)
     # Bind the queue to the exchange
     await queueRefund.bind(exchangeRefund, "refund.user")
@@ -226,6 +253,15 @@ async def view_user(id):
         return jsonify({"code": 200, "data": user.json()})
 
 
+@app.route("/email/<int:user_id>", methods=["GET"])
+async def get_user_email(user_id):
+    async with AsyncSessionLocal() as session:
+        user = await session.get(User, str(user_id))
+        if user is None:
+            return jsonify({"code": 404, "message": "User not found"})
+        return jsonify({"code": 200, "email": user.email})
+
+
 ############################################################################################################
 ########################################    CREATE USER     ################################################
 ############################################################################################################
@@ -296,6 +332,7 @@ async def view_all_user_tickets(id):
                 return jsonify({"code": 404, "message": "User has no tickets"})
             return jsonify({"code": 200, "data": user.tickets})
 
+
 # # view a specific ticket bought by the user by serial number
 # @app.route("/<int:id>/tickets/<int:serial_no>", methods=["GET"])
 # async def view_ticket_by_serial_no(id, serial_no):
@@ -314,6 +351,7 @@ async def view_all_user_tickets(id):
 #                     return jsonify({"code": 200, "data": ticket})
 #             return jsonify({"code": 404, "message": "Ticket not found"})
 
+
 # view a specific ticket bought by the user by match id
 @app.route("/<int:id>/tickets/match/<string:match_id>", methods=["GET"])
 async def view_ticket_by_match_id(id, match_id):
@@ -331,6 +369,7 @@ async def view_ticket_by_match_id(id, match_id):
                 if ticket["match_id"] == str(match_id):
                     return jsonify({"code": 200, "data": ticket})
             return jsonify({"code": 404, "message": "Ticket not found"})
+
 
 ############################################################################################################
 #################################    END OF VIEW USER TICKETS    ###########################################
@@ -405,15 +444,20 @@ async def delete_ticket_from_user(id):
                 return jsonify({"code": 404, "message": "User not found"})
             if user.tickets is None:
                 return jsonify({"code": 404, "message": "User has no tickets"})
-            for ticket in user.tickets: # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
+            for (
+                ticket
+            ) in (
+                user.tickets
+            ):  # there is a need to loop through all the tickets because there can be multiple tickets with the same payment_intent
                 if ticket["payment_intent"] == payment_intent:
                     user.tickets.remove(ticket)
                     flag_modified(user, "tickets")
                     await session.commit()
-                    tickets_deleted = True 
+                    tickets_deleted = True
             if tickets_deleted:
                 return jsonify({"code": 200, "message": "Ticket deleted successfully"})
             return jsonify({"code": 404, "message": "Ticket not found"})
+
 
 ############################################################################################################
 ####################################    END OF DELETE A USER TICKET     ####################################
