@@ -93,6 +93,7 @@ def publish_to_amqp(data):
 
     connection.close()
 
+
 def publish_fail_msg(data):
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     parameters = pika.URLParameters(rabbitmq_url)
@@ -116,6 +117,7 @@ def publish_fail_msg(data):
     )
 
     connection.close()
+
 
 # RETURNS AVAILABLE TICKETS
 @app.route("/availabletickets/<match_id>", methods=["GET"])
