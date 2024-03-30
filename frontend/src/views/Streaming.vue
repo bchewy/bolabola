@@ -5,6 +5,7 @@
       <!-- {{ streamUrl }} -->
       <div v-if="streamUrl" class="flex-container">
         <h3> {{ match.name }} </h3>
+        {{ score }}
         <p class><span class="teamName">{{ match.home_team }}</span> {{ score[match.home_team] }}:{{
         score[match.away_team] }} <span>{{ match.away_team }}</span></p>
         <div class="container">
@@ -103,8 +104,8 @@ export default defineComponent({
       console.log('Stream data:', data.data);
       console.log(data.data.event)
       if (data.data.event == 'GOAL') {
-        console.log(this.score[data.data.team])
-        this.score[data.data.team] += 1;
+        console.log(this.score[data.data.team.toUpperCase()])
+        this.score[data.data.team.toUpperCase()] += 1;
       }
 
       this.$nextTick(() => {
