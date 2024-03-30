@@ -26,7 +26,7 @@
                 <button v-if="isWithinBookingWindow(match.date)" class="btn btn-primary gradient-button1" @click="bookMatch(match)">Book Now</button>
                 <button v-else class="btn btn-primary gradient-button1" disabled>Book Now</button>
                 <button v-if="!isDuringLiveWindow(match.date)" class="btn btn-primary gradient-button2" @click="watchMatch(match)" disabled>Watch Live</button>
-                <button v-else class="btn btn-primary gradient-button2">Watch Live</button>
+                <button v-else class="btn btn-primary gradient-button2" @click="watchMatch(match)">Watch Live</button>
               </div>
             </div>
           </div>
