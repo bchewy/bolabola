@@ -14,29 +14,26 @@ networks:
     name: kong-net
 services:
   ##### FRONTEND #####
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/certbot/conf:/etc/letsencrypt
-    depends_on:
-      - frontend
-    networks:
-      - kong-net
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/conf.d:/etc/nginx/conf.d
+  #     - ./nginx/certbot/conf:/etc/letsencrypt
+  #   depends_on:
+  #     - frontend
+  #   networks:
+  #     - kong-net
 
-  frontend:
-    image: nginx:latest
-    container_name: nginx_frontend
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html
-    ports:
-      - "8080:80"
-    networks:
-      - kong-net
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   networks:
+  #     - kong-net
 
   ##### BACKEND #####
 
