@@ -29,9 +29,12 @@ services:
       - kong-net
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: nginx:latest
+    container_name: nginx_frontend
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+    ports:
+      - "8080:80"
     networks:
       - kong-net
 
