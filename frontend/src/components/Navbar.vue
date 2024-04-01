@@ -82,7 +82,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-lightblue">
         <div class="container">
             <a class="navbar-brand text-superblue" href="#" style="display: flex; align-items: center;">
-                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png"
+                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/logo1.png"
                     class="img-fluid" style="max-height: 40px;">
                 <router-link class="nav-link text-evenlighter" to="/" style="margin-left: 5px;">Bola Bola</router-link>
             </a>
