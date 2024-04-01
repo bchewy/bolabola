@@ -123,8 +123,8 @@ def create_checkout_session():
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
-                success_url="http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://localhost:5173/views/checkoutCancel",
+                success_url="https://esd.bchwy.com/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="https://esd.bchwy.com/views/checkoutCancel",
                 metadata=metadata,  # pass the metadata to the webhook
             )
             checkout_session_id = checkout_session["id"]
