@@ -165,7 +165,7 @@ def stripe_webhook():
         return "Invalid signature", 400
 
     # send payment information to orchestrator
-    ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
+    ORCHESTRATOR_URL = "https://esd.bchwy.com:8443/api/v1/booking/process-webhook"
 
     # # remove the ticket from the list
     # for ticket in tickets_reserved_not_bought:
@@ -243,7 +243,7 @@ def check_tickets():
                 },
             }
             response = requests.post(
-                "http://kong:8000/api/v1/booking/fail-booking", json=payload
+                "https://esd.bchwy.com:8443/api/v1/booking/fail-booking", json=payload
             )
             print("The response from orchestrator is: ", response)
             if response.ok:
