@@ -2,3 +2,4 @@ flask
 requests
 pika
 flask_cors
+prometheus_flask_exporter

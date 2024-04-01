@@ -4,6 +4,8 @@ import pika
 from threading import Thread
 import requests
 import json
+from prometheus_flask_exporter import PrometheusMetrics
+
 
 MATCH_URL = "http://kong:8000/api/v1/match"
 SEAT_URL = "http://kong:8000/api/v1/seat"
@@ -11,6 +13,14 @@ BILLING_URL = "http://kong:8000/api/v1/billing"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+metrics = PrometheusMetrics(app)
+
+# Metrics:
+match_booking_attempts = metrics.counter(
+    "match_booking_attempts",
+    "Number of attempts to book a match",
+    labels={"outcome": None},
+)
 
 
 # Publish to AMQP - to update subsequent services about the match booking
@@ -19,6 +29,8 @@ def publish_to_amqp(data):
     parameters = pika.URLParameters(rabbitmq_url)
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
+
+    match_booking_attempts.labels(outcome=True).inc()
 
     # Publish to user to update match booking - DONE
     category = ""
@@ -129,7 +141,6 @@ def publish_fail_msg(data):
             delivery_mode=2,  # make the message persistent
         ),
     )
-
 
     connection.close()
 
@@ -262,7 +273,7 @@ def process_webhook():
 
         return jsonify({"message": "Match booking info sent to AMQP"})
 
-    
+
 # User does not pay in time
 @app.route("/fail-booking", methods=["POST"])
 def failed_booking():
@@ -281,7 +292,9 @@ def failed_booking():
     }
     """
     data = request.json
-    print("The Match Booking orcha FAIL BILLING received the following from billing service: ")
+    print(
+        "The Match Booking orcha FAIL BILLING received the following from billing service: "
+    )
     print(data)
 
     # Publish to RabbitMQ
