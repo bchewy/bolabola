@@ -4,7 +4,7 @@ import pika
 from threading import Thread
 import requests
 import json
-from prometheus_flask_exporter import PrometheusMetrics
+# from prometheus_flask_exporter import PrometheusMetrics
 
 # Local URLs
 # MATCH_URL = "http://kong:8000/api/v1/match"
@@ -18,14 +18,14 @@ BILLING_URL = "https://esd.bchwy.com:8443/api/v1/billing"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-metrics = PrometheusMetrics(app)
+# metrics = PrometheusMetrics(app)
 
 # Metrics:
-match_booking_attempts = metrics.counter(
-    "match_booking_attempts",
-    "Number of attempts to book a match",
-    labels={"outcome": None},
-)
+# match_booking_attempts = metrics.counter(
+#     "match_booking_attempts",
+#     "Number of attempts to book a match",
+#     labels={"outcome": None},
+# )
 
 
 # Publish to AMQP - to update subsequent services about the match booking
@@ -35,7 +35,7 @@ def publish_to_amqp(data):
     connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
 
-    match_booking_attempts.labels(outcome=True).inc()
+    # match_booking_attempts.labels(outcome=True).inc()
 
     # Publish to user to update match booking - DONE
     category = ""
