@@ -147,8 +147,8 @@ export default defineComponent({
         console.log(response.data.data.match_details)
         this.match = response.data.data.match_details;
         this.score = {
-          [this.match.home_team]: 0,
-          [this.match.away_team]: 0,
+          [this.match.home_team.toUpperCase()]: 0,
+          [this.match.away_team.toUpperCase()]: 0,
         }
       })
       .catch((error) => {
