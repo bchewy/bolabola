@@ -60,7 +60,7 @@ export default {
                     "user_id": "123"
                 };
                 // make a POST request to the backend
-                fetch('https://kong:8443/api/v1/billing/checkout', {
+                fetch('https://localhost:8443/api/v1/billing/checkout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
