@@ -84,12 +84,19 @@ export default defineComponent({
       score: {}
     };
   },
+  created() {
+    console.log('MATCH ID HERE: ', this.$route.params.id)
+  },
   mounted() {
 
-      this.socket = io('http://localhost:8000', {
-        transports: ['websocket'],
-        path: '/api/v1/livestats/socket.io',
-      });
+    this.socket = io('http://localhost:8000', {
+      transports: ['websocket'],
+      path: '/api/v1/livestats/socket.io',
+      // Query doesnt work... =(
+      // query: {
+      //   match_id: this.$route.params.id,
+      // }
+    });
 
     this.socket.on('disconnect', () => {
       console.log('Disconnected from streaming server');
@@ -97,6 +104,8 @@ export default defineComponent({
 
     this.socket.on('connect', () => {
       console.log('Connected to streaming server');
+
+      this.socket.emit('start', { match_id: this.$route.params.id });
     });
 
     this.socket.on('stream', (data) => {
@@ -126,9 +135,9 @@ export default defineComponent({
     });
 
     axios
-      .get("http://localhost:8000/api/v1/videoasset/video?id=1")
+      .get(`http://localhost:8000/api/v1/videoasset/video?id=${this.matchID}`)
       .then((response) => {
-        console.log("response",response.data)
+        console.log("response", response.data)
         this.streamUrl = response.data;
         // Process the streaming details as needed
         // console.log("Streaming details:", streamingDetails);
@@ -185,7 +194,7 @@ export default defineComponent({
   margin-top: 20px;
 }
 
-.eventPlayer{
+.eventPlayer {
   font-weight: 300;
 }
 

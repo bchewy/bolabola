@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import os
 import json
 import requests
+from boto3.dynamodb.conditions import Key
+from pytube import YouTube
 
 app = Flask(__name__)
 load_dotenv()
@@ -54,7 +56,53 @@ else:
     print(f"Bucket {bucket_name} already exists and is accessible.")
 
 
-# it is important to note here that the √ideo id equals to the match id.
+def download_and_upload_video(youtube_url, s3_bucket_name=bucket_name):
+    try:
+        # Download video from YouTube
+        yt = YouTube(youtube_url)
+        video_stream = (
+            yt.streams.filter(progressive=True, file_extension="mp4")
+            .order_by("resolution")
+            .desc()
+            .first()
+        )
+        if not video_stream:
+            return {"error": "No suitable video stream found"}, 400
+
+        # Create a temporary file to store the downloaded video
+        temp_video_path = video_stream.download()
+
+        # Upload the video to S3
+        video_filename = os.path.basename(temp_video_path)
+        s3.upload_file(
+            Filename=temp_video_path,
+            Bucket=s3_bucket_name,
+            Key=video_filename,
+            ExtraArgs={"ACL": "public-read"},
+        )
+
+        # Generate the URL of the uploaded video
+        video_url = f"https://{s3_bucket_name}.s3.amazonaws.com/{video_filename}"
+
+        # Clean up the temporary file
+        os.remove(temp_video_path)
+
+        return {"video_url": video_url}, 200
+    except Exception as e:
+        print(f"Error downloading and uploading video: {str(e)}")
+        return {"error": "Failed to process video"}, 500
+
+
+def query_video_id_12labs_by_match_id(match_id):
+    table = dynamodb.Table("ESD-VideoMetaData")
+    response = table.query(
+        KeyConditionExpression=Key("video_id").eq(match_id)
+    )  # !!! video_id is match id!
+    items = response.get("Items", [])
+    if items:
+        return items[0].get("video_id_12labs")
+    else:
+        return None
 
 
 # Cache size depends on your needs; here, we cache the latest 128 requests
@@ -81,30 +129,53 @@ def get_video_path(video_id):
 
 
 # Create video asset with video_id
-@app.route("/ ", methods=["POST"])
+@app.route("/", methods=["POST"])
 def create_video_asset():
+    print("======================== coming into video crud=================")
     video_url = request.json.get("video_url")
     match_id = request.json.get("match_id")
     if not video_url:
         return jsonify({"error": "No video URL provided"}), 400
 
+    url = "https://api.twelvelabs.io/v1.2/tasks/external-provider"
+
     try:
         # Send video_url to 12labs API and get video_id as response
         response = requests.post(
-            "https://api.12labs.com/upload",
-            json={"video_url": video_url},
-            headers={"Authorization": "Bearer tlk_0A7K1FP1A5EK902T611D205A8D51"},
+            url,
+            json={
+                "index_id": "660a6bbf2ae59d128f13369f",  # hardcoded index_id
+                "url": video_url,  # certain mediacorp/channels/region locked videos on youtube urls are NOT supported.
+            },
+            headers={
+                "accept": "application/json",
+                "content-type": "application/json",
+                "x-api-key": "tlk_0A7K1FP1A5EK902T611D205A8D51",
+            },
         )
         response_data = response.json()
-        if response.status_code == 200:
-            video_id_12labs = response_data["video_id"]
+        if response.status_code == 201:  # 12labs returns 201
+            video_id_12labs = response_data["_id"]
+
+            # DOwnload video for usage locally
+            print("======= Downloading video to s3 here =======")
+            result = download_and_upload_video(video_url)
+            print("result: " + str(result))
+            s3_url = result[0]["video_url"]
+            print("s3 url is : " + str(s3_url))
+            print("Download ran")
+
+            # Update match id -- video url -- video id to dynamoDB
+            # video url to play on frontend
+            # video id 12labs needed to take highlights in livestats micro
             table.put_item(
                 Item={
-                    "match_id": match_id,
-                    "video_url": video_url,
+                    "video_id": match_id,  # !!!! video_id on dynamo IS match_id.
+                    "video_url": s3_url,
                     "video_id_12labs": video_id_12labs,
                 }
             )
+
         else:
             return (
                 jsonify({"error": "Failed to process video with 12labs"}),
@@ -142,6 +213,19 @@ def get_video():
         return jsonify(video_path)
     else:
         return jsonify({"error": "Video not found"}), 404
+
+
+@app.route("/video/<matchid>", methods=["GET"])
+def get_video_id_12labs(matchid):
+    try:
+        video_id_12labs = query_video_id_12labs_by_match_id(matchid)
+        if video_id_12labs:
+            return jsonify({"video_id_12labs": video_id_12labs}), 200
+        else:
+            return jsonify({"error": "Match ID not found"}), 404
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Internal server error"}), 500
 
 
 if __name__ == "__main__":

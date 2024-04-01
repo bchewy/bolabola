@@ -7,6 +7,7 @@ import graphene
 from flask_socketio import SocketIO, emit
 import json
 import redis
+from flask import request
 
 app = Flask(__name__)
 socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins="*")
@@ -31,15 +32,31 @@ def index():
 @socketio.on("connect")
 def handle_connect(*args):
     print("Client connected")
+    emit("connected", {"message": "Connected to match streaming service"})
+
+
+@socketio.on("start")
+def start_things(*args):
+    print("======================================================================")
+    print("Client connected")
     # Cache in redis
     BASE_URL = "https://api.twelvelabs.io/v1.2"
     api_key = "tlk_0W18KV92FYPK3S2NY8RQZ2EWFC3R"
+    print("Socket iniital connection ===============")
+    print("Request args: ", args)
+    match_id = args[0]["match_id"]
+    # match_id = data.get("match_id")
+    print("MATCH ID IS : ", match_id)
+    video_id = fetch_match_video(match_id)
+
     query = {
-        "video_id": "6607ccef66995fbd9fd65fbc",
+        "video_id": video_id,
         "type": "summary",
         "prompt": 'return only a json object list called "highlights" of highlights including:\n\ntimestamp\nplayer\nteam\nevent\ndescription\n\nthe timestamp should follow the video\'s timing in seconds as an int,\nexample of event can be "SHOT", "CROSS", "VAR", "PASS"\nbe as specific as possible, at least 10 events',
-        "index_id": "6607ccc7a8753bd44500e816",
+        # "index_id": "6607ccc7a8753bd44500e816", #matt's 12lab index
+        "index_id": "660a6bbf2ae59d128f13369f", #brian's 
     }
+
     # Send request
     response = requests.post(
         f"{BASE_URL}/summarize", json=query, headers={"x-api-key": api_key}
@@ -57,6 +74,25 @@ def handle_connect(*args):
         # redis_client.hset('stats', mapping=data)
         redis_client.hset("stats", mapping=summaryDict)
     emit("connected", {"message": "Connected to match streaming service"})
+
+
+# HELPER FUNCTION TO FETCH 12LABS VIDEO ID
+def fetch_match_video(match_id):
+    url = f"http://localhost:8000/api/v1/videoasset/video/{match_id}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        print("VIDEO Data from within livestats: ", response.json())
+        video_data = response.json()
+        video_id_12labs = video_data.get("video_id_12labs")
+        return video_id_12labs
+    else:
+        print(
+            f"Failed to fetch video for match {match_id}, status code: {response.status_code}"
+        )
+
+
+# Example usage
+# fetch_match_video("6608c540d2581f223537c270")
 
 
 @socketio.on("disconnect")
