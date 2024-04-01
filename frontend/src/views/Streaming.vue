@@ -5,7 +5,6 @@
       <!-- {{ streamUrl }} -->
       <div v-if="streamUrl" class="flex-container">
         <h3> {{ match.name }} </h3>
-        {{ score }}
         <p class><span class="teamName">{{ match.home_team }}</span> {{ score[match.home_team] }}:{{
         score[match.away_team] }} <span>{{ match.away_team }}</span></p>
         <div class="container">
@@ -18,22 +17,17 @@
             <div :style="{ float: match.home_team == highlight.team ? 'left' : 'right', clear: 'both', width: '50%' }">
               <div class="event"
                 :class="{ 'home-team': highlight.team === match.home_team, 'away-team': highlight.team === match.away_team }">
-                <!-- <p v-if="highlight.team == match.away_team">{{ highlight.timestamp }}'</p> -->
                 <div class="eventDetails">
                   <h6 class="eventTeam">{{ highlight.team }}</h6>
                   <h6 class="eventPlayer">{{ highlight.player }}</h6>
                   <p class="eventInfo">{{ highlight.description }}</p>
                 </div>
-                <!-- <p v-if="highlight.team == match.home_team">{{ highlight.timestamp }}'</p> -->
               </div>
             </div>
             </p>
           </div>
         </div>
         <p> {{ match.description }}</p>
-      </div>
-      <div v-else-if="loading">
-        <p>Loading match details...</p>
       </div>
       <div v-else>
         <p>Match not found.</p>
@@ -130,8 +124,6 @@ export default defineComponent({
       .then((response) => {
         console.log("response",response.data)
         this.streamUrl = response.data;
-        // Process the streaming details as needed
-        // console.log("Streaming details:", streamingDetails);
       })
       .catch((error) => {
         console.error("Error retrieving streaming details:", error);
