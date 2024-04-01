@@ -109,9 +109,6 @@ services:
       - mysql
     environment:
       - PYTHONUNBUFFERED=1
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     restart: always
 
   livestats:
@@ -128,9 +125,6 @@ services:
 
   notification:
     environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - PYTHONUNBUFFERED=1
     build:
       context: ./microservices/base/7-notification
