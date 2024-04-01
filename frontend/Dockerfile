@@ -21,9 +21,11 @@ FROM nginx:stable-alpine as production-stage
 
 # Copy the built assets from the 'build-stage' to the nginx serving directory
 COPY --from=build-stage /app/dist /usr/share/nginx/html
+COPY nginx-selfsigned.crt /etc/nginx/ssl/nginx-selfsigned.crt
+COPY nginx-selfsigned.key /etc/nginx/ssl/nginx-selfsigned.key
+COPY default.conf /etc/nginx/conf.d/default.conf
 
-# Expose port 80 to the outside once the container has launched
-EXPOSE 80
+EXPOSE 80 443
 
 # Define the command to run the app using nginx
 CMD ["nginx", "-g", "daemon off;"]

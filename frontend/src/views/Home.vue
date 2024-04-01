@@ -125,7 +125,7 @@ export default {
 <style scoped>
 /* Other component-specific styles */
 .bg-image {
-  /* background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png'); */
+  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png');
   /* background-image: url('https://bchewy-images.s3.ap-southeast-1.amazonaws.com/plan-it/planit.png'); */
   background-size: cover;
   background-repeat: no-repeat;
@@ -163,6 +163,6 @@ export default {
 }
 
 .gradient-button1 {
-    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
+  background-image: linear-gradient(to right, #67C6E3, #5356FF);
 }
 </style>
