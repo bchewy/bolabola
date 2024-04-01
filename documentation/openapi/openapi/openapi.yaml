@@ -37,8 +37,6 @@ tags:
     description: "Ticket purchasing and management operations."
   - name: Users
     description: "User account management and profile operations."
-  - name: Notifications
-    description: "User notifications and alerts."
   - name: Billing
     description: "Handle payments and refunds using Stripe integration."
   - name: Seats
@@ -53,7 +51,6 @@ x-tagGroups:
   - name: User Management
     tags:
       - Users
-      - Notifications
       - Billing
       - Seats
       - Video Asset
@@ -65,7 +62,7 @@ servers:
         description: Your tenant id
   - url: https://api.bolabola.com/v1
 paths:
-  "/users/{userId}":
+  "/user/{user_id}":
     get:
       tags:
         - Users
@@ -83,22 +80,22 @@ paths:
           description: User information retrieved successfully, including any tickets associated with the user.
         "404":
           description: User not found.
-    post:
-      tags:
-        - Users
-      summary: Register a New User
-      description: Registers a new user in the system. This endpoint requires a JSON payload containing the new user's information.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "./components/schemas/newuser.yml#/NewUser"
-      responses:
-        "201":
-          description: New user has been successfully created.
-        "400":
-          description: Invalid input provided.
+    # post:
+    #   tags:
+    #     - Users
+    #   summary: Register a New User
+    #   description: Registers a new user in the system. This endpoint requires a JSON payload containing the new user's information.
+    #   requestBody:
+    #     required: true
+    #     content:
+    #       application/json:
+    #         schema:
+    #           $ref: "./components/schemas/newuser.yml#/NewUser"
+    #   responses:
+    #     "201":
+    #       description: New user has been successfully created.
+    #     "400":
+    #       description: Invalid input provided.
     put:
       tags:
         - Users
@@ -140,8 +137,91 @@ paths:
         "204":
           description: User deleted successfully.
         "404":
-          description: User not found.  
-  "/availabletickets/{id}":
+          description: User not found.
+  "/user/check-create":
+    post:
+      tags:
+        - Users
+      summary: Check and create user
+      description: Check if user exists and create a new user if not.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  example: user@example.com
+                user_id:
+                  type: string
+                  example: "auth0|1234"
+      responses:
+        "201":
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: User created successfully
+        "400":
+          description: User already exists or invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: An error occurred
+  "/user/email/{user_id}":
+    get:
+      tags:
+       - Users
+      summary: Get user email by ID
+      description: Retrieve user email by providing user ID.
+      parameters:
+        - in: path
+          name: user_id
+          description: User ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  email:
+                    type: string
+                    example: user@example.com
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User not found
+  "/booking/availabletickets/{id}":
     get:
       summary: Get Available Tickets
       description: Retrieve available tickets for a specific match.
@@ -154,7 +234,7 @@ paths:
             type: string
             format: ObjectId
       responses:
-        '200':
+        "200":
           description: Successfully retrieved available tickets.
           content:
             application/json:
@@ -173,7 +253,7 @@ paths:
                       type: string
                     seat_number:
                       type: string
-        '404':
+        "404":
           description: Match not found.
   "/reserve":
     post:
@@ -195,7 +275,7 @@ paths:
                 quantity:
                   type: integer
       responses:
-        '200':
+        "200":
           description: Seats successfully reserved.
           content:
             application/json:
@@ -210,9 +290,9 @@ paths:
                     items:
                       type: string
                     description: IDs of reserved tickets.
-        '400':
+        "400":
           description: Invalid request payload.
-        '409':
+        "409":
           description: One or more seats are currently on hold or have issues.
   "/validate_reservation/":
     post:
@@ -230,7 +310,7 @@ paths:
                 user_id:
                   type: string
       responses:
-        '200':
+        "200":
           description: Validation successful.
           content:
             application/json:
@@ -244,7 +324,7 @@ paths:
                   message:
                     type: string
                     description: Confirmation message.
-        '404':
+        "404":
           description: Seat not found.
   "/tickets/count":
     post:
@@ -260,7 +340,7 @@ paths:
                 match_id:
                   type: string
       responses:
-        '200':
+        "200":
           description: Ticket count successfully retrieved.
           content:
             application/json:
@@ -299,14 +379,14 @@ paths:
                     items:
                       type: string
                     description: IDs of all tickets for the match.
-        '404':
+        "404":
           description: Match not found.
   "/":
     get:
       summary: Health Check
       description: Check the health status of the API.
       responses:
-        '200':
+        "200":
           description: API is alive.
           content:
             application/json:
@@ -317,7 +397,6 @@ paths:
                     type: string
                     description: Status of the API.
                     example: alive
-
 
   "/matches/{matchId}":
     get:
@@ -488,7 +567,7 @@ paths:
   "/seat/availabletickets/{id}":
     get:
       tags:
-       - Seats
+        - Seats
       summary: Get Available Tickets
       description: Retrieve available tickets for a specific match.
       parameters:
@@ -500,7 +579,7 @@ paths:
             type: string
             format: ObjectId
       responses:
-        '200':
+        "200":
           description: Successfully retrieved available tickets.
           content:
             application/json:
@@ -519,12 +598,12 @@ paths:
                       type: string
                     seat_number:
                       type: string
-        '404':
+        "404":
           description: Match not found.
   "/seat/reserve":
     post:
       tags:
-       - Seats
+        - Seats
       summary: Reserve Seats
       description: Reserve seats for a user in a specific match.
       requestBody:
@@ -543,7 +622,7 @@ paths:
                 quantity:
                   type: integer
       responses:
-        '200':
+        "200":
           description: Seats successfully reserved.
           content:
             application/json:
@@ -558,14 +637,14 @@ paths:
                     items:
                       type: string
                     description: IDs of reserved tickets.
-        '400':
+        "400":
           description: Invalid request payload.
-        '409':
+        "409":
           description: One or more seats are currently on hold or have issues.
   "/seat/validate_reservation/":
     post:
       tags:
-       - Seats
+        - Seats
       summary: Validate Reservation
       description: Validate if a seat reservation belongs to a specific user.
       requestBody:
@@ -580,7 +659,7 @@ paths:
                 user_id:
                   type: string
       responses:
-        '200':
+        "200":
           description: Validation successful.
           content:
             application/json:
@@ -594,12 +673,12 @@ paths:
                   message:
                     type: string
                     description: Confirmation message.
-        '404':
+        "404":
           description: Seat not found.
   "/seat/tickets/count":
     post:
       tags:
-       - Seats
+        - Seats
       summary: Get Ticket Count
       description: Get the count of tickets for a specific match, including reserved and available tickets.
       requestBody:
@@ -612,7 +691,7 @@ paths:
                 match_id:
                   type: string
       responses:
-        '200':
+        "200":
           description: Ticket count successfully retrieved.
           content:
             application/json:
@@ -651,57 +730,13 @@ paths:
                     items:
                       type: string
                     description: IDs of all tickets for the match.
-        '404':
+        "404":
           description: Match not found.
 
-  "/send-email":
-    post:
-      tags:
-       - Notifications
-      summary: Send email notification
-      description: |
-        Endpoint to send email notifications to users using AWS SES (Simple Email Service). This endpoint expects a JSON payload containing recipient email, subject, and message body.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  description: Email address of the recipient.
-                subject:
-                  type: string
-                  description: Subject of the email.
-                body:
-                  type: string
-                  description: Body content of the email.
-              required:
-                - email
-                - subject
-                - body
-      responses:
-        200:
-          description: Email notification sent successfully.
-        400:
-          description: Bad request. Missing required fields or invalid data provided.
-        500:
-          description: Internal server error. Failed to send email notification.
-  "/ping":
+  "/billing/public-key":
     get:
       tags:
-       - Billing
-      summary: Ping endpoint
-      description: Endpoint for testing the availability of the billing service.
-      responses:
-        200:
-          description: Service is available and responsive.
-
-  "/public-key":
-    get:
-      tags:
-       - Billing
+        - Billing
       summary: Get Stripe public key
       description: Endpoint to retrieve the public key for the frontend integration with Stripe.
       responses:
@@ -710,10 +745,10 @@ paths:
         500:
           description: Internal server error.
 
-  "/checkout":
+  "/billing/checkout":
     post:
       tags:
-       - Billing
+        - Billing
       summary: Create checkout session
       description: |
         Endpoint to create a new checkout session for purchasing tickets. This endpoint expects a JSON payload containing details about the tickets to be purchased, match information, and user details.
@@ -764,10 +799,10 @@ paths:
         500:
           description: Internal server error.
 
-  "/webhook/stripe":
+  "/billing/webhook/stripe":
     post:
       tags:
-       - Billing
+        - Billing
       summary: Stripe webhook endpoint
       description: Endpoint to handle webhook events from Stripe, such as payment confirmation, cancellation, or expiration.
       requestBody:
@@ -785,10 +820,10 @@ paths:
         500:
           description: Failed to notify the orchestrator.
 
-  "/refund":
+  "/billing/refund":
     post:
       tags:
-       - Billing
+        - Billing
       summary: Refund payment
       description: |
         Endpoint to refund a user's payment. This endpoint expects a JSON payload containing the payment intent ID and other details.
@@ -833,7 +868,7 @@ paths:
           description: Bad request. Missing required fields or invalid data provided.
         500:
           description: Internal server error. Failed to process the refund.
-  "/process-webhook":
+  "/billing/process-webhook":
     post:
       tags:
         - Billing
@@ -858,7 +893,7 @@ paths:
                   type: object
                   description: Additional metadata about the transaction, including user ID, email, ticket categories, match ID, and ticket IDs.
       responses:
-        '200':
+        "200":
           description: Transaction status processed successfully.
           content:
             application/json:
@@ -868,67 +903,68 @@ paths:
                   message:
                     type: string
                     description: Confirmation message.
-        '400':
+        "400":
           description: Bad request. Missing required fields or invalid data provided.
-        '500':
+        "500":
           description: Internal server error. Failed to process the transaction status.
-  "/video":
-      post:
-        tags:
-          - Video Asset
-        summary: Create video asset
-        description: Create a new video asset with a given video ID and URL.
-        requestBody:
+  "/videoasset/":
+    post:
+      tags:
+        - Video Asset
+      summary: Create video asset
+      description: Create a new video asset with a given video ID and URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The ID of the video asset (equivalent to match ID).
+                url:
+                  type: string
+                  description: The URL of the video asset.
+              required:
+                - id
+                - url
+      responses:
+        "201":
+          description: Video asset created successfully.
+        "400":
+          description: Bad request. Missing video ID or URL.
+        "500":
+          description: Internal server error. Failed to create video asset.
+  "/videoasset/video":
+    get:
+      tags:
+        - Video Asset
+      summary: Get video asset
+      description: Retrieve the URL of a video asset by its video ID (equivalent to match ID).
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
           required: true
+          description: The ID of the video asset to retrieve.
+      responses:
+        "200":
+          description: Video asset retrieved successfully.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: string
-                    description: The ID of the video asset (equivalent to match ID).
-                  url:
+                  video_url:
                     type: string
                     description: The URL of the video asset.
-                required:
-                  - id
-                  - url
-        responses:
-          '201':
-            description: Video asset created successfully.
-          '400':
-            description: Bad request. Missing video ID or URL.
-          '500':
-            description: Internal server error. Failed to create video asset.
-      get:
-        tags:
-          - Video Asset
-        summary: Get video asset
-        description: Retrieve the URL of a video asset by its video ID (equivalent to match ID).
-        parameters:
-          - in: query
-            name: id
-            schema:
-              type: string
-            required: true
-            description: The ID of the video asset to retrieve.
-        responses:
-          '200':
-            description: Video asset retrieved successfully.
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    video_url:
-                      type: string
-                      description: The URL of the video asset.
-          '400':
-            description: Bad request. Missing video ID.
-          '404':
-            description: Video not found.
-  "/availabletickets/{match_id}":
+        "400":
+          description: Bad request. Missing video ID.
+        "404":
+          description: Video not found.
+  "/seat/availabletickets/{match_id}":
     get:
       tags:
         - Tickets
@@ -942,7 +978,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successfully retrieved available tickets.
           content:
             application/json:
@@ -966,13 +1002,12 @@ paths:
                     seat_number:
                       type: string
                       description: The seat number of the ticket.
-        '404':
+        "404":
           description: Match not found.
-  "/init-match-booking/{match_id}":
+  "/billing/init-match-booking/{match_id}":
     post:
       tags:
         - Billing
-        - Seats
       summary: Initialize Match Booking
       description: |
         Handles the flow for selecting seats and quantity during the checkout process.
@@ -1005,7 +1040,7 @@ paths:
                   type: integer
                   description: The quantity of tickets being booked.
       responses:
-        '200':
+        "200":
           description: Checkout URL generated successfully.
           content:
             application/json:
@@ -1015,13 +1050,13 @@ paths:
                   checkout_url:
                     type: string
                     description: The URL for the checkout session.
-        '400':
+        "400":
           description: Bad request. Missing required fields or invalid data provided.
-        '404':
+        "404":
           description: Match details not found.
-        '409':
+        "409":
           description: Seats have already been reserved.
-        '500':
+        "500":
           description: Internal server error. Failed to initialize match booking.
 
 components:
@@ -1041,5 +1076,3 @@ components:
       type: apiKey
       in: header
       name: X-BolaBola-API-Key
-
-
