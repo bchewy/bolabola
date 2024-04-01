@@ -36,3 +36,6 @@ coverage
 # Dir for bundles
 dist
 node_modules
+
+frontend/nginx-selfsigned.crt
+frontend/nginx-selfsigned.key
