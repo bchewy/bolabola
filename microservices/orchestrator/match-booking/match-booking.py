@@ -6,10 +6,15 @@ import requests
 import json
 from prometheus_flask_exporter import PrometheusMetrics
 
+# Local URLs
+# MATCH_URL = "http://kong:8000/api/v1/match"
+# SEAT_URL = "http://kong:8000/api/v1/seat"
+# BILLING_URL = "http://kong:8000/api/v1/billing"
 
-MATCH_URL = "http://kong:8000/api/v1/match"
-SEAT_URL = "http://kong:8000/api/v1/seat"
-BILLING_URL = "http://kong:8000/api/v1/billing"
+# Deployment URLs:
+MATCH_URL = "https://esd.bchwy.com:8443/api/v1/match"
+SEAT_URL = "https://esd.bchwy.com:8443/api/v1/seat"
+BILLING_URL = "https://esd.bchwy.com:8443/api/v1/billing"
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
