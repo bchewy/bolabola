@@ -97,7 +97,7 @@ export default {
       // this.$router.push('/views/queue');
     },
     fetchMatches() {
-      axios.post('http://localhost:8000/api/v1/match/', {
+      axios.post('http://kong:8000/api/v1/match/', {
         query: FETCH_MATCHES,
       })
         .then(response => {

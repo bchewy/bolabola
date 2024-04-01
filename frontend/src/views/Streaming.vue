@@ -86,7 +86,7 @@ export default defineComponent({
   },
   mounted() {
 
-      this.socket = io('http://localhost:8000', {
+      this.socket = io('http://kong:8000', {
         transports: ['websocket'],
         path: '/api/v1/livestats/socket.io',
       });
@@ -126,7 +126,7 @@ export default defineComponent({
     });
 
     axios
-      .get("http://localhost:8000/api/v1/videoasset/video?id=1")
+      .get("http://kong:8000/api/v1/videoasset/video?id=1")
       .then((response) => {
         console.log("response",response.data)
         this.streamUrl = response.data;
@@ -138,7 +138,7 @@ export default defineComponent({
       });
 
     axios
-      .post("http://localhost:8000/api/v1/match/", {
+      .post("http://kong:8000/api/v1/match/", {
         query: FETCH_MATCHES,
         variables: {
           _id: this.matchID
