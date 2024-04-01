@@ -4,6 +4,8 @@ from botocore.exceptions import ClientError
 from functools import lru_cache
 from dotenv import load_dotenv
 import os
+import json
+import requests
 
 app = Flask(__name__)
 load_dotenv()
@@ -11,12 +13,46 @@ load_dotenv()
 os.environ["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
 os.environ["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
 os.environ["AWS_DEFAULT_REGION"] = "ap-southeast-1"
+# os.environ["12LAB_KEY"] = os.getenv("12LAB_KEY")
 
-dynamodb = boto3.resource("dynamodb")
+print("AWS_ACCESS_KEY_ID: " + os.getenv("AWS_ACCESS_KEY_ID"))
+print("AWS_SECRET_ACCESS_KEY: " + os.getenv("AWS_SECRET_ACCESS_KEY"))
+# print("12LAB_KEY: " + os.getenv("12LAB_KEY"))
 
-print(os.getenv("AWS_ACCESS_KEY_ID"))
-print(os.getenv("AWS_SECRET_ACCESS_KEY"))
+# DynamoDB credentials from environment variables
+dynamodb_credentials = {
+    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
+    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+    "region_name": os.getenv("AWS_DEFAULT_REGION"),
+}
+dynamodb = boto3.resource("dynamodb", **dynamodb_credentials)
 table = dynamodb.Table("ESD-VideoMetaData")
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_DEFAULT_REGION"),
+)
+bucket_name = "esd-videometadata-assets"
+
+# Create the S3 bucket if it does not exist
+try:
+    s3.head_bucket(Bucket=bucket_name)
+except ClientError:
+    # The bucket does not exist or you have no access.
+    s3.create_bucket(
+        Bucket=bucket_name,
+        CreateBucketConfiguration={
+            "LocationConstraint": os.getenv("AWS_DEFAULT_REGION")
+        },
+    )
+    # Set the new bucket to have public read access
+    s3.put_bucket_acl(Bucket=bucket_name, ACL="public-read")
+    print(f"Bucket {bucket_name} created and set to public read access.")
+else:
+    print(f"Bucket {bucket_name} already exists and is accessible.")
+
 
 # it is important to note here that the √ideo id equals to the match id.
 
@@ -47,26 +83,50 @@ def get_video_path(video_id):
 # Create video asset with video_id
 @app.route("/ ", methods=["POST"])
 def create_video_asset():
-    video_id = request.json.get("id")
-    video_url = request.json.get("url")
+    video_url = request.json.get("video_url")
+    match_id = request.json.get("match_id")
+    if not video_url:
+        return jsonify({"error": "No video URL provided"}), 400
 
-    if not video_id or not video_url:
-        return jsonify({"error": "Missing fields, video id and url are required"}), 400
-    video_urlink = video_url  # Use the provided video_url
-
-    # Setting a default URL for all matches - can comment the one below ocne this works!
-    video_urlink = "https://bchewy.s3.ap-southeast-1.amazonaws.com/Old+Trafford+Thriller+Manchester+United+vs+Liverpool.mp4"  # set as default
-
-    # video_url = request.json.get("url")
-    if not video_id or not video_urlink:
-        return jsonify({"error": "Missing video id or url"}), 400
     try:
-        table.put_item(Item={"video_id": video_id, "video_url": video_urlink})
+        # Send video_url to 12labs API and get video_id as response
+        response = requests.post(
+            "https://api.12labs.com/upload",
+            json={"video_url": video_url},
+            headers={"Authorization": "Bearer tlk_0A7K1FP1A5EK902T611D205A8D51"},
+        )
+        response_data = response.json()
+        if response.status_code == 200:
+            video_id_12labs = response_data["video_id"]
+            table.put_item(
+                Item={
+                    "match_id": match_id,
+                    "video_url": video_url,
+                    "video_id_12labs": video_id_12labs,
+                }
+            )
+        else:
+            return (
+                jsonify({"error": "Failed to process video with 12labs"}),
+                response.status_code,
+            )
     except ClientError as e:
         print(e.response["Error"]["Message"])
         return jsonify({"error": "Failed to create video asset"}), 500
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return jsonify({"error": "Failed to communicate with 12labs API"}), 500
     else:
-        return jsonify({"message": "Video asset created successfully"}), 201
+        return (
+            jsonify(
+                {
+                    "message": "Video asset created successfully",
+                    "video_id_12labs": video_id_12labs,
+                    "video_url": video_url,
+                }
+            ),
+            201,
+        )
 
 
 @app.route("/video", methods=["GET"])
