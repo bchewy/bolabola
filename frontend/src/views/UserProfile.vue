@@ -17,7 +17,7 @@
         </thead>
         <tbody>
           <tr v-for="(ticket, index) in tickets" :key="index">
-            <td>{{ ticket.matchName }}</td> 
+            <td>{{ ticket.matchName }}</td>
             <td>{{ ticket.matchTime }}</td>
             <!-- <td>{{ ticket.matchLocation }}</td> -->
             <td>{{ ticket.quantity }}</td>
@@ -79,6 +79,7 @@ export default {
   methods: {
     // Function to get the user's information
     getUserInfo(userId) {
+      console.log("Retrieving user info", userId)
       // Send a request to the backend to get the user's information using their userId using get request
       fetch(`https://esd.bchwy.com:8443/api/v1/user/${userId}`)
         .then((response) => response.json())
@@ -152,7 +153,7 @@ export default {
         alert('Unsuccessful Refund. Please try again.');
       }
     },
-    
+
   },
   mounted() {
     this.fetchUserInfo();
@@ -172,6 +173,6 @@ export default {
 }
 
 .gradient-button1 {
-    background-image: linear-gradient(to right, #67C6E3, #5356FF); 
+  background-image: linear-gradient(to right, #67C6E3, #5356FF);
 }
 </style>
