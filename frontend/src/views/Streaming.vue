@@ -5,7 +5,6 @@
       <!-- {{ streamUrl }} -->
       <div v-if="streamUrl" class="flex-container">
         <h3> {{ match.name }} </h3>
-        {{ score }}
         <p class><span class="teamName">{{ match.home_team }}</span> {{ score[match.home_team] }}:{{
         score[match.away_team] }} <span>{{ match.away_team }}</span></p>
         <div class="container">
