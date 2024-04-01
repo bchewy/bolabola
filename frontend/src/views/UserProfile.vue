@@ -80,7 +80,7 @@ export default {
     // Function to get the user's information
     getUserInfo(userId) {
       // Send a request to the backend to get the user's information using their userId using get request
-      fetch(`https://localhost:8443/api/v1/user/${userId}`)
+      fetch(`https://esd.bchwy.com:8443/api/v1/user/${userId}`)
         .then((response) => response.json())
         .then((data) => {
           this.tickets = data["data"].tickets;
@@ -88,7 +88,7 @@ export default {
           // Get the match information for each ticket
           this.tickets.forEach((ticket) => {
             // Send a request to the backend to get the match information using the matchId
-            axios.post('https://localhost:8443/api/v1/match/', {
+            axios.post('https://esd.bchwy.com:8443/api/v1/match/', {
               query: FETCH_MATCH_DETAILS,
               variables: {
                 _id: ticket.match_id,
@@ -126,7 +126,7 @@ export default {
     // Function to refund tickets
     refundTicket(index) {
       // Send a request to the backend to refund the ticket
-      fetch('https://localhost:8443/api/v1/refund/initiate-refund', {
+      fetch('https://esd.bchwy.com:8443/api/v1/refund/initiate-refund', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

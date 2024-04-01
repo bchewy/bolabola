@@ -86,7 +86,7 @@ export default defineComponent({
   },
   mounted() {
 
-      this.socket = io('https://localhost:8443', {
+      this.socket = io('https://esd.bchwy.com:8443', {
         transports: ['websocket'],
         path: '/api/v1/livestats/socket.io',
       });
@@ -126,7 +126,7 @@ export default defineComponent({
     });
 
     axios
-      .get("https://localhost:8443/api/v1/videoasset/video?id=1")
+      .get("https://esd.bchwy.com:8443/api/v1/videoasset/video?id=1")
       .then((response) => {
         console.log("response",response.data)
         this.streamUrl = response.data;
@@ -138,7 +138,7 @@ export default defineComponent({
       });
 
     axios
-      .post("https://localhost:8443/api/v1/match/", {
+      .post("https://esd.bchwy.com:8443/api/v1/match/", {
         query: FETCH_MATCHES,
         variables: {
           _id: this.matchID

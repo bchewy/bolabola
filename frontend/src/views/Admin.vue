@@ -184,7 +184,7 @@ export default {
             };
 
             try {
-                const response = await fetch('https://localhost:8443/api/v1/match', {
+                const response = await fetch('https://esd.bchwy.com:8443/api/v1/match', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ export default {
             this.liveStreamUrl = ''; // Reset form
         },
         fetchMatches() {
-            axios.post('https://localhost:8443/api/v1/match/', {
+            axios.post('https://esd.bchwy.com:8443/api/v1/match/', {
                 query: FETCH_MATCHES,
             })
                 .then(response => {
