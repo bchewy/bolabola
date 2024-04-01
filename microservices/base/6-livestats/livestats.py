@@ -31,8 +31,7 @@ def index():
 
 @socketio.on("connect")
 def handle_connect(*args):
-    print("Client connected")
-    emit("connected", {"message": "Connected to match streaming service"})
+    print("Connected")
 
 
 @socketio.on("start")
@@ -44,17 +43,18 @@ def start_things(*args):
     api_key = "tlk_0W18KV92FYPK3S2NY8RQZ2EWFC3R"
     print("Socket iniital connection ===============")
     print("Request args: ", args)
-    match_id = args[0]["match_id"]
+    video_id = args[0]["video_id"]
+    print("VIDEO ID HERE!: ", video_id)
     # match_id = data.get("match_id")
-    print("MATCH ID IS : ", match_id)
-    video_id = fetch_match_video(match_id)
+    # print("MATCH ID IS : ", match_id)
+    # video_id = fetch_match_video(match_id)
 
     query = {
-        "video_id": video_id,
+        "video_id": str(video_id),
         "type": "summary",
         "prompt": 'return only a json object list called "highlights" of highlights including:\n\ntimestamp\nplayer\nteam\nevent\ndescription\n\nthe timestamp should follow the video\'s timing in seconds as an int,\nexample of event can be "SHOT", "CROSS", "VAR", "PASS"\nbe as specific as possible, at least 10 events',
         # "index_id": "6607ccc7a8753bd44500e816", #matt's 12lab index
-        "index_id": "660a6bbf2ae59d128f13369f", #brian's 
+        "index_id": "660a6bbf2ae59d128f13369f",  # brian's
     }
 
     # Send request
@@ -68,6 +68,9 @@ def start_things(*args):
     summaryDict = {
         item["timestamp"]: json.dumps(item) for item in summaryData["highlights"]
     }
+
+    print("Summary data: ", summaryData)
+
     # print("summaryJson:",summaryJson)
     # print("data",data)
     if not redis_client.exists("stats"):
@@ -77,18 +80,18 @@ def start_things(*args):
 
 
 # HELPER FUNCTION TO FETCH 12LABS VIDEO ID
-def fetch_match_video(match_id):
-    url = f"http://localhost:8000/api/v1/videoasset/video/{match_id}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        print("VIDEO Data from within livestats: ", response.json())
-        video_data = response.json()
-        video_id_12labs = video_data.get("video_id_12labs")
-        return video_id_12labs
-    else:
-        print(
-            f"Failed to fetch video for match {match_id}, status code: {response.status_code}"
-        )
+# def fetch_match_video(match_id):
+#     url = f"http://localhost:8000/api/v1/videoasset/video/{match_id}"
+#     response = requests.get(url)
+#     if response.status_code == 200:
+#         print("VIDEO Data from within livestats: ", response.json())
+#         video_data = response.json()
+#         video_id_12labs = video_data.get("video_id_12labs")
+#         return video_id_12labs
+#     else:
+#         print(
+#             f"Failed to fetch video for match {match_id}, status code: {response.status_code}"
+#         )
 
 
 # Example usage

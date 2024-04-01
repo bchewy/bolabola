@@ -81,7 +81,8 @@ export default defineComponent({
       playNow: true,
       socket: null,
       matchInfo: [],
-      score: {}
+      score: {},
+      video_id_12_labs: ""
     };
   },
   created() {
@@ -102,10 +103,20 @@ export default defineComponent({
       console.log('Disconnected from streaming server');
     })
 
-    this.socket.on('connect', () => {
-      console.log('Connected to streaming server');
+    const fetchVideoData = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/v1/videoasset/video/${this.matchID}`);
+        console.log("Video data here!:", response.data);
+        this.video_id_12_labs = response.data.video_id_12labs;
+      } catch (error) {
+        console.error("Error fetching video data:", error);
+      }
+    };
 
-      this.socket.emit('start', { match_id: this.$route.params.id });
+    this.socket.on('connect', async () => {
+      console.log('Connected to streaming server');
+      await fetchVideoData();
+      this.socket.emit('start', { video_id: this.video_id_12_labs });
     });
 
     this.socket.on('stream', (data) => {
@@ -133,6 +144,9 @@ export default defineComponent({
       });
 
     });
+
+
+
 
     axios
       .get(`http://localhost:8000/api/v1/videoasset/video?id=${this.matchID}`)
