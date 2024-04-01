@@ -188,7 +188,7 @@ export default {
                 let user_id_after_split = user_id.split('|')[1];
                 try {
                     // send a post request to the backend to add a new user
-                    fetch(`http://kong:8000/api/v1/user/check-create`, {
+                    fetch(`https://kong:8443/api/v1/user/check-create`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
