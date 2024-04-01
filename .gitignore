@@ -39,5 +39,7 @@ node_modules
 
 frontend/nginx-selfsigned.crt
 frontend/nginx-selfsigned.key
+frontend/fullchain.pem
+frontend/privkey.pem
 infrastructure/kong/kong.crt
 infrastructure/kong/kong.key
