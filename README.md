@@ -10,9 +10,18 @@
 ```
 
 
-Microservices:
-![image](https://github.com/bchewy/ticketboost/assets/16286067/09a270e6-46e4-4fab-8ffa-41c702c3ae09)
+## Technical Overview Diagram
+![Technical Overview Diagram](tod.png)
 
+## Workflow Diagrams
+### Scenario 1
+![Scenario 1](scenario1.png)
+
+### Scenario 2
+![Scenario 2](scenario2.png)
+
+### Scenario 3
+![Scenario 3](scenario3.png)
 
 ## Quickstart
 To set up this repository, run the following command in the current working directory:
