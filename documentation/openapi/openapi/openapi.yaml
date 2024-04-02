@@ -48,12 +48,14 @@ x-tagGroups:
     tags:
       - Matches
       - Tickets
+      - Refund
   - name: User Management
     tags:
       - Users
       - Billing
       - Seats
       - Video Asset
+
 servers:
   - url: https://{tenant}.bolabola.smuaws.com/api/v1
     variables:
@@ -1058,6 +1060,76 @@ paths:
           description: Seats have already been reserved.
         "500":
           description: Internal server error. Failed to initialize match booking.
+
+  "api/v1/refund/ping":
+    get:
+      tags: 
+        - Refund
+      summary: Ping refund service
+      description: |
+        Endpoint to check the status of the refund service.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Pong!"
+      responses:
+        200:
+          description: Refund service is up and running.
+        500:
+          description: Refund service is down. Please try again later.
+
+  "api/v1/refund/initiate-refund":
+    post:
+      tags: 
+        - Refund
+      summary: Initiate refund
+      description: |
+        Initiate refund for a user's ticket purchase.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                  description: The ID of the user requesting the refund.
+                ticket_ids:
+                  type: string
+                  description: Comma-separated list of ticket IDs to be refunded.
+                match_id:
+                  type: string
+                  description: The ID of the match associated with the ticket.
+                category:
+                  type: string
+                  description: The category of the ticket for which the refund is being processed.
+                quantity:
+                  type: integer
+                  description: The quantity of tickets for which the refund is being processed.
+                payment_intent:
+                  type: string
+                  description: The ID of the payment intent associated with the transaction.
+              required:
+                - user_id
+                - ticket_id
+                - match_id
+                - category
+                - quantity
+                - payment_intent
+      responses:
+        200:
+          description: Refund initiated successfully.
+        500:
+          description: Internal server error. Failed to initiate refund.
+
+
+
+
 
 components:
   securitySchemes:
