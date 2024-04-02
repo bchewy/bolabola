@@ -62,8 +62,10 @@
           "tags":[
              "Users",
              "Billing",
+             "Seats",
              "Video Asset"
           ]
+       }
     ],
     "servers":[
        {
