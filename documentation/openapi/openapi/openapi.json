@@ -1,0 +1,558 @@
+{
+    "openapi":"3.1.0",
+    "info":{
+       "version":"1.0.0",
+       "title":"BolaBola API",
+       "termsOfService":"https://bolabola.smuaws.com/terms/",
+       "contact":{
+          "name":"Contact BolaBola Support",
+          "email":"support@bolabola.com",
+          "url":"http://bolabola.smuaws.com/contact"
+       },
+       "license":{
+          "name":"MIT",
+          "url":"http://opensource.org/licenses/MIT"
+       },
+       "x-logo":{
+          "url":"https://bolabola.com/logo.png",
+          "altText":"BolaBola logo"
+       },
+       "description":"This is the **BolaBola** API to demonstrate the functionalities of the BolaBola application.\n# Introduction\nThe BolaBola API is designed to provide developers with a comprehensive toolset for integrating with our platform, offering access to our core features and functionalities.\nIt also demonstrates the use of the OpenAPI specification to document APIs in a clear and concise manner, facilitating easier integration and understanding of the available API endpoints.\n# OpenAPI Specification\nThe OpenAPI Specification offers a wide-ranging and language-agnostic interface to RESTful APIs, enabling both humans and computers to discover and understand the capabilities of a service without direct access to the source code or extensive documentation.\nBy adhering to the OpenAPI Specification, we aim to provide a seamless and straightforward experience for developers looking to integrate with the BolaBola platform, ensuring that the available services are easily accessible and understandable.\n"
+    },
+    "externalDocs":{
+       "description":"Learn more about integrating with the BolaBola API.",
+       "url":"https://bolabola.com/docs/api"
+    },
+    "tags":[
+       {
+          "name":"Matches",
+          "description":"Operations related to match scheduling and information."
+       },
+       {
+          "name":"Tickets",
+          "description":"Ticket purchasing and management operations."
+       },
+       {
+          "name":"Users",
+          "description":"User account management and profile operations."
+       },
+       {
+          "name":"Billing",
+          "description":"Handle payments and refunds using Stripe integration."
+       },
+       {
+          "name":"Seats",
+          "description":"Handle seat reservations and ticket counts."
+       },
+       {
+          "name":"Video Asset",
+          "description":"Manages video assets; interacts with AWS DynamoDB to store and retrieve video metadata, including video URLs."
+       }
+    ],
+    "x-tagGroups":[
+       {
+          "name":"Core Features",
+          "tags":[
+             "Matches",
+             "Tickets"
+          ]
+       },
+       {
+          "name":"User Management",
+          "tags":[
+             "Users",
+             "Billing",
+             "Video Asset"
+          ]
+    ],
+    "servers":[
+       {
+          "url":"https://{tenant}.bolabola.smuaws.com/api/v1",
+          "variables":{
+             "tenant":{
+                "default":"app",
+                "description":"Your tenant id"
+             }
+          }
+       },
+       {
+          "url":"https://api.bolabola.com/v1"
+       }
+    ],
+    "paths":{
+       "/user/{user_id}":{
+        "get":{
+            "tags":[
+               "Users"
+            ],
+            "summary":"Retrieve User Information",
+            "description":"Fetches the details of a user given their unique userId. This includes basic user information along with associated tickets.",
+            "parameters":[
+               {
+                  "name":"userId",
+                  "in":"path",
+                  "required":true,
+                  "description":"The unique identifier of the user whose information is being retrieved.",
+                  "schema":{
+                     "type":"string"
+                  }
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"User information retrieved successfully, including any tickets associated with the user."
+               },
+               "404":{
+                  "description":"User not found."
+               }
+            }
+         },
+         "put":{
+            "tags":[
+               "Users"
+            ],
+            "summary":"Update Existing User Information",
+            "description":"Updates the information of an existing user identified by their userId. Requires a JSON payload with the updated user information.",
+            "parameters":[
+               {
+                  "name":"userId",
+                  "in":"path",
+                  "required":true,
+                  "description":"The unique identifier of the user whose information is to be updated.",
+                  "schema":{
+                     "type":"string"
+                  }
+               }
+            ],
+            "requestBody":{
+               "required":true,
+               "content":{
+                  "application/json":{
+                     "schema":{
+                        "$ref":"#/components/schemas/UpdateUser"
+                     }
+                  }
+               }
+            },
+            "responses":{
+               "200":{
+                  "description":"User information updated successfully."
+               },
+               "400":{
+                  "description":"Invalid input provided."
+               },
+               "404":{
+                  "description":"User not found."
+               }
+            }
+         },
+         "delete":{
+            "tags":[
+               "Users"
+            ],
+            "summary":"Remove a User",
+            "description":"Deletes a user from the system using their unique userId. This action is irreversible.",
+            "parameters":[
+               {
+                  "name":"userId",
+                  "in":"path",
+                  "required":true,
+                  "description":"The unique identifier of the user to be deleted.",
+                  "schema":{
+                     "type":"string"
+                  }
+               }
+            ],
+            "responses":{
+               "204":{
+                  "description":"User deleted successfully."
+               },
+               "404":{
+                  "description":"User not found."
+               }
+            }
+         }
+      },
+      "/user/check-create":{
+         "post":{
+            "tags":[
+               "Users"
+            ],
+            "summary":"Check and create user",
+            "description":"Check if user exists and create a new user if not.",
+            "requestBody":{
+               "required":true,
+               "content":{
+                  "application/json":{
+                     "schema":{
+                        "type":"object",
+                        "properties":{
+                           "name":{
+                              "type":"string",
+                              "example":"John Doe"
+                           },
+                           "email":{
+                              "type":"string",
+                              "example":"user@example.com"
+                           },
+                           "user_id":{
+                              "type":"string",
+                              "example":"auth0|1234"
+                           }
+                        }
+                     }
+                  }
+               }
+            },
+            "responses":{
+               "201":{
+                  "description":"User created successfully",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "code":{
+                                 "type":"integer",
+                                 "example":201
+                              },
+                              "message":{
+                                 "type":"string",
+                                 "example":"User created successfully"
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "400":{
+                  "description":"User already exists or invalid request",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "message":{
+                                 "type":"string",
+                                 "example":"An error occurred"
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/user/email/{user_id}":{
+         "get":{
+            "tags":[
+               "Users"
+            ],
+            "summary":"Get user email by ID",
+            "description":"Retrieve user email by providing user ID.",
+            "parameters":[
+               {
+                  "in":"path",
+                  "name":"user_id",
+                  "description":"User ID",
+                  "required":true,
+                  "schema":{
+                     "type":"integer"
+                  }
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"User email",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "code":{
+                                 "type":"integer",
+                                 "example":200
+                              },
+                              "email":{
+                                 "type":"string",
+                                 "example":"user@example.com"
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404":{
+                  "description":"User not found",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "message":{
+                                 "type":"string",
+                                 "example":"User not found"
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+         }
+      },
+      "/booking/availabletickets/{id}":{
+         "get":{
+            "summary":"Get Available Tickets",
+            "description":"Retrieve available tickets for a specific match.",
+            "parameters":[
+               {
+                  "in":"path",
+                  "name":"id",
+                  "description":"The ID of the match.",
+                  "required":true,
+                  "schema":{
+                     "type":"string",
+                     "format":"ObjectId"
+                  }
+               }
+            ],
+            "responses":{
+               "200":{
+                  "description":"Successfully retrieved available tickets.",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"array",
+                           "items":{
+                              "type":"object",
+                              "properties":{
+                                 "ticket_id":{
+                                    "type":"string"
+                                 },
+                                 "user_id":{
+                                    "type":"string"
+                                 },
+                                 "match_id":{
+                                    "type":"string"
+                                 },
+                                 "category":{
+                                    "type":"string"
+                                 },
+                                 "seat_number":{
+                                    "type":"string"
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404":{
+                  "description":"Match not found."
+               }
+            }
+         }
+      },
+      "/reserve":{
+         "post":{
+            "summary":"Reserve Seats",
+            "description":"Reserve seats for a user in a specific match.",
+            "requestBody":{
+               "required":true,
+               "content":{
+                  "application/json":{
+                     "schema":{
+                        "type":"object",
+                        "properties":{
+                           "user_id":{
+                              "type":"string"
+                           },
+                           "match_id":{
+                              "type":"string"
+                           },
+                           "category":{
+                              "type":"string"
+                           },
+                           "quantity":{
+                              "type":"integer"
+                           }
+                        }
+                     }
+                  }
+               }
+            },
+            "responses":{
+               "200":{
+                  "description":"Seats successfully reserved.",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "message":{
+                                 "type":"string",
+                                 "description":"Confirmation message."
+                              },
+                              "ticket_ids":{
+                                 "type":"array",
+                                 "items":{
+                                    "type":"string"
+                                 },
+                                 "description":"IDs of reserved tickets."
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "400":{
+                  "description":"Invalid request payload."
+               },
+               "409":{
+                  "description":"One or more seats are currently on hold or have issues."
+               }
+            }
+         }
+      },
+      "/validate_reservation/":{
+         "post":{
+            "summary":"Validate Reservation",
+            "description":"Validate if a seat reservation belongs to a specific user.",
+            "requestBody":{
+               "required":true,
+               "content":{
+                  "application/json":{
+                     "schema":{
+                        "type":"object",
+                        "properties":{
+                           "ticket_id":{
+                              "type":"string"
+                           },
+                           "user_id":{
+                              "type":"string"
+                           }
+                        }
+                     }
+                  }
+               }
+            },
+            "responses":{
+               "200":{
+                  "description":"Validation successful.",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "status":{
+                                 "type":"string",
+                                 "enum":[
+                                    "confirmed",
+                                    "available"
+                                 ],
+                                 "description":"Status of the reservation."
+                              },
+                              "message":{
+                                 "type":"string",
+                                 "description":"Confirmation message."
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404":{
+                  "description":"Seat not found."
+               }
+            }
+         }
+      },
+      "/tickets/count":{
+         "post":{
+            "summary":"Get Ticket Count",
+            "description":"Get the count of tickets for a specific match, including reserved and available tickets.",
+            "requestBody":{
+               "required":true,
+               "content":{
+                  "application/json":{
+                     "schema":{
+                        "type":"object",
+                        "properties":{
+                           "match_id":{
+                              "type":"string"
+                           }
+                        }
+                     }
+                  }
+               }
+            },
+            "responses":{
+               "200":{
+                  "description":"Ticket count successfully retrieved.",
+                  "content":{
+                     "application/json":{
+                        "schema":{
+                           "type":"object",
+                           "properties":{
+                              "match_id":{
+                                 "type":"string",
+                                 "description":"ID of the match."
+                              },
+                              "reserved_tickets":{
+                                 "type":"object",
+                                 "properties":{
+                                    "A":{
+                                       "type":"integer",
+                                       "description":"Number of reserved tickets in category A."
+                                    },
+                                    "B":{
+                                       "type":"integer",
+                                       "description":"Number of reserved tickets in category B."
+                                    },
+                                    "C":{
+                                       "type":"integer",
+                                       "description":"Number of reserved tickets in category C."
+                                    }
+                                 }
+                              },
+                              "available_tickets":{
+                                 "type":"object",
+                                 "properties":{
+                                    "A":{
+                                       "type":"integer",
+                                       "description":"Number of available tickets in category A."
+                                    },
+                                    "B":{
+                                       "type":"integer",
+                                       "description":"Number of available tickets in category B."
+                                    },
+                                    "C":{
+                                       "type":"integer",
+                                       "description":"Number of available tickets in category C."
+                                    }
+                                 }
+                              },
+                              "ticket_ids":{
+                                 "type":"array",
+                                 "items":{
+                                    "type":"string"
+                                 },
+                                 "description":"IDs of all tickets for the match."
+                              }
+                           }
+                        }
+                     }
+                  }
+               },
+               "404":{
+                  "description":"Match not found."
+               }
+            }
+         }
+      }
+   }
+}
+
+ 
