@@ -12,10 +12,17 @@ os.environ["AWS_ACCESS_KEY_ID"] = os.getenv("AWS_ACCESS_KEY_ID")
 os.environ["AWS_SECRET_ACCESS_KEY"] = os.getenv("AWS_SECRET_ACCESS_KEY")
 os.environ["AWS_DEFAULT_REGION"] = "ap-southeast-1"
 
-dynamodb = boto3.resource("dynamodb")
+print("AWS_ACCESS_KEY_ID: " + os.getenv("AWS_ACCESS_KEY_ID"))
+print("AWS_SECRET_ACCESS_KEY: " + os.getenv("AWS_SECRET_ACCESS_KEY"))
 
-print(os.getenv("AWS_ACCESS_KEY_ID"))
-print(os.getenv("AWS_SECRET_ACCESS_KEY"))
+# DynamoDB credentials from environment variables
+dynamodb_credentials = {
+    "aws_access_key_id": os.getenv("AWS_ACCESS_KEY_ID"),
+    "aws_secret_access_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+    "region_name": os.getenv("AWS_DEFAULT_REGION"),
+}
+dynamodb = boto3.resource("dynamodb", **dynamodb_credentials)
+
 table = dynamodb.Table("ESD-VideoMetaData")
 
 # it is important to note here that the √ideo id equals to the match id.

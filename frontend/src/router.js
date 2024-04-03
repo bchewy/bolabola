@@ -43,6 +43,7 @@ const router = createRouter({
       name: 'Queue',
       component: () => import('./views/Queue.vue'),
       props: true,
+      beforeEnter: authGuard
     },
 
     {
@@ -50,32 +51,38 @@ const router = createRouter({
       name: 'seats',
       component: () => import('./views/Seats.vue'),
       props: true,
+      beforeEnter: authGuard
     },
     {
       path: '/views/checkout/:id',
       name: 'checkout',
       component: () => import('./views/Checkout.vue'),
       props: true,
+      beforeEnter: authGuard
     },
     {
       path: '/views/checkoutSuccess',
       name: 'checkoutSuccess',
-      component: () => import('./views/CheckoutSuccess.vue')
+      component: () => import('./views/CheckoutSuccess.vue'),
+      beforeEnter: authGuard
     },
     {
       path: '/views/checkoutCancel',
       name: 'checkoutCancel',
-      component: () => import('./views/CheckoutCancel.vue')
+      component: () => import('./views/CheckoutCancel.vue'),
+      beforeEnter: authGuard
     },
     {
       path: '/profile',
       name: 'userprofile',
-      component: () => import('./views/UserProfile.vue')
+      component: () => import('./views/UserProfile.vue'),
+      beforeEnter: authGuard
     },
     {
       path: '/views/refund',
       name: 'refund',
-      component: () => import('./views/Refund.vue')
+      component: () => import('./views/Refund.vue'),
+      beforeEnter: authGuard
     },
 
     // Streaming extras
@@ -83,6 +90,7 @@ const router = createRouter({
       path: '/streaming/:id',
       name: 'Streaming',
       component: () => import('./views/Streaming.vue'),
+      beforeEnter: authGuard,
       props: true,
     },
 

@@ -3,3 +3,4 @@ requests
 flask_cors
 flask_pymongo
 prometheus-flask-exporter==0.23.0
+python-dotenv
