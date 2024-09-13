@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy the requirements file into the container
 COPY requirements.txt .
 COPY videoasset.py .
-COPY .env .
+# COPY .env .env-example ./
 # RUN test -f .env || cp .env-example .env
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt

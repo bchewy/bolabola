@@ -1,5 +1,4 @@
 from flask import Flask
-
 # import pika
 import requests
 from prometheus_flask_exporter import PrometheusMetrics
@@ -12,19 +11,13 @@ socketio = SocketIO(app, logger=True, engineio_logger=True, cors_allowed_origins
 
 # metrics = PrometheusMetrics(app)
 
-
 @app.route("/")
 def index():
     return "Match Streaming Service.. alive"
 
 
-# Local URLs:
-# VIDEOASS_URL = "http://kong:8000/api/v1/videoasset/"
-# MATCH_URL = "http://kong:8000/api/v1/match/"
-
-# Deployment URLs:
-VIDEOASS_URL = "https://esd.bchwy.com:8443/api/v1/videoasset/"
-MATCH_URL = "https://esd.bchwy.com:8443/api/v1/match/"
+VIDEOASS_URL = "http://kong:8000/api/v1/videoasset/"
+MATCH_URL = "http://kong:8000/api/v1/match/"
 
 # Flow of orchestrator for streaming:
 # 1. Retrieve match from match service
@@ -95,41 +88,32 @@ def retrieve_match(id):
             return f"Error retrieving match: {response.status_code}", 500
     except requests.exceptions.RequestException as e:
         return f"Error retrieving match: {str(e)}", 500
-
-
+    
 def retrieve_stats():
     return
+    
 
-
-@socketio.on("connect")
+@socketio.on('connect')
 def handle_connect():
     print("Client connected")
-    emit("connected", {"message": "Connected to match streaming service"})
+    emit('connected', {'message': 'Connected to match streaming service'})
 
-
-@socketio.on("disconnect")
+@socketio.on('disconnect')
 def handle_disconnect():
     print("Client disconnected")
-    emit("disconnected", {"message": "Disconnected from match streaming service"})
-
-
-@socketio.on("stream")
+    emit('disconnected', {'message': 'Disconnected from match streaming service'})
+    
+@socketio.on('stream')
 def handle_stream_match(timestamp):
     print(f"Received timestamp from client: {timestamp}")
     if timestamp in data:
         print("Data found in timestamp")
-        emit(
-            "stream",
-            {
-                "data": {
-                    "timestamp": timestamp,
-                    "player": data[timestamp]["player"],
-                    "team": data[timestamp]["team"],
-                    "event": data[timestamp]["event"],
-                }
-            },
-        )
-
+        emit('stream', {'data': {
+            'timestamp': timestamp,
+            'player': data[timestamp]['player'],
+            'team': data[timestamp]['team'],
+            'event': data[timestamp]['event']
+        }})
 
 # AMQP consumer
 # def consume_message(channel, method, properties, body):
@@ -149,3 +133,4 @@ def handle_stream_match(timestamp):
 if __name__ == "__main__":
     # app.run(port=9102, debug=True, host="0.0.0.0")
     socketio.run(app, port=9102, debug=True, host="0.0.0.0", allow_unsafe_werkzeug=True)
+    

@@ -5,7 +5,6 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy the notification.py file into the container
-COPY .env .
 COPY notification.py .
 COPY requirements.txt .
 COPY wait-for-it.sh /wait-for-it.sh

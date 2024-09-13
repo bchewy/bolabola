@@ -125,8 +125,7 @@ export default {
 <style scoped>
 /* Other component-specific styles */
 .bg-image {
-  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/background2.png');
-  /* background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png'); */
+  background-image: url('https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/Stage.png');
   /* background-image: url('https://bchewy-images.s3.ap-southeast-1.amazonaws.com/plan-it/planit.png'); */
   background-size: cover;
   background-repeat: no-repeat;

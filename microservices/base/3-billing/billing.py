@@ -123,8 +123,8 @@ def create_checkout_session():
                 payment_method_types=["card"],
                 line_items=line_items,
                 mode="payment",
-                success_url="https://esd.bchwy.com/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="https://esd.bchwy.com/views/checkoutCancel",
+                success_url="http://localhost:5173/views/checkoutSuccess?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://localhost:5173/views/checkoutCancel",
                 metadata=metadata,  # pass the metadata to the webhook
             )
             checkout_session_id = checkout_session["id"]
@@ -165,7 +165,7 @@ def stripe_webhook():
         return "Invalid signature", 400
 
     # send payment information to orchestrator
-    ORCHESTRATOR_URL = "https://esd.bchwy.com:8443/api/v1/booking/process-webhook"
+    ORCHESTRATOR_URL = "http://kong:8000/api/v1/booking/process-webhook"
 
     # # remove the ticket from the list
     # for ticket in tickets_reserved_not_bought:
@@ -243,7 +243,7 @@ def check_tickets():
                 },
             }
             response = requests.post(
-                "https://esd.bchwy.com:8443/api/v1/booking/fail-booking", json=payload
+                "http://kong:8000/api/v1/booking/fail-booking", json=payload
             )
             print("The response from orchestrator is: ", response)
             if response.ok:
