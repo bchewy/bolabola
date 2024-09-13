@@ -82,9 +82,10 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-lightblue">
         <div class="container">
             <a class="navbar-brand text-superblue" href="#" style="display: flex; align-items: center;">
-                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/logo1.png"
+                <img src="https://s3.ap-southeast-1.amazonaws.com/esd-assets.bchwy.com/ticketboost.png"
                     class="img-fluid" style="max-height: 40px;">
-                <router-link class="nav-link text-evenlighter" to="/" style="margin-left: 5px;">Bola Bola</router-link>
+                <router-link class="nav-link text-evenlighter" to="/"
+                    style="margin-left: 5px;">Bola Bola</router-link>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,7 +124,7 @@
                             <li>
                                 <router-link class="dropdown-item text-light" to="/profile">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                        style="fill: rgba(255, 255, 255, 1);transform:">
+                                        style="fill: rgba(255, 255, 255, 1);transform: ;msFilter:;">
                                         <path
                                             d="M12 2C6.579 2 2 6.579 2 12s4.579 10 10 10 10-4.579 10-10S17.421 2 12 2zm0 5c1.727 0 3 1.272 3 3s-1.273 3-3 3c-1.726 0-3-1.272-3-3s1.274-3 3-3zm-5.106 9.772c.897-1.32 2.393-2.2 4.106-2.2h2c1.714 0 3.209.88 4.106 2.2C15.828 18.14 14.015 19 12 19s-3.828-.86-5.106-2.228z">
                                         </path>
@@ -187,7 +188,7 @@ export default {
                 let user_id_after_split = user_id.split('|')[1];
                 try {
                     // send a post request to the backend to add a new user
-                    fetch(`https://esd.bchwy.com:8443/api/v1/user/check-create`, {
+                    fetch(`http://localhost:8000/api/v1/user/check-create`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

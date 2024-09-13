@@ -1,15 +1,6 @@
 import boto3
 import json
 import pika
-import os
-from dotenv import load_dotenv
-
-# Load .env file
-load_dotenv()
-
-# Retrieve AWS credentials from .env file
-aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 
 def consume_notifications():
@@ -38,9 +29,7 @@ def consume_notifications():
     )
     queueBooking = channel.queue_declare(queue="booking_notification", durable=True)
     channel.queue_bind(
-        exchange="booking",
-        queue="booking_notification",
-        routing_key="booking.notification",
+        exchange="booking", queue="booking_notification", routing_key="booking.notification"
     )
 
     # declare and find queues for 'refunds'
@@ -49,9 +38,7 @@ def consume_notifications():
     )
     queueRefunds = channel.queue_declare(queue="refunds_notification", durable=True)
     channel.queue_bind(
-        exchange="refunds",
-        queue="refunds_notification",
-        routing_key="refunds.notification",
+        exchange="refunds", queue="refunds_notification", routing_key="refunds.notification"
     )
 
     print(
@@ -139,7 +126,7 @@ def consume_notifications():
             """
         except KeyError:
             email = message["email"]
-            subject = "Booking Failed!"
+            subject= "Booking Failed!"
             bodyme = f"""
             <!DOCTYPE html>
             <html>
@@ -169,17 +156,14 @@ def consume_notifications():
 
         # Log the notification
         print(f"Sent notification to {message['email']}")
+    
+    channel.basic_consume(
+        queue=queueRefunds.method.queue, on_message_callback=callbackRefund, auto_ack=True
+    )
+    channel.basic_consume(
+        queue=queueBooking.method.queue, on_message_callback=callbackBooking, auto_ack=True
+    )
 
-    channel.basic_consume(
-        queue=queueRefunds.method.queue,
-        on_message_callback=callbackRefund,
-        auto_ack=True,
-    )
-    channel.basic_consume(
-        queue=queueBooking.method.queue,
-        on_message_callback=callbackBooking,
-        auto_ack=True,
-    )
 
     # queue_email = "notification"
     # queue_telegram = "telegram"
@@ -224,14 +208,7 @@ def consume_notifications():
     # SES ========================
 
     # Set up AWS SES client with explicit region
-
-    # Update SES client with credentials from .env
-    ses = boto3.client(
-        "ses",
-        region_name="ap-southeast-1",
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-    )
+    ses = boto3.client("ses", region_name="ap-southeast-1")  # AWS SES region
 
     def send_email(recipient, subject, body):
         ses.send_email(

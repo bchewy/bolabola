@@ -28,7 +28,7 @@ export default {
     const { user } = useAuth0();
     const user_id = user.value.sub.split('|')[1];
 
-    const socket = new WebSocket('wss://esd.bchwy.com:8443/api/v1/queue')
+    const socket = new WebSocket('ws://localhost:8000/api/v1/queue')
 
     socket.onopen = function() {
       console.log('Connected to the WebSocket server');

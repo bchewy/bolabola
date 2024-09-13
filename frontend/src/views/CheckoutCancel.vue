@@ -61,7 +61,7 @@ export default {
                     "user_id": "123"
                 };
                 // make a POST request to the backend
-                fetch('https://esd.bchwy.com:8443/api/v1/billing/checkout', {
+                fetch('http://localhost:8000/api/v1/billing/checkout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

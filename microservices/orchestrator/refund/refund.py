@@ -7,9 +7,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-
-# MATCH_URL = "http://kong:8000/api/v1/match"
-MATCH_URL = "https://esd.bchwy.com:8443/api/v1/match"
+MATCH_URL = "http://kong:8000/api/v1/match"
 
 # Hardcoded credentials and connection details for RabbitMQ
 rabbitmq_user = "ticketboost"
@@ -26,13 +24,11 @@ parameters = pika.ConnectionParameters(
     credentials=credentials,
 )
 
-
-@app.route("/ping", methods=["GET"])
+@app.route('/ping', methods=['GET'])
 def ping():
     return jsonify({"message": "Pong!"})
 
-
-@app.route("/initiate-refund", methods=["POST"])
+@app.route('/initiate-refund', methods=['POST'])
 def refund():
     """
     1.1. receives ticket and user information from frontend
@@ -91,25 +87,20 @@ def refund():
     ticket_ids = data_from_frontend["ticket_info"]["ticket_ids"]
     email = data_from_frontend["email"]
 
-    user_service_url = (
-        f"https://esd.bchwy.com:8443/api/v1/user/{user_id}/tickets/match/{match_id}"
-        # f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
-    )
+    user_service_url = f"http://kong:8000/api/v1/user/{user_id}/tickets/match/{match_id}"
 
     response = requests.get(user_service_url)
     print(response.json())
     payment_intent = response.json()["data"]["payment_intent"]
 
     # 2. call billing service for refund
-    billing_service_refund_url = "https://esd.bchwy.com:8443/api/v1/billing/refund"
-    # billing_service_refund_url = "http://kong:8000/api/v1/billing/refund"
-
+    billing_service_refund_url = "http://kong:8000/api/v1/billing/refund"
     data_for_sending = {
         "user_id": user_id,
         "match_id": match_id,
         "category": category,
         "quantity": quantity,
-        "ticket_ids": ticket_ids,
+        "ticket_ids": ticket_ids, 
         "payment_intent": payment_intent,
         "email": email,
     }
@@ -126,7 +117,6 @@ def refund():
         return jsonify({"message": "Refund initiated successfully"}), 200
     else:
         return jsonify({"message": "Failed to initiate refund"}), 500
-
 
 def retrive_match_from_match_service(match_id):
     query = """
@@ -161,12 +151,11 @@ def retrive_match_from_match_service(match_id):
             f"Query failed to run with a status code {response.status_code}. {response.text}"
         )
 
-
 def publish_to_amqp(data):
     rabbitmq_url = "amqp://ticketboost:veryS3ecureP@ssword@rabbitmq/"
     parameters = pika.URLParameters(rabbitmq_url)
     connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
+    channel = connection.channel()  
 
     user_id = data["metadata"]["user_id"]
     match_id = data["metadata"]["match_id"]
@@ -176,14 +165,9 @@ def publish_to_amqp(data):
     ticket_ids = data["metadata"]["ticket_ids"]
     email = data["metadata"]["email"]
 
+
     # Publish to user to remove ticket from user account
-    user_message = {
-        "user_id": user_id,
-        "match_id": match_id,
-        "payment_intent": payment_intent,
-        "category": category,
-        "quantity": quantity,
-    }
+    user_message = {"user_id":user_id, "match_id":match_id, "payment_intent":payment_intent, "category":category, "quantity":quantity} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.user",
@@ -194,7 +178,7 @@ def publish_to_amqp(data):
     )
 
     # Publish to match to update available tickets
-    match_message = {"match_id": match_id, "quantity": quantity}
+    match_message = {"match_id":match_id, "quantity":quantity} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.match",
@@ -204,8 +188,8 @@ def publish_to_amqp(data):
         ),
     )
 
-    # Publish to seat to remove the seat from tickets
-    seat_message = {"ticket_ids": ticket_ids}
+    # Publish to seat to remove the seat from tickets  
+    seat_message = {"ticket_ids": ticket_ids} 
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.seat",
@@ -217,13 +201,13 @@ def publish_to_amqp(data):
 
     # Publish to notification to send email to user
     notification_message = {
-        "user_id": user_id,
-        "match": retrive_match_from_match_service(match_id),
-        "category": category,
-        "quantity": quantity,
-        "payment_intent": payment_intent,
-        "email": email,
-    }
+                                "user_id": user_id, 
+                                "match": retrive_match_from_match_service(match_id), 
+                                "category": category, 
+                                "quantity": quantity, 
+                                "payment_intent": payment_intent,
+                                "email": email
+                            }
     channel.basic_publish(
         exchange="refunds",
         routing_key="refunds.notification",
@@ -235,6 +219,5 @@ def publish_to_amqp(data):
 
     connection.close()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(port=9103, debug=True, host="0.0.0.0")

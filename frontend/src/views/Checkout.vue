@@ -52,7 +52,7 @@ export default {
     },
     methods: {
         initMatchBooking() {
-            let urlmatch = `https://esd.bchwy.com:8443/api/v1/booking/init-match-booking/${this.match_id}`;
+            let urlmatch = `http://localhost:8000/api/v1/booking/init-match-booking/${this.match_id}`;
             console.log("URL", urlmatch);
             console.log("User ID", this.user_id);
             console.log("Selected Tickets", this.selectedTickets);

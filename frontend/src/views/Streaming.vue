@@ -80,7 +80,7 @@ export default defineComponent({
   },
   mounted() {
 
-      this.socket = io('https://esd.bchwy.com:8443', {
+      this.socket = io('http://localhost:8000', {
         transports: ['websocket'],
         path: '/api/v1/livestats/socket.io',
       });
@@ -120,7 +120,7 @@ export default defineComponent({
     });
 
     axios
-      .get("https://esd.bchwy.com:8443/api/v1/videoasset/video?id=1")
+      .get("http://localhost:8000/api/v1/videoasset/video?id=1")
       .then((response) => {
         console.log("response",response.data)
         this.streamUrl = response.data;
@@ -130,7 +130,7 @@ export default defineComponent({
       });
 
     axios
-      .post("https://esd.bchwy.com:8443/api/v1/match/", {
+      .post("http://localhost:8000/api/v1/match/", {
         query: FETCH_MATCHES,
         variables: {
           _id: this.matchID
@@ -140,8 +140,8 @@ export default defineComponent({
         console.log(response.data.data.match_details)
         this.match = response.data.data.match_details;
         this.score = {
-          [this.match.home_team.toUpperCase()]: 0,
-          [this.match.away_team.toUpperCase()]: 0,
+          [this.match.home_team]: 0,
+          [this.match.away_team]: 0,
         }
       })
       .catch((error) => {

@@ -62,6 +62,9 @@ services:
       - kong-net
     depends_on:
       - rabbitmq
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     restart: always
 
   billing:
@@ -106,6 +109,9 @@ services:
       - mysql
     environment:
       - PYTHONUNBUFFERED=1
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
     restart: always
 
   livestats:
@@ -122,6 +128,9 @@ services:
 
   notification:
     environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
       - PYTHONUNBUFFERED=1
     build:
       context: ./microservices/base/7-notification
@@ -259,9 +268,7 @@ services:
       KONG_PROXY_ERROR_LOG: /dev/stderr
       KONG_ADMIN_ERROR_LOG: /dev/stderr
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_ADMIN_GUI_URL: http://esd.bchwy.com:8002 # Changing this to test deploy, please change back to http://localhost:8002 if you need to test locally.
-      KONG_SSL_CERT: /etc/kong/ssl/fullchain.pem
-      KONG_SSL_CERT_KEY: /etc/kong/ssl/privkey.pem
+      KONG_ADMIN_GUI_URL: http://bolabola.smuaws.com:8002 # Changing this to test deploy, please change back to http://localhost:8002 if you need to test locally.
     depends_on:
       - kong-migration
     ports:
@@ -278,8 +285,6 @@ services:
       - "8447:8447" # Dev Portal /files traffic over HTTPS, assuming the Dev Portal is enabled.
     volumes:
       - ./infrastructure/kong/kong.yml:/etc/kong/kong.yml
-      - ./infrastructure/kong/fullchain.pem:/etc/kong/ssl/fullchain.pem
-      - ./infrastructure/kong/privkey.pem:/etc/kong/ssl/privkey.pem
     command: >
       /bin/sh -c "
         kong config db_import /etc/kong/kong.yml &&
