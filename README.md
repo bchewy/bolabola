@@ -25,7 +25,7 @@
 
 ## Quickstart
 To set up this repository, run the following command in the current working directory:
-brian was here
+brian was here but i was here more!!!
 ```bash
 docker-compose up
 ```
